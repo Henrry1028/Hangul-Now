@@ -1,0 +1,19 @@
+# Firebase App Hosting 구성 파일 (차세대 풀스택 서버리스 배포)
+# https://firebase.google.com/docs/app-hosting
+
+runConfig:
+  # 트래픽에 따른 자동 스케일링 설정
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+
+env:
+  - variable: NODE_ENV
+    value: production
+  # Gemini API 모델 계층
+  - variable: GEMINI_DIALOGUE_MODEL
+    value: gemini-3.8-flash
+  - variable: GEMINI_PREMIUM_MODEL
+    value: gemini-3.7-flash

@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" />
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="./js/dc-runtime.js"></script>
+
+<style>
+/* === 훈이 & 정이 3D 캐릭터 입체화 및 부유 그림자 효과 === */
+img[src*="캐릭터_"], img[src*="캐릭터-"] {
+  filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.22)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.14)) !important;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
+  user-select: none;
+}
+img[src*="캐릭터_"], img[src*="캐릭터-"]:hover {
+  transform: translateY(-5px) scale(1.03);
+  filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.28)) drop-shadow(0 10px 18px rgba(0, 0, 0, 0.18)) !important;
+}
+</style>
+</head>
+<body>
+<x-dc>
+<helmet>
+
+<style>
+:root{--bg:#F5F2EB;--bg2:#FBF9F4;--card:#fff;--line:#E4DFD4;--line2:#EEEAE1;--line3:#D3CDBF;--chip:#F1EDE4;--seg:#EAE5DA;--ink:#1C1F1E;--ink2:#3A3935;--sub:#66645D;--faint:#8A877E;--accent:#23493F;--accent-ink:#23493F;--accent-soft:#E3ECE6;--hot:#C8502A;--hot-soft:#F7E4DA;--solid:#1C1F1E;--on-solid:#F5F2EB;--chat:#BFD0DC;--chat-ink:#3E4C55;--bubble:#FAE27C;--tbubble:#fff;--hi:#F7E9B8;--gold:#C9A24A;color-scheme:light}
+:root[data-theme=dark]{--bg:#121413;--bg2:#171A18;--card:#1C201E;--line:#2C312E;--line2:#252A27;--line3:#3A403C;--chip:#262B28;--seg:#262B28;--ink:#ECE8DF;--ink2:#CFCBC1;--sub:#A5A197;--faint:#85817A;--accent:#2E6154;--accent-ink:#8CC3AE;--accent-soft:#1E3530;--hot:#E27A52;--hot-soft:#3A2620;--solid:#ECE8DF;--on-solid:#121413;--chat:#1D2A31;--chat-ink:#9DB0BC;--bubble:#EBD166;--tbubble:#2B3338;--hi:#4A4020;--gold:#D8B35A;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .2s}
+*{box-sizing:border-box}
+a{color:var(--accent-ink);text-decoration:none}a:hover{color:var(--hot)}
+button,textarea,input{font-family:inherit;color:inherit}
+@keyframes dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(200,80,42,.45)}100%{box-shadow:0 0 0 22px rgba(200,80,42,0)}}
+</style>
+</helmet>
+
+<sc-if value="{{ isMkt }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;background:var(--bg);overflow-x:clip">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(20px,5vw,64px);border-bottom:1px solid var(--line);flex-wrap:wrap">
+    <button sc-camel-on-click="{{ goIntro }}" style="display:flex;align-items:center;gap:10px;border:0;background:none;cursor:pointer;padding:0">
+      <div style="width:36px;height:36px;border-radius:9px;background:var(--accent);color:#F5F2EB;display:grid;place-items:center;font:700 20px 'Gowun Batang',serif">한</div>
+      <span style="font:600 21px 'Newsreader',serif;letter-spacing:-.01em;color:var(--ink)">Hangul Now</span>
+    </button>
+    <nav style="display:flex;align-items:center;gap:20px;font-size:14px;flex-wrap:wrap">
+      <button sc-camel-on-click="{{ goHow }}" style="border:0;background:none;color:var(--sub);font-size:14px;cursor:pointer">{{ t.navHow }}</button>
+      <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:none;color:var(--sub);font-size:14px;cursor:pointer">{{ t.navTutors }}</button>
+      <button sc-camel-on-click="{{ goAbout }}" style="border:0;background:none;color:{{ aboutNavC }};font-size:14px;cursor:pointer;font-weight:{{ aboutNavW }}">{{ t.navAbout }}</button>
+      <div style="display:flex;background:var(--seg);border-radius:999px;padding:3px"><button sc-camel-on-click="{{ setEn }}" style="border:0;background:{{ enBg }};color:{{ enFg }};border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer">EN</button><button sc-camel-on-click="{{ setKo }}" style="border:0;background:{{ koBg }};color:{{ koFg }};border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer">한국어</button></div>
+      <button sc-camel-on-click="{{ toggleTheme }}" title="{{ t.themeTitle }}" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer">
+        <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if>
+        <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if>
+      </button>
+      <button sc-camel-on-click="{{ goHome }}" style="border:0;background:none;color:var(--ink);font-size:14px;cursor:pointer">{{ t.login }}</button>
+      <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:var(--solid);color:var(--on-solid);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer">{{ t.startFree }}</button>
+    </nav>
+  </header>
+
+  <sc-if value="{{ isIntro }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="01 Landing">
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:56px;align-items:center;padding:72px clamp(20px,5vw,64px) 88px;max-width:1280px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:26px">
+        <span style="font:400 17px 'Gowun Batang',serif;color:var(--hot)">{{ t.heroEyebrow }}</span>
+        <h1 style="margin:0;font:500 clamp(44px,5.8vw,76px)/1.06 'Newsreader','Gowun Batang',serif;letter-spacing:-.025em;text-wrap:balance">{{ t.heroH1 }}</h1>
+        <p style="margin:0;max-width:520px;font-size:18px;line-height:1.65;color:var(--ink2);text-wrap:pretty">{{ t.heroP }}</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:var(--accent);color:#fff;padding:16px 26px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">{{ t.ctaTutor }}</button>
+          <button sc-camel-on-click="{{ goHome }}" style="border:1px solid var(--ink);background:transparent;color:var(--ink);padding:16px 22px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">{{ t.ctaLevel }}</button>
+        </div>
+        <span style="font-size:13.5px;color:var(--faint)">{{ t.heroNote }}</span>
+      </div>
+      <div style="position:relative;justify-self:center;width:min(100%,380px);margin-top:40px">
+        <img src="./assets/캐릭터-정이.png" alt="Jeongie" style="position:absolute;right:-100px;top:-120px;width:130px;z-index:2;transform:rotate(8deg);pointer-events:none">
+        <div style="background:var(--chat);border-radius:30px;padding:18px 14px 20px;box-shadow:0 30px 60px -30px rgba(0,0,0,.35);border:8px solid #1C1F1E;position:relative;z-index:1">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px 14px"><span style="font-size:15px;font-weight:700">{{ t.mockName }}</span><span style="font-size:11px;color:var(--chat-ink)">{{ t.mockRole }}</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5">
+            <div style="display:flex;gap:8px"><div style="width:34px;height:34px;border-radius:13px;background:#E9C2A6;color:#1C1F1E;flex:none;display:grid;place-items:center;font-size:11px;font-weight:700">지우</div><div style="background:var(--tbubble);padding:9px 12px;border-radius:4px 14px 14px 14px;max-width:78%">주말에 뭐 했어요?</div></div>
+            <div style="align-self:flex-end;background:var(--bubble);color:#1C1F1E;padding:9px 12px;border-radius:14px 4px 14px 14px;max-width:80%">비가 많이 <span style="text-decoration:line-through;color:#8a6d00">왔어서</span> 집에 있었어요.</div>
+            <div style="align-self:flex-end;background:var(--tbubble);border-radius:12px;padding:10px 12px;max-width:86%;font-size:12.5px;display:flex;flex-direction:column;gap:4px;border:1px solid rgba(0,0,0,.06)">
+              <span style="font-weight:700;color:var(--accent-ink);font-size:11px;letter-spacing:.06em">{{ t.correction }}</span>
+              <span>비가 많이 <b style="color:var(--accent-ink)">와서</b> 집에 있었어요.</span>
+              <span style="color:var(--sub)">{{ t.mockRule }}</span>
+            </div>
+            <div style="display:flex;gap:8px"><div style="width:34px;height:34px;flex:none"></div><div style="background:var(--tbubble);padding:9px 12px;border-radius:14px;max-width:78%">잘했어요! 집에서 뭐 했어요?</div></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:10px;margin:10px 0 0 -60px">
+          <img src="./assets/캐릭터_훈이.png" alt="Hunie" style="width:130px;flex:none;margin-top:-50px;position:relative;z-index:2;pointer-events:none">
+          <div style="background:var(--solid);color:var(--on-solid);padding:10px 14px;border-radius:12px 12px 12px 4px;font-size:12.5px;line-height:1.45;margin-bottom:22px;max-width:220px">{{ t.callout }}</div>
+        </div>
+      </div>
+    </section>
+
+        <!-- 🌟 처음 접속한 사용자를 위한 4대 핵심 AI 기능 쇼케이스 허브 (Landing Feature Showcase) -->
+    <section style="max-width:1280px;margin:0 auto;padding:10px clamp(20px,5vw,64px) 50px;width:100%">
+      <div style="background:linear-gradient(135deg, rgba(35,73,63,0.06) 0%, rgba(200,80,42,0.06) 100%);border:1px solid var(--line);border-radius:24px;padding:clamp(24px,3.5vw,36px);position:relative;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,0.04)">
+        
+        <!-- 상단 헤더 & 배지 -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+          <div style="display:flex;flex-direction:column;gap:8px;max-width:760px">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#F5F2EB;padding:4px 12px;border-radius:999px;font-size:12.5px;font-weight:600;width:fit-content">
+              <span>✨</span>
+              <span>처음 오셨나요? 지금 바로 Hangul Now의 4대 핵심 AI 기능을 무료로 체험해 보세요</span>
+            </div>
+            <h2 style="margin:0;font:600 clamp(22px,2.6vw,32px)/1.25 'Newsreader','Gowun Batang',serif;color:var(--ink)">
+              실시간 AI 대화부터 자모 조합 쓰기, 발음 코칭, 형태소 독해까지
+            </h2>
+            <p style="margin:0;color:var(--sub);font-size:15px;line-height:1.6">
+              원어민 수준의 자연스러운 대화와 훈민정음 창제 원리 블록, 음절별 AI 발음 분석 및 Kiwi 형태소 엔진을 즉시 경험하세요.
+            </p>
+          </div>
+          
+          <div style="display:flex;align-items:center;gap:12px;flex:none">
+            <img src="./assets/캐릭터_훈이.png" alt="훈이" style="width:72px;height:auto;transform:rotate(-4deg)">
+            <img src="./assets/캐릭터-정이.png" alt="정이" style="width:72px;height:auto;transform:rotate(4deg)">
+          </div>
+        </div>
+
+        <!-- 4대 기능 인터랙티브 카드 그리드 -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:16px">
+          
+          <!-- 카드 1: AI 튜터 실시간 대화 & 교정 -->
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;box-shadow:0 4px 14px rgba(0,0,0,0.03);transition:transform .2s ease">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:24px">💬</span>
+                <span style="font-size:10.5px;font-weight:700;background:rgba(35,73,63,0.12);color:var(--accent);padding:2px 8px;border-radius:6px">실시간 메신저</span>
+              </div>
+              <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">AI 튜터 대화 & 교정</h3>
+              <p style="margin:0;font-size:13.5px;color:var(--sub);line-height:1.55">원어민 AI 튜터와 일상 대화를 나누며 틀린 문장을 메신저 안에서 실시간으로 다정하게 교정받아요.</p>
+            </div>
+            <button sc-camel-on-click="{{ goChat }}" style="border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:100%">
+              <span>지우와 대화하기</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- 카드 2: 훈민정음 자모 조합 쓰기 -->
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;box-shadow:0 4px 14px rgba(0,0,0,0.03);transition:transform .2s ease">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:24px">🧩</span>
+                <span style="font-size:10.5px;font-weight:700;background:rgba(200,80,42,0.12);color:var(--hot);padding:2px 8px;border-radius:6px">초·중·종성 조합</span>
+              </div>
+              <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">한글 글자 조합 쓰기</h3>
+              <p style="margin:0;font-size:13.5px;color:var(--sub);line-height:1.55">훈민정음 원리 그대로 자모 블록을 결합해 글자를 만들고, 짧은 문장을 써서 AI 문법 첨삭을 받아요.</p>
+            </div>
+            <button sc-camel-on-click="{{ goWriting }}" style="border:0;background:var(--hot);color:#fff;padding:10px 14px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:100%">
+              <span>자모 쓰기 체험</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- 카드 3: 음절별 AI 발음 코칭 -->
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;box-shadow:0 4px 14px rgba(0,0,0,0.03);transition:transform .2s ease">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:24px">🎙️</span>
+                <span style="font-size:10.5px;font-weight:700;background:rgba(155,139,191,0.18);color:#6B539A;padding:2px 8px;border-radius:6px">정밀 음절 분석</span>
+              </div>
+              <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">음절별 발음 코칭</h3>
+              <p style="margin:0;font-size:13.5px;color:var(--sub);line-height:1.55">원어민 발음을 듣고 따라 말하면, 음절 단위 정확도 점수와 연음·받침 맞춤 교정 팁을 제공합니다.</p>
+            </div>
+            <button sc-camel-on-click="{{ goSpeaking }}" style="border:0;background:#6B539A;color:#fff;padding:10px 14px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:100%">
+              <span>발음 평가 체험</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- 카드 4: Kiwi 스마트 형태소 독해 -->
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;box-shadow:0 4px 14px rgba(0,0,0,0.03);transition:transform .2s ease">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:24px">📖</span>
+                <span style="font-size:10.5px;font-weight:700;background:rgba(201,162,74,0.18);color:#8F6C1A;padding:2px 8px;border-radius:6px">Kiwi NLP 품사분석</span>
+              </div>
+              <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">스마트 형태소 독해</h3>
+              <p style="margin:0;font-size:13.5px;color:var(--sub);line-height:1.55">문장 속 모르는 단어를 누르면 품사 태그, 기본형, 영문 사전 뜻풀이가 팝업으로 즉각 나타납니다.</p>
+            </div>
+            <button sc-camel-on-click="{{ goReading }}" style="border:0;background:#8F6C1A;color:#fff;padding:10px 14px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:100%">
+              <span>독해 연습 시작</span>
+              <span>→</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+<section id="how" style="background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+      <div style="max-width:1280px;margin:0 auto;padding:80px clamp(20px,5vw,64px);display:flex;flex-direction:column;gap:48px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+          <h2 style="margin:0;font:500 clamp(32px,3.8vw,48px)/1.12 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em;max-width:640px">{{ t.howH2 }}</h2>
+          <p style="margin:0;max-width:400px;color:var(--sub);line-height:1.6">{{ t.howP }}</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));border-top:1px solid var(--ink)">
+          <sc-for list="{{ skills }}" as="s" hint-placeholder-count="4">
+            <div style="padding:28px 24px 32px 0;display:flex;flex-direction:column;gap:14px;border-bottom:1px solid var(--line)">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:700 56px/1 'Gowun Batang',serif;color:var(--accent-ink)">{{ s.glyph }}</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">{{ s.no }}</span></div>
+              <div style="font-size:18px;font-weight:700">{{ s.name }} <span style="font-weight:400;color:var(--faint);font-size:14px;font-family:'Gowun Batang',serif">{{ s.ko }}</span></div>
+              <p style="margin:0;color:var(--ink2);line-height:1.6;font-size:15px;text-wrap:pretty">{{ s.desc }}</p>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="max-width:1280px;margin:0 auto;padding:80px clamp(20px,5vw,64px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:40px">
+      <sc-for list="{{ steps }}" as="st" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot)">STEP {{ st.n }}</span><h3 style="margin:0;font:500 26px 'Newsreader','Gowun Batang',serif">{{ st.t }}</h3><p style="margin:0;color:var(--sub);line-height:1.6">{{ st.p }}</p></div>
+      </sc-for>
+    </section>
+
+    <section style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+      <div style="max-width:1280px;margin:0 auto;padding:80px clamp(20px,5vw,64px);display:flex;flex-direction:column;gap:40px">
+        <div style="display:flex;flex-direction:column;gap:12px;max-width:640px">
+          <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">{{ t.guidesEyebrow }}</span>
+          <h2 style="margin:0;font:500 clamp(32px,3.8vw,48px)/1.12 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.guidesH2 }}</h2>
+          <p style="margin:0;color:var(--sub);line-height:1.6">{{ t.guidesP }}</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px">
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+            <img src="./assets/캐릭터_훈이.png" alt="Hunie" style="width:170px;flex:none">
+            <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px"><span style="font:700 26px 'Gowun Batang',serif">{{ t.hunName }}</span><span style="font-size:13px;font-weight:600;color:var(--accent-ink)">{{ t.hunRole }}</span><p style="margin:0;color:var(--ink2);line-height:1.6;font-size:15px">{{ t.hunDesc }}</p></div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+            <img src="./assets/캐릭터-정이.png" alt="Jeongie" style="width:170px;flex:none">
+            <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px"><span style="font:700 26px 'Gowun Batang',serif">{{ t.jeongName }}</span><span style="font-size:13px;font-weight:600;color:var(--hot)">{{ t.jeongRole }}</span><p style="margin:0;color:var(--ink2);line-height:1.6;font-size:15px">{{ t.jeongDesc }}</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tutors" style="background:#23493F;color:#F5F2EB">
+      <div style="max-width:1280px;margin:0 auto;padding:80px clamp(20px,5vw,64px);display:flex;flex-direction:column;gap:36px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+          <h2 style="margin:0;font:500 clamp(32px,3.8vw,48px)/1.12 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.tutorsH2 }}</h2>
+          <button sc-camel-on-click="{{ goTutors }}" style="border:1px solid #F5F2EB;background:transparent;color:#F5F2EB;padding:12px 20px;border-radius:999px;font-size:14px;cursor:pointer">{{ t.seeAll }}</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px">
+          <sc-for list="{{ tutorsIntro }}" as="tu" hint-placeholder-count="4">
+            <div style="background:rgba(245,242,235,.07);border:1px solid rgba(245,242,235,.16);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+              <div style="width:56px;height:56px;border-radius:20px;background:{{ tu.color }};color:#1C1F1E;display:grid;place-items:center;font-weight:700">{{ tu.initial }}</div>
+              <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:17px;font-weight:700">{{ tu.name }}</span><span style="font-size:13px;color:#C9D5CF">{{ tu.role }}</span></div>
+              <p style="margin:0;font:400 16px/1.5 'Newsreader','Gowun Batang',serif;color:#E9E4D8">“{{ tu.quote }}”</p>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="max-width:1280px;margin:0 auto;padding:88px clamp(20px,5vw,64px);display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center">
+      <div style="display:flex;align-items:flex-end;gap:4px"><img src="./assets/캐릭터_훈이.png" alt="" style="width:110px"><img src="./assets/캐릭터-정이.png" alt="" style="width:110px"></div>
+      <h2 style="margin:0;font:500 clamp(34px,4.4vw,56px)/1.14 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em;text-wrap:balance">{{ t.finalH2 }}</h2>
+      <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:var(--hot);color:#fff;padding:18px 32px;border-radius:12px;font-size:17px;font-weight:600;cursor:pointer">{{ t.startFree2 }}</button>
+    </section>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="10 About us">
+    <section style="max-width:1280px;margin:0 auto;padding:80px clamp(20px,5vw,64px) 64px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:48px;align-items:end">
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.12em">{{ t.aboutEyebrow }}</span>
+        <h1 style="margin:0;font:500 clamp(40px,5vw,66px)/1.08 'Newsreader','Gowun Batang',serif;letter-spacing:-.025em;text-wrap:balance">{{ t.aboutH1 }}</h1>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;font-size:17px;line-height:1.7;color:var(--ink2)">
+        <p style="margin:0;text-wrap:pretty">{{ t.aboutP1 }}</p>
+        <p style="margin:0;text-wrap:pretty">{{ t.aboutP2 }}</p>
+      </div>
+    </section>
+
+    <section style="background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+      <div style="max-width:1280px;margin:0 auto;padding:72px clamp(20px,5vw,64px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:48px;align-items:center">
+        <div style="display:flex;align-items:flex-end;justify-content:center;gap:0;position:relative">
+          <span style="position:absolute;inset:auto 0 12% 0;text-align:center;font:700 clamp(90px,12vw,150px)/1 'Gowun Batang',serif;color:var(--line2);letter-spacing:.02em;z-index:0">훈민정음</span>
+          <img src="./assets/캐릭터_훈이.png" alt="Hunie" style="width:min(46%,220px);position:relative;z-index:1">
+          <img src="./assets/캐릭터-정이.png" alt="Jeongie" style="width:min(46%,220px);position:relative;z-index:1">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint);letter-spacing:.12em">{{ t.originLabel }}</span>
+          <h2 style="margin:0;font:500 clamp(28px,3.2vw,40px)/1.2 'Newsreader','Gowun Batang',serif">{{ t.originH }}</h2>
+          <p style="margin:0;color:var(--ink2);line-height:1.7;font-size:16px;text-wrap:pretty">{{ t.originP }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="max-width:1280px;margin:0 auto;padding:80px clamp(20px,5vw,64px);display:flex;flex-direction:column;gap:36px">
+      <h2 style="margin:0;font:500 clamp(28px,3.2vw,40px)/1.2 'Newsreader','Gowun Batang',serif">{{ t.princH }}</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));border-top:1px solid var(--ink)">
+        <sc-for list="{{ principles }}" as="pr" hint-placeholder-count="3">
+          <div style="padding:26px 28px 30px 0;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot)">0{{ pr.n }}</span><span style="font-size:19px;font-weight:700">{{ pr.t }}</span><p style="margin:0;color:var(--sub);line-height:1.65;font-size:15px">{{ pr.d }}</p></div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="background:#23493F;color:#F5F2EB">
+      <div style="max-width:1280px;margin:0 auto;padding:72px clamp(20px,5vw,64px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:40px">
+        <div style="display:flex;flex-direction:column;gap:12px"><h2 style="margin:0;font:500 clamp(28px,3.2vw,40px)/1.2 'Newsreader','Gowun Batang',serif">{{ t.contactH }}</h2><p style="margin:0;color:#DCE5E0;line-height:1.65">{{ t.contactP }}</p></div>
+        <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(245,242,235,.25);padding-top:16px"><span style="font-size:13px;color:#A9C1B6">{{ t.cLearners }}</span><span style="font-size:17px">hello@hangulnow.com</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(245,242,235,.25);padding-top:16px"><span style="font-size:13px;color:#A9C1B6">{{ t.cPartners }}</span><span style="font-size:17px">partners@hangulnow.com</span><span style="font-size:13.5px;color:#C9D5CF;margin-top:6px">{{ t.cOffice }}</span></div>
+      </div>
+    </section>
+  </div>
+  </sc-if>
+
+  <footer style="border-top:1px solid var(--line);padding:24px clamp(20px,5vw,64px);font-size:13px;color:var(--faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap"><span>© 2026 Hangul Now</span><div style="display:flex;gap:16px"><button sc-camel-on-click="{{ goAbout }}" style="border:0;background:none;color:var(--faint);font-size:13px;cursor:pointer;padding:0">{{ t.navAbout }}</button><span>{{ t.footerLinks }}</span></div></footer>
+</div>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;min-height:100vh;background:var(--bg)">
+  <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+  <aside style="width:240px;flex:none;position:sticky;top:0;height:100vh;border-right:1px solid var(--line);background:var(--bg2);display:flex;flex-direction:column;padding:20px 14px;gap:20px;overflow-y:auto">
+    <button sc-camel-on-click="{{ goIntro }}" style="display:flex;align-items:center;gap:10px;border:0;background:none;cursor:pointer;padding:4px 6px;text-align:left">
+      <div style="width:32px;height:32px;border-radius:8px;background:var(--accent);color:#F5F2EB;display:grid;place-items:center;font:700 18px 'Gowun Batang',serif">한</div>
+      <span style="font:600 19px 'Newsreader',serif;color:var(--ink)">Hangul Now</span>
+    </button>
+    <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--faint);padding:0 10px 6px">{{ g.label }}</span>
+        <sc-for list="{{ g.items }}" as="n" hint-placeholder-count="3">
+          <button sc-camel-on-click="{{ n.go }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:{{ n.bg }};color:{{ n.fg }};padding:8px 10px;border-radius:10px;font-size:13.5px;cursor:pointer;width:100%;text-align:left;position:relative;transition:all .15s ease">
+            <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
+              <span style="width:24px;height:24px;border-radius:6px;border:1px solid {{ n.bd }};display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;background:rgba(255,255,255,0.06)">{{ n.glyph }}</span>
+              <span style="font-weight:{{ n.fw }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.label }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <sc-if value="{{ n.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="background:#C25E3E;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700">{{ n.badge }}</span></sc-if>
+              <span style="font-size:9.5px;padding:2px 6px;border-radius:4px;background:rgba(128,128,128,0.14);color:{{ n.fg }};opacity:0.9;white-space:nowrap;font-weight:600">{{ n.tag }}</span>
+            </div>
+          </button>
+        </sc-for>
+      </div>
+    </sc-for>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px">
+        <div style="display:flex;background:var(--seg);border-radius:999px;padding:3px"><button sc-camel-on-click="{{ setEn }}" style="border:0;background:{{ enBg }};color:{{ enFg }};border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer">EN</button><button sc-camel-on-click="{{ setKo }}" style="border:0;background:{{ koBg }};color:{{ koFg }};border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer">한국어</button></div>
+        <button sc-camel-on-click="{{ toggleTheme }}" title="{{ t.themeTitle }}" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer">
+          <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if>
+          <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if>
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid var(--line)">
+        <div style="width:34px;height:34px;border-radius:50%;background:#D7DCE3;color:#1C1F1E;display:grid;place-items:center;font-size:13px;font-weight:700">E</div>
+        <div style="display:flex;flex-direction:column;line-height:1.35"><span style="font-size:14px;font-weight:600">Emma Clarke</span><span style="font-size:12px;color:var(--faint)">{{ t.emmaLevel }}</span></div>
+      </div>
+    </div>
+  </aside>
+  </sc-if>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+      <div style="position:sticky;top:0;z-index:5;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 12px;align-items:center">
+        <sc-for list="{{ navFlat }}" as="n" hint-placeholder-count="6">
+          <button sc-camel-on-click="{{ n.go }}" style="flex:none;border:1px solid {{ n.bd }};background:{{ n.bg }};color:{{ n.fg }};padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer">{{ n.label }}</button>
+        </sc-for>
+        <button sc-camel-on-click="{{ toggleLang }}" style="flex:none;border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer">{{ langShort }}</button>
+        <button sc-camel-on-click="{{ toggleTheme }}" style="flex:none;border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer">{{ themeShort }}</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ pHome }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="02 Today" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+      <!-- 🌟 처음 접속한 사용자를 위한 신규 기능 쇼케이스 허브 (Welcome Feature Hub) -->
+      <div style="background:linear-gradient(135deg, rgba(35,73,63,0.08) 0%, rgba(200,94,62,0.09) 100%);border:1.5px solid var(--accent);border-radius:20px;padding:24px clamp(16px,3vw,28px);position:relative;overflow:hidden;box-shadow:0 10px 25px -5px rgba(35,73,63,0.08)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;position:relative;z-index:2">
+          <div style="max-width:660px">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#F5F2EB;padding:4px 12px;border-radius:20px;font-size:11.5px;font-weight:700;margin-bottom:10px">
+              <span>✨ 처음 오셨나요? (Welcome to Hangul Now!)</span>
+            </div>
+            <h2 style="margin:0 0 8px;font-size:clamp(19px,2.2vw,25px);font-weight:700;color:var(--ink);letter-spacing:-0.01em">Hangul Now의 4대 핵심 AI 기능을 바로 체험해 보세요</h2>
+            <p style="margin:0;font-size:13.5px;color:var(--ink2);line-height:1.5">카카오톡 스타일의 AI 메신저 대화, 실시간 문법 교정 카드, 한글 자모 블록 글자 조합, 음절별 발음 코칭을 원클릭으로 시작할 수 있습니다.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <img src="./assets/캐릭터-정이.png" alt="Jeongie" style="width:82px;filter:drop-shadow(0 14px 22px rgba(0,0,0,0.22));transform:rotate(5deg);transition:transform .3s ease" onmouseover="this.style.transform='rotate(8deg) scale(1.06)'" onmouseout="this.style.transform='rotate(5deg)'" />
+            <img src="./assets/캐릭터_훈이.png" alt="Hunie" style="width:82px;filter:drop-shadow(0 14px 22px rgba(0,0,0,0.22));transform:rotate(-5deg);transition:transform .3s ease" onmouseover="this.style.transform='rotate(-8deg) scale(1.06)'" onmouseout="this.style.transform='rotate(-5deg)'" />
+          </div>
+        </div>
+
+        <!-- 4대 핵심 기능 카드 그리드 -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:20px;position:relative;z-index:2">
+          <!-- 1. AI 튜터 채팅 -->
+          <div sc-camel-on-click="{{ openJiwoo }}" style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:transform .2s ease, box-shadow .2s ease;display:flex;flex-direction:column;justify-content:space-between;gap:12px" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 20px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:22px">💬</span>
+                <span style="font-size:10px;font-weight:700;background:rgba(35,73,63,0.12);color:var(--accent);padding:2px 7px;border-radius:5px">실시간 메신저</span>
+              </div>
+              <h3 style="margin:0 0 5px;font-size:15px;font-weight:700;color:var(--ink)">AI 튜터 대화 & 교정</h3>
+              <p style="margin:0;font-size:12px;color:var(--ink2);line-height:1.45">친구 지우와 메신저로 대화해 보세요. 실수한 문장은 실시간 교정 카드로 바로잡아 줍니다.</p>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:4px">지금 대화 시작하기 →</span>
+          </div>
+
+          <!-- 2. 한글 글자 만들기 & 작문 -->
+          <div sc-camel-on-click="{{ goWriting }}" style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:transform .2s ease, box-shadow .2s ease;display:flex;flex-direction:column;justify-content:space-between;gap:12px" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 20px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:22px">🧩</span>
+                <span style="font-size:10px;font-weight:700;background:rgba(200,94,62,0.12);color:#C25E3E;padding:2px 7px;border-radius:5px">초·중·종성</span>
+              </div>
+              <h3 style="margin:0 0 5px;font-size:15px;font-weight:700;color:var(--ink)">한글 글자 조합 쓰기</h3>
+              <p style="margin:0;font-size:12px;color:var(--ink2);line-height:1.45">훈민정음 원리로 자모 블록을 조합하고, 작성한 문장의 첨삭 피드백을 받아보세요.</p>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:4px">글자 만들기 체험 →</span>
+          </div>
+
+          <!-- 3. 음절별 발음 평가 -->
+          <div sc-camel-on-click="{{ goSpeaking }}" style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:transform .2s ease, box-shadow .2s ease;display:flex;flex-direction:column;justify-content:space-between;gap:12px" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 20px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:22px">🎙️</span>
+                <span style="font-size:10px;font-weight:700;background:rgba(35,73,63,0.12);color:var(--accent);padding:2px 7px;border-radius:5px">AI Voice Coach</span>
+              </div>
+              <h3 style="margin:0 0 5px;font-size:15px;font-weight:700;color:var(--ink)">음절별 발음 코칭</h3>
+              <p style="margin:0;font-size:12px;color:var(--ink2);line-height:1.45">원어민 발음을 듣고 따라 말해 보세요. 음절별 정확도 점수와 억양 팁을 측정해 드립니다.</p>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:4px">발음 점수 측정하기 →</span>
+          </div>
+
+          <!-- 4. 스마트 인터랙티브 독해 -->
+          <div sc-camel-on-click="{{ goReading }}" style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:transform .2s ease, box-shadow .2s ease;display:flex;flex-direction:column;justify-content:space-between;gap:12px" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 20px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:22px">📖</span>
+                <span style="font-size:10px;font-weight:700;background:rgba(120,120,120,0.15);color:var(--ink);padding:2px 7px;border-radius:5px">Kiwi 형태소</span>
+              </div>
+              <h3 style="margin:0 0 5px;font-size:15px;font-weight:700;color:var(--ink)">스마트 형태소 독해</h3>
+              <p style="margin:0;font-size:12px;color:var(--ink2);line-height:1.45">문장 속 모르는 단어를 누르면 품사, 기본형, 영문 사전 뜻풀이가 팝업으로 나타납니다.</p>
+            </div>
+            <span style="font-size:12.5px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:4px">읽기 연습 시작하기 →</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:14px;color:var(--faint)">{{ t.homeDate }}</span>
+          <h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.homeHello }} <span style="font:400 .6em 'Gowun Batang',serif;color:var(--faint)">{{ t.homeHelloSub }}</span></h1>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:240px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-weight:600">{{ t.levelFrom }}</span><span style="color:var(--faint)">64%</span></div>
+          <div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden"><div style="width:64%;height:100%;background:var(--accent)"></div></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px">
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><h2 style="margin:0;font-size:18px">{{ t.planH }}</h2><span style="font-size:13px;color:var(--faint)">{{ planMeta }}</span></div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ plan }}" as="p" hint-placeholder-count="4">
+              <button sc-camel-on-click="{{ p.go }}" style="display:flex;align-items:center;gap:14px;padding:14px 4px;border:0;border-top:1px solid var(--line2);background:none;cursor:pointer;text-align:left;width:100%">
+                <span style="width:22px;height:22px;border-radius:50%;border:1.5px solid {{ p.ring }};background:{{ p.fill }};color:#fff;display:grid;place-items:center;font-size:12px;flex:none">{{ p.check }}</span>
+                <span style="font:700 18px 'Gowun Batang',serif;color:var(--accent-ink);width:24px">{{ p.glyph }}</span>
+                <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600;color:{{ p.tc }};text-decoration:{{ p.td }}">{{ p.title }}</span><span style="font-size:13px;color:var(--faint)">{{ p.sub }}</span></span>
+                <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">{{ p.min }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div style="background:#23493F;color:#F5F2EB;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden">
+            <img src="./assets/캐릭터-정이.png" alt="" style="position:absolute;right:-10px;bottom:-12px;width:120px;pointer-events:none">
+            <span style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#A9C1B6">{{ t.exprLabel }}</span>
+            <span style="font:700 34px/1.3 'Gowun Batang',serif">밥 먹었어요?</span>
+            <sc-if value="{{ showRoman }}" hint-placeholder-val="{{ true }}"><span style="font:400 13px 'IBM Plex Mono',monospace;color:#A9C1B6">bap meo-geo-sseo-yo?</span></sc-if>
+            <p style="margin:0;font-size:14.5px;line-height:1.6;color:#DCE5E0;max-width:calc(100% - 100px)">{{ t.exprDesc }}</p>
+            <button sc-camel-on-click="{{ goSpeaking }}" style="align-self:flex-start;border:0;background:#F5F2EB;color:#23493F;padding:9px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer">{{ t.exprBtn }}</button>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <span style="font-size:15px;font-weight:700">{{ t.streakT }}</span>
+              <div style="display:flex;gap:6px">
+                <sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><span style="width:24px;height:24px;border-radius:7px;background:{{ d.bg }};border:1px solid {{ d.bd }}"></span><span style="font-size:11px;color:var(--faint)">{{ d.d }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+            <span style="font:500 52px 'Newsreader',serif;color:var(--hot)">12</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px">
+        <button sc-camel-on-click="{{ openJiwoo }}" style="background:var(--chat);border:0;border-radius:18px;padding:22px 24px;display:flex;flex-direction:column;gap:14px;cursor:pointer;text-align:left">
+          <div style="display:flex;justify-content:space-between;width:100%"><span style="font-size:13px;font-weight:600;color:var(--chat-ink)">{{ t.continueChat }}</span><span style="font-size:12px;color:var(--chat-ink)">{{ lastJiwooTime }}</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="width:40px;height:40px;border-radius:15px;background:#E9C2A6;color:#1C1F1E;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">지우</div>
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:13px;font-weight:600">{{ t.mockName }}</span><span style="background:var(--tbubble);padding:9px 12px;border-radius:4px 14px 14px 14px;font-size:14.5px;line-height:1.5;color:var(--ink)">참, 한강에서 치킨 먹는 걸 “치맥”이라고 해요.</span></div>
+          </div>
+        </button>
+        <button sc-camel-on-click="{{ goRecord }}" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;display:flex;gap:14px;cursor:pointer;text-align:left;align-items:center;overflow:hidden">
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:13px;font-weight:600;color:var(--hot)">{{ t.reviewLabel }}</span>
+            <span style="font-size:20px;font-weight:700;color:var(--ink)">{{ t.reviewT }}</span>
+            <span style="font-size:14px;color:var(--sub);line-height:1.5">{{ t.reviewP }}</span>
+          </div>
+          <img src="./assets/캐릭터_훈이.png" alt="" style="width:120px;flex:none;margin:-10px -8px -24px 0">
+        </button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ pTutors }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="03 Tutors" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.tutorsH1 }}</h1>
+        <p style="margin:0;color:var(--sub)">{{ t.tutorsP }}</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ filters }}" as="f" hint-placeholder-count="6">
+          <button sc-camel-on-click="{{ f.go }}" style="border:1px solid {{ f.bd }};background:{{ f.bg }};color:{{ f.fg }};padding:8px 14px;border-radius:999px;font-size:14px;cursor:pointer">{{ f.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px">
+        <sc-for list="{{ tutorList }}" as="tu" hint-placeholder-count="6">
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;gap:14px;align-items:center">
+              <div style="position:relative;flex:none"><div style="width:60px;height:60px;border-radius:22px;background:{{ tu.color }};color:#1C1F1E;display:grid;place-items:center;font-weight:700">{{ tu.initial }}</div><sc-if value="{{ tu.online }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:#3E9B6A;border:2.5px solid var(--card)"></span></sc-if></div>
+              <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:17px;font-weight:700">{{ tu.name }} <span style="font:400 14px 'Gowun Batang',serif;color:var(--faint)">{{ tu.alt }}</span></span><span style="font-size:13.5px;color:var(--sub)">{{ tu.role }}</span></div>
+            </div>
+            <p style="margin:0;font:400 16px/1.55 'Newsreader','Gowun Batang',serif;color:var(--ink2);min-height:50px">“{{ tu.quote }}”</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ tu.tagLabels }}" as="tag" hint-placeholder-count="2"><span style="background:var(--chip);color:var(--ink2);font-size:12px;padding:4px 9px;border-radius:6px">{{ tag }}</span></sc-for>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line2);padding-top:14px;gap:10px">
+              <span style="font-size:12.5px;color:var(--faint)">{{ tu.status }}</span>
+              <button sc-camel-on-click="{{ tu.open }}" style="border:0;background:var(--accent);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;flex:none">{{ t.startChat }}</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ pChat }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="04 Chat" style="display:flex;height:{{ chatH }};min-height:520px">
+      <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+      <div style="width:300px;flex:none;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column">
+        <div style="padding:20px 18px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:19px;font-weight:700">{{ t.chats }}</span><button sc-camel-on-click="{{ goTutors }}" style="border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 10px;font-size:12.5px;cursor:pointer">{{ t.newTutor }}</button></div>
+        <div style="flex:1;overflow-y:auto">
+          <sc-for list="{{ chatList }}" as="c" hint-placeholder-count="5">
+            <button sc-camel-on-click="{{ c.open }}" style="display:flex;gap:12px;align-items:center;width:100%;padding:11px 18px;border:0;background:{{ c.bg }};cursor:pointer;text-align:left">
+              <div style="width:46px;height:46px;border-radius:17px;background:{{ c.color }};color:#1C1F1E;display:grid;place-items:center;font-size:12.5px;font-weight:700;flex:none">{{ c.initial }}</div>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:14.5px;font-weight:600">{{ c.name }}</span><span style="font-size:11.5px;color:var(--faint);flex:none">{{ c.time }}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.last }}</span><sc-if value="{{ c.hasUnread }}" hint-placeholder-val="{{ false }}"><span style="background:var(--hot);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;flex:none">{{ c.unread }}</span></sc-if></div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--chat)">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(0,0,0,.06);flex-wrap:wrap">
+          <div style="width:38px;height:38px;border-radius:14px;background:{{ tutor.color }};color:#1C1F1E;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">{{ tutor.initial }}</div>
+          <div style="flex:1;min-width:140px;display:flex;flex-direction:column;line-height:1.35"><span style="font-size:16px;font-weight:700">{{ tutor.name }}</span><span style="font-size:12px;color:var(--chat-ink)">{{ tutor.role }} · {{ tutor.pace }}</span></div>
+          <button sc-camel-on-click="{{ toggleAllTr }}" style="border:1px solid var(--line3);background:{{ trBtnBg }};border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer">{{ trLabel }}</button>
+        </div>
+        <div ref="{{ msgRef }}" style="flex:1;overflow-y:auto;padding:16px 18px 20px;display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ msgs }}" as="m" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-if value="{{ m.hasDate }}" hint-placeholder-val="{{ false }}"><div style="align-self:center;background:rgba(0,0,0,.16);color:#fff;font-size:12px;padding:4px 12px;border-radius:999px;margin:8px 0">{{ m.dateLabel }}</div></sc-if>
+              <sc-if value="{{ m.isTutor }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:8px;align-items:flex-start;margin-top:{{ m.mt }}">
+                  <div style="width:38px;height:38px;border-radius:14px;background:{{ tutor.color }};color:#1C1F1E;display:grid;place-items:center;font-size:11.5px;font-weight:700;flex:none;opacity:{{ m.avOp }}">{{ tutor.initial }}</div>
+                  <div style="display:flex;flex-direction:column;gap:4px;max-width:min(72%,520px)">
+                    <sc-if value="{{ m.first }}" hint-placeholder-val="{{ true }}"><span style="font-size:12.5px;color:var(--chat-ink)">{{ tutor.name }}</span></sc-if>
+                    <div style="display:flex;align-items:flex-end;gap:6px">
+                      <div sc-camel-on-click="{{ m.toggleTr }}" title="{{ t.tapTr }}" style="background:var(--tbubble);padding:9px 12px;border-radius:{{ m.rad }};font-size:15px;line-height:1.5;cursor:pointer;display:flex;flex-direction:column;gap:6px">
+                        <span>{{ m.text }}</span>
+                        <sc-if value="{{ m.showTr }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--sub);border-top:1px dashed var(--line3);padding-top:6px">{{ m.tr }}</span></sc-if>
+                      </div>
+                      <span style="font-size:11px;color:var(--chat-ink);flex:none;white-space:nowrap">{{ m.timeLabel }}</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ m.isMe }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:{{ m.mt }}">
+                  <div style="display:flex;align-items:flex-end;gap:6px;justify-content:flex-end;max-width:min(76%,540px)">
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;flex:none"><sc-if value="{{ m.pending }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;color:#C99A00">1</span></sc-if><span style="font-size:11px;color:var(--chat-ink);white-space:nowrap">{{ m.timeLabel }}</span></div>
+                    <div style="background:var(--bubble);color:#1C1F1E;padding:9px 12px;border-radius:{{ m.rad }};font-size:15px;line-height:1.5">{{ m.text }}</div>
+                  </div>
+                  <sc-if value="{{ m.hasFix }}" hint-placeholder-val="{{ false }}">
+                    <div style="background:var(--tbubble);border-radius:12px;padding:12px 14px;max-width:min(76%,440px);display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.5;border:1px solid rgba(0,0,0,.05)">
+                      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span style="font-size:11px;font-weight:700;color:var(--accent-ink);letter-spacing:.06em">{{ t.correction }}</span><span style="font-size:11.5px;color:var(--faint)">{{ t.savedNotes }}</span></div>
+                      <span><span style="text-decoration:line-through;color:var(--hot)">{{ m.fixWrong }}</span> → <b style="color:var(--accent-ink)">{{ m.fixRight }}</b></span>
+                      <span style="color:var(--sub);font-size:13px">{{ m.fixNote }}</span>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ typing }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+              <div style="width:38px;height:38px;border-radius:14px;background:{{ tutor.color }};color:#1C1F1E;display:grid;place-items:center;font-size:11.5px;font-weight:700">{{ tutor.initial }}</div>
+              {{ typingDots }}
+            </div>
+          </sc-if>
+        </div>
+        <div style="background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column">
+          <div style="display:flex;gap:6px;overflow-x:auto;padding:10px 12px 0">
+            <sc-for list="{{ quick }}" as="q" hint-placeholder-count="4">
+              <button sc-camel-on-click="{{ q.send }}" style="flex:none;border:1px solid var(--line);background:var(--bg2);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;display:flex;gap:6px"><span>{{ q.text }}</span><span style="color:var(--faint)">{{ q.en }}</span></button>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 12px 12px">
+            <button title="Voice" style="width:38px;height:38px;border-radius:50%;border:0;background:var(--chip);color:var(--ink2);cursor:pointer;display:grid;place-items:center;flex:none"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+            <input value="{{ draft }}" sc-camel-on-change="{{ onDraft }}" sc-camel-on-key-down="{{ onKey }}" placeholder="{{ t.placeholder }}" style="flex:1;min-width:0;border:0;background:var(--bg);color:var(--ink);border-radius:20px;padding:11px 16px;font-size:15px;outline:none">
+            <button sc-camel-on-click="{{ send }}" style="border:0;background:{{ sendBg }};color:{{ sendFg }};border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;flex:none">{{ t.send }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ pListening }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="05 Listening" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">{{ t.lEyebrow }}</span><h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.lTitle }} <span style="font:400 .6em 'Gowun Batang',serif;color:var(--faint)">{{ t.lTitleSub }}</span></h1><span style="color:var(--sub)">{{ t.lSub }}</span></div>
+      <div style="background:#1C1F1E;color:#F5F2EB;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:18px;border:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:3px;height:64px">
+          <sc-for list="{{ bars }}" as="b" hint-placeholder-count="48"><span style="flex:1;height:{{ b.h }};background:{{ b.c }};border-radius:2px"></span></sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <button sc-camel-on-click="{{ togglePlay }}" style="height:48px;padding:0 22px;border-radius:999px;border:0;background:#F5F2EB;color:#1C1F1E;cursor:pointer;font-size:14px;font-weight:700;flex:none">{{ playLabel }}</button>
+          <span style="font:500 13px 'IBM Plex Mono',monospace;color:#B8B4AA">{{ playTime }} / 1:48</span>
+          <div style="display:flex;gap:4px;margin-left:auto">
+            <sc-for list="{{ speeds }}" as="s" hint-placeholder-count="3"><button sc-camel-on-click="{{ s.go }}" style="border:1px solid #45443F;background:{{ s.bg }};color:{{ s.fg }};border-radius:8px;padding:6px 10px;font:500 12px 'IBM Plex Mono',monospace;cursor:pointer">{{ s.label }}</button></sc-for>
+          </div>
+          <button sc-camel-on-click="{{ toggleScript }}" style="border:1px solid #45443F;background:transparent;color:#F5F2EB;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer">{{ scriptLabel }}</button>
+        </div>
+        <sc-if value="{{ showScript }}" hint-placeholder-val="{{ false }}">
+          <div style="border-top:1px solid #33362F;padding-top:16px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ script }}" as="l" hint-placeholder-count="5"><div style="display:flex;gap:14px;font-size:15.5px;line-height:1.55"><span style="width:72px;flex:none;color:#A9C1B6;font-size:13px;padding-top:2px">{{ l.who }}</span><span style="display:flex;flex-direction:column;gap:2px"><span>{{ l.text }}</span><span style="font-size:13px;color:#8F8C83">{{ l.en }}</span></span></div></sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px">
+        <sc-for list="{{ lQs }}" as="q" hint-placeholder-count="3">
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px">
+            <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">Q{{ q.no }}</span>
+            <span style="font-size:17px;font-weight:600">{{ q.q }}</span>
+            <span style="font-size:13.5px;color:var(--faint);margin-top:-4px">{{ q.en }}</span>
+            <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="3">
+              <button sc-camel-on-click="{{ o.pick }}" style="text-align:left;border:1.5px solid {{ o.bd }};background:{{ o.bg }};border-radius:12px;padding:12px 14px;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;gap:10px"><span>{{ o.text }}</span><span style="font-size:12.5px;font-weight:700;color:{{ o.mc }}">{{ o.mark }}</span></button>
+            </sc-for>
+          </div>
+        </sc-for>
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:12px">
+          <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">{{ t.lDictLabel }}</span>
+          <span style="font-size:13.5px;color:var(--faint)">{{ t.lDictHint }}</span>
+          <span style="font-size:17px;line-height:1.7">“드시고 가세요, 아니면 <input value="{{ dict }}" sc-camel-on-change="{{ onDict }}" placeholder="____" style="width:90px;border:0;border-bottom:2px solid {{ dictBd }};background:transparent;color:var(--ink);font-size:17px;text-align:center;outline:none"> 드릴까요?”</span>
+          <span style="font-size:13.5px;color:{{ dictColor }}">{{ dictMsg }}</span>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ pReading }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="06 Reading" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:28px;align-items:start">
+      <div style="grid-column:span 2;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:clamp(24px,4vw,44px);display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">{{ t.rEyebrow }}</span><h1 style="margin:0;font:700 clamp(24px,3vw,32px)/1.4 'Gowun Batang',serif">벚꽃이 피면, 서울은 분홍색이 돼요</h1><span style="font-size:14px;color:var(--faint)">{{ t.rSubtitle }}</span></div>
+        <sc-for list="{{ paras }}" as="para" hint-placeholder-count="3">
+          <p style="margin:0;font:400 19px/2 'Gowun Batang',serif;color:var(--ink);text-wrap:pretty"><sc-for list="{{ para.segs }}" as="s" hint-placeholder-count="3"><span sc-camel-on-click="{{ s.click }}" style="border-bottom:{{ s.bb }};background:{{ s.bg }};cursor:{{ s.cur }};border-radius:3px">{{ s.t }}</span></sc-for></p>
+        </sc-for>
+        <div style="border-top:1px solid var(--line2);padding-top:22px;display:flex;flex-direction:column;gap:18px">
+          <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">{{ t.rCheck }}</span>
+          <sc-for list="{{ rQs }}" as="q" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:16px;font-weight:600">{{ q.no }}. {{ q.q }} <span style="font-weight:400;color:var(--faint);font-size:14px">{{ q.en }}</span></span>
+              <div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="3"><button sc-camel-on-click="{{ o.pick }}" style="border:1.5px solid {{ o.bd }};background:{{ o.bg }};border-radius:10px;padding:9px 14px;font-size:14.5px;cursor:pointer">{{ o.text }}</button></sc-for></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <aside style="position:sticky;top:24px;display:flex;flex-direction:column;gap:16px">
+        <sc-if value="{{ hasWord }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#23493F;color:#F5F2EB;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:12px;color:#A9C1B6">{{ word.pos }}</span>
+            <span style="font:700 32px 'Gowun Batang',serif">{{ word.base }}</span>
+            <span style="font-size:16px">{{ word.en }}</span>
+            <span style="font-size:14px;color:#DCE5E0;border-top:1px solid rgba(245,242,235,.18);padding-top:10px;line-height:1.55">{{ word.ex }}</span>
+            <button sc-camel-on-click="{{ saveWord }}" style="align-self:flex-start;border:0;background:#F5F2EB;color:#23493F;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">{{ saveLabel }}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noWord }}" hint-placeholder-val="{{ true }}">
+          <div style="border:1.5px dashed var(--line3);border-radius:18px;padding:18px 18px 0;display:flex;gap:10px;align-items:flex-end;overflow:hidden">
+            <img src="./assets/캐릭터_훈이.png" alt="" style="width:96px;flex:none;margin-bottom:-6px">
+            <span style="color:var(--sub);font-size:14px;line-height:1.55;padding-bottom:18px">{{ t.rEmpty }}</span>
+          </div>
+        </sc-if>
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:14px;font-weight:700">{{ t.grammarH }}</span>
+          <span style="font-size:14.5px;line-height:1.6"><b style="font-family:'Gowun Batang',serif">-(으)러 오다/가다</b> — {{ t.g1 }} <span style="color:var(--faint)">구경을 하러 온 사람들</span></span>
+          <span style="font-size:14.5px;line-height:1.6"><b style="font-family:'Gowun Batang',serif">-기 때문에</b> — {{ t.g2 }} <span style="color:var(--faint)">일주일만 피기 때문에</span></span>
+        </div>
+      </aside>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ pWriting }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="07 Writing" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">WRITING</span><h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.wTitle }}</h1></div>
+        <div style="display:flex;background:var(--seg);border-radius:12px;padding:4px">
+          <button sc-camel-on-click="{{ wTabJamo }}" style="border:0;background:{{ wJamoBg }};border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer">{{ t.wTab1 }}</button>
+          <button sc-camel-on-click="{{ wTabSent }}" style="border:0;background:{{ wSentBg }};border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer">{{ t.wTab2 }}</button>
+        </div>
+      </div>
+      <sc-if value="{{ wJamo }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px">
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;position:relative">
+            <span style="font-size:15px;color:var(--sub)">{{ t.jamoPrompt }} <b style="color:var(--ink);font-family:'Gowun Batang',serif;font-size:18px">{{ target.ch }}</b> <span style="color:var(--faint)">({{ target.en }})</span></span>
+            <div style="width:200px;height:200px;border-radius:20px;background:var(--bg);border:2px solid {{ blockBd }};display:grid;place-items:center;font:700 120px/1 'Gowun Batang',serif;position:relative">{{ composed }}
+              <span style="position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:100px 100px;background-position:-1px -1px;opacity:.6;pointer-events:none;border-radius:18px"></span>
+            </div>
+            <span style="font-size:14.5px;font-weight:600;color:{{ jamoMsgC }}">{{ jamoMsg }}</span>
+            <sc-if value="{{ jamoOk }}" hint-placeholder-val="{{ false }}"><img src="./assets/캐릭터_훈이.png" alt="" style="position:absolute;right:10px;bottom:10px;width:96px;pointer-events:none"></sc-if>
+            <button sc-camel-on-click="{{ nextTarget }}" style="border:1px solid var(--ink);background:transparent;border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer">{{ t.nextSyl }}</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <sc-for list="{{ jamoRows }}" as="row" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600;color:var(--sub)">{{ row.label }}</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ row.keys }}" as="k" hint-placeholder-count="6"><button sc-camel-on-click="{{ k.pick }}" style="min-width:48px;height:48px;padding:0 8px;border-radius:12px;border:1.5px solid {{ k.bd }};background:{{ k.bg }};color:{{ k.fg }};font:600 {{ k.fs }} 'Pretendard',sans-serif;cursor:pointer">{{ k.ch }}</button></sc-for></div>
+              </div>
+            </sc-for>
+            <span style="font-size:13.5px;color:var(--faint);line-height:1.6;border-top:1px solid var(--line);padding-top:14px">{{ t.jamoNote }}</span>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ wSent }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px;align-items:start">
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:17px;font-weight:600">{{ t.sentPrompt }}</span>
+            <span style="font-size:13.5px;color:var(--faint)">{{ t.sentHint }} <span style="font-family:'Gowun Batang',serif;color:var(--ink)">-에서, -아서/어서, -고 싶어요</span></span>
+            <textarea value="{{ wText }}" sc-camel-on-change="{{ onWText }}" rows="7" style="border:1px solid var(--line);border-radius:12px;padding:14px;font:400 17px/1.8 'Gowun Batang',serif;resize:vertical;outline:none;background:var(--bg2);color:var(--ink)"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">{{ wCountLabel }}</span><button sc-camel-on-click="{{ checkW }}" style="border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:600;cursor:pointer">{{ t.getFb }}</button></div>
+          </div>
+          <sc-if value="{{ wChecked }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px">
+                <span style="font-size:13px;font-weight:700;color:var(--accent-ink)">{{ t.fbFrom }}</span>
+                <p style="margin:0;font:400 17px/1.9 'Gowun Batang',serif">지난 주말에 친구를 만났어요. 우리는 홍대<del style="color:var(--hot)">에</del><ins style="color:var(--accent-ink);text-decoration:none;background:var(--accent-soft);padding:0 2px">에서</ins> 떡볶이를 먹었어요. 정말 <del style="color:var(--hot)">맛있었어서</del> <ins style="color:var(--accent-ink);text-decoration:none;background:var(--accent-soft);padding:0 2px">맛있어서</ins> 또 가고 싶어요.</p>
+              </div>
+              <div style="background:var(--hot-soft);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px;line-height:1.6"><b style="font-family:'Gowun Batang',serif">에 vs 에서</b><span>{{ t.fb1 }}</span></div>
+              <div style="background:var(--hot-soft);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px;line-height:1.6"><b style="font-family:'Gowun Batang',serif">-아서/어서 + {{ t.pastTense }}</b><span>{{ t.fb2 }}</span></div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ pSpeaking }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="08 Speaking" style="max-width:880px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">{{ t.sEyebrow }}</span><h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.sTitle }}</h1></div><span style="font:500 13px 'IBM Plex Mono',monospace;color:var(--faint)">{{ sIdxLabel }}</span></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:24px;padding:clamp(28px,5vw,48px);display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
+        <div style="display:flex;gap:2px;flex-wrap:wrap;justify-content:center">
+          <sc-for list="{{ sylls }}" as="y" hint-placeholder-count="6"><span style="font:700 clamp(36px,6vw,56px)/1.25 'Gowun Batang',serif;color:{{ y.c }};border-bottom:3px solid {{ y.u }};min-width:.3em">{{ y.ch }}</span></sc-for>
+        </div>
+        <sc-if value="{{ showRoman }}" hint-placeholder-val="{{ true }}"><span style="font:400 15px 'IBM Plex Mono',monospace;color:var(--faint)">{{ sent.roman }}</span></sc-if>
+        <span style="font-size:15px;color:var(--sub)">“{{ sent.en }}” · {{ t.soundsLike }} <b style="color:var(--ink);font-family:'Gowun Batang',serif">{{ sent.pron }}</b></span>
+        <div style="display:flex;align-items:center;gap:28px;margin-top:12px">
+          <button style="width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--bg2);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink2)">{{ t.native }}</button>
+          <button sc-camel-on-click="{{ toggleRec }}" style="width:92px;height:92px;border-radius:50%;border:0;background:{{ recBg }};color:{{ recFg }};cursor:pointer;font-size:15px;font-weight:700;animation:{{ recAnim }}">{{ recLabel }}</button>
+          <button sc-camel-on-click="{{ nextSent }}" style="width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--bg2);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink2)">{{ t.next }}</button>
+        </div>
+        <span style="font-size:13.5px;color:var(--faint)">{{ recHint }}</span>
+      </div>
+      <sc-if value="{{ recDone }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px">
+          <div style="background:#23493F;color:#F5F2EB;border-radius:18px;padding:22px;display:flex;gap:10px;align-items:flex-end;overflow:hidden">
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:#A9C1B6">{{ t.pronLabel }}</span><span style="font:500 52px/1 'Newsreader',serif">{{ sent.score }}</span><span style="font-size:13.5px;color:#DCE5E0">{{ t.pronHint }}</span></div>
+            <img src="./assets/캐릭터-정이.png" alt="" style="width:96px;flex:none;margin:-20px -12px -26px 0">
+          </div>
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:8px;grid-column:span 2"><span style="font-size:14px;font-weight:700">{{ t.tipFrom }}</span><span style="font-size:15px;line-height:1.65;color:var(--ink2)">{{ sentTip }}</span></div>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ pRecord }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="09 My progress" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+      <h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.recH1 }}</h1>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));border-top:1px solid var(--ink);border-bottom:1px solid var(--line)">
+        <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4"><div style="padding:20px 16px 20px 0;display:flex;flex-direction:column;gap:4px"><span style="font-size:13px;color:var(--faint)">{{ s.label }}</span><span style="font:500 36px 'Newsreader','Gowun Batang',serif">{{ s.value }}</span><span style="font-size:12.5px;color:var(--sub)">{{ s.sub }}</span></div></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px">
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px"><span style="font-size:16px;font-weight:700">{{ t.weekH }}</span>
+            <div style="display:flex;gap:10px;font-size:12px;color:var(--sub);flex-wrap:wrap"><sc-for list="{{ legend }}" as="l" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:{{ l.c }}"></span>{{ l.n }}</span></sc-for></div></div>
+          <div style="display:flex;align-items:flex-end;gap:14px;height:170px">
+            <sc-for list="{{ weekBars }}" as="d" hint-placeholder-count="7">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                <div style="width:100%;max-width:30px;display:flex;flex-direction:column-reverse;border-radius:4px;overflow:hidden">
+                  <sc-for list="{{ d.parts }}" as="p" hint-placeholder-count="4"><span style="height:{{ p.h }};background:{{ p.c }}"></span></sc-for>
+                </div>
+                <span style="font-size:12px;color:{{ d.tc }}">{{ d.d }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px">
+          <span style="font-size:16px;font-weight:700">{{ t.skillH }}</span>
+          <sc-for list="{{ skillLv }}" as="s" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:14px"><span><b style="font-family:'Gowun Batang',serif;color:var(--accent-ink)">{{ s.g }}</b> {{ s.n }}</span><span style="color:var(--faint)">{{ s.lv }}</span></div><div style="height:8px;background:var(--line2);border-radius:4px;overflow:hidden"><div style="width:{{ s.w }};height:100%;background:{{ s.c }}"></div></div></div>
+          </sc-for>
+          <span style="font-size:13.5px;color:var(--sub);line-height:1.55;border-top:1px solid var(--line2);padding-top:12px">{{ t.skillTip }}</span>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden">
+        <div style="display:flex;border-bottom:1px solid var(--line);padding:0 12px;overflow-x:auto">
+          <sc-for list="{{ recTabs }}" as="tb" hint-placeholder-count="3"><button sc-camel-on-click="{{ tb.go }}" style="border:0;background:none;padding:16px 12px;font-size:14.5px;font-weight:600;color:{{ tb.fg }};border-bottom:2px solid {{ tb.bd }};cursor:pointer;flex:none">{{ tb.label }} <span style="color:var(--faint);font-weight:400">{{ tb.count }}</span></button></sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ recRows }}" as="r" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.7fr) auto;gap:16px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--line2)">
+              <span style="font:700 17px 'Gowun Batang',serif">{{ r.a }}</span>
+              <span style="font-size:14px;color:var(--ink2)">{{ r.b }}</span>
+              <span style="font-size:12px;color:{{ r.tc }};background:{{ r.tb }};padding:4px 9px;border-radius:6px;white-space:nowrap">{{ r.c }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+  </main>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;startPage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;intro&quot;,&quot;about&quot;,&quot;home&quot;,&quot;tutors&quot;,&quot;chat&quot;,&quot;listening&quot;,&quot;reading&quot;,&quot;writing&quot;,&quot;speaking&quot;,&quot;record&quot;],&quot;default&quot;:&quot;intro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;language&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;en&quot;,&quot;ko&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showRomanization&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;inlineCorrections&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const TUTORS = [
+  {id:'jiwoo', en:'Jiwoo Kim', ko:'김지우', initial:'지우', color:'#E9C2A6', online:true, tags:['daily','beginner'],
+   role:['Everyday conversation','일상 회화'], pace:['Speaks slowly','천천히 말해요'], quote:['Text me like you’d text a friend. I’ll show you when to use casual vs polite speech.','친구한테 문자 보내듯 편하게 써요. 반말과 존댓말을 언제 쓰는지도 알려 줄게요.']},
+  {id:'minho', en:'Minho Park', ko:'박민호', initial:'민호', color:'#B9C7A5', online:true, tags:['business','intermediate'],
+   role:['Business Korean','비즈니스 한국어'], pace:['Normal pace','보통 속도'], quote:['Meetings, emails, team dinners — phrases you can use at a Korean office tomorrow.','회의, 이메일, 회식까지. 내일 회사에서 바로 쓰는 표현으로 연습해요.']},
+  {id:'seoyeon', en:'Seoyeon Lee', ko:'이서연', initial:'서연', color:'#C9BEDD', online:false, tags:['topik','intermediate'],
+   role:['TOPIK & grammar','TOPIK · 문법'], pace:['Detailed feedback','꼼꼼한 첨삭'], quote:['I always explain why something is wrong, so you don’t make the same mistake twice.','틀린 이유를 꼭 설명해 드려요. 같은 실수를 두 번 하지 않게요.']},
+  {id:'haneul', en:'Haneul Choi', ko:'최하늘', initial:'하늘', color:'#A9CBD6', online:true, tags:['pron','beginner'],
+   role:['Pronunciation & intonation','발음 · 억양 교정'], pace:['Voice messages','음성 메시지 위주'], quote:['Fix your final consonants and rhythm, and you’ll sound far more natural. Send me a recording.','받침과 리듬만 잡아도 훨씬 자연스러워져요. 녹음해서 보내 주세요.']},
+  {id:'dohyun', en:'Dohyun Jung', ko:'정도현', initial:'도현', color:'#E4D29B', online:false, tags:['daily','intermediate'],
+   role:['Korean through K-dramas','드라마로 배우는 표현'], pace:['Normal pace','보통 속도'], quote:['That line from last night’s drama — let’s talk about how people really use it.','어젯밤 본 드라마 대사, 실제로 어떻게 쓰는지 같이 이야기해요.']},
+  {id:'sora', en:'Sora Han', ko:'한소라', initial:'소라', color:'#EBB7B7', online:true, tags:['beginner','pron'],
+   role:['Absolute beginners','왕초보 · 한글 떼기'], pace:['Lots of English','영어 설명 많이'], quote:['Starting from ㄱ, ㄴ, ㄷ is perfectly fine. We’ll read one letter at a time.','ㄱ, ㄴ, ㄷ부터 시작해도 괜찮아요. 한 글자씩 같이 읽어요.']}
+];
+const TAGS = {daily:['Daily talk','일상 회화'], business:['Business','비즈니스'], topik:['TOPIK','TOPIK'], pron:['Pronunciation','발음'], beginner:['Beginner','초급'], intermediate:['Intermediate','중급']};
+const TODAY='2026-09-26';
+const SEED = {
+  jiwoo: [
+    {from:'t', text:'에마 씨, 좋은 아침이에요! 주말에 뭐 할 거예요?', tr:'Good morning, Emma! What are you doing this weekend?', time:'09:12', date:TODAY},
+    {from:'me', text:'저는 친구하고 한강에 갈 거예요.', time:'09:14'},
+    {from:'t', text:'와, 좋겠다! 한강에서 뭐 하고 싶어요?', tr:'Oh, nice! What do you want to do at the Han River?', time:'09:14'},
+    {from:'me', text:'치킨을 먹고 자전거를 탈 거예요.', time:'09:15'},
+    {from:'me', text:'어제는 비가 많이 왔어서 못 갔어요.', time:'09:16', fix:{wrong:'왔어서', right:'와서', note:['-아서/어서 never takes the past tense: 오다 → 와서','-아서/어서 앞에는 과거형을 쓰지 않아요: 오다 → 와서']}},
+    {from:'t', text:'맞아요, 어제 비가 정말 많이 왔죠. 오늘은 맑아서 다행이에요.', tr:'Right, it really poured yesterday. Glad it’s clear today.', time:'09:17'},
+    {from:'t', text:'참, 한강에서 치킨 먹는 걸 “치맥”이라고 해요. 치킨 + 맥주!', tr:'By the way, eating chicken by the river is called “chimaek” — chicken + beer!', time:'09:17'}
+  ],
+  minho: [{from:'t', text:'월요일 회의 준비는 잘 되고 있어요? 오늘은 자기소개를 연습해 봐요.', tr:'How’s prep for Monday’s meeting going? Let’s practice introducing yourself.', time:'18:40', date:'2026-09-25'}],
+  seoyeon: [{from:'t', text:'어제 보낸 작문 첨삭했어요. ‘에’와 ‘에서’만 조심하면 완벽해요!', tr:'I corrected your writing. Just watch 에 vs 에서 and it’s perfect!', time:'21:05', date:'2026-09-24'}],
+  haneul: [{from:'t', text:'“했어요”는 [해써요]처럼 이어서 읽어요. 한번 녹음해 볼까요?', tr:'Read “했어요” linked together, like [hae-sseo-yo]. Want to try recording it?', time:'10:30', date:'2026-09-22'}],
+  dohyun: [{from:'t', text:'안녕하세요! 요즘 어떤 드라마 보고 있어요?', tr:'Hi! What drama are you watching these days?', time:'08:02', date:TODAY}],
+  sora: [{from:'t', text:'반가워요! 오늘은 ‘ㅎ’ 소리를 같이 연습해요. 하, 허, 호, 후!', tr:'Nice to meet you! Let’s practice the ㅎ sound today. Ha, heo, ho, hu!', time:'07:45', date:TODAY}]
+};
+const REPLIES = [
+  {text:'오, 그렇군요! 조금 더 자세히 말해 줄 수 있어요?', tr:'Oh, I see! Can you tell me a bit more?'},
+  {text:'좋아요. 방금 문장 아주 자연스러웠어요.', tr:'Nice — that sentence sounded really natural.'},
+  {text:'그럴 때는 “같이 갈까요?”처럼 ‘-(으)ㄹ까요?’를 써 보세요.', tr:'Try ‘-(으)ㄹ까요?’ there, like “같이 갈까요?” (Shall we go together?)'},
+  {text:'하하, 재미있네요. 그다음에는 뭐 했어요?', tr:'Haha, that’s fun. What did you do after that?'}
+];
+const QUICK = [['다시 한번 말해 주세요','Say it again'],['무슨 뜻이에요?','What does it mean?'],['천천히 말해 주세요','Slower please'],['예문 보여 주세요','Show an example']];
+const SKILLS = [
+  {glyph:'듣', no:'01', name:['Listening','듣기'], ko:['듣기','Listening'], desc:['Short real-life dialogues — cafés, subways, phone calls — at adjustable speed, with dictation.','카페, 지하철, 전화 등 실제 상황 대화를 속도 조절과 받아쓰기로 연습해요.']},
+  {glyph:'읽', no:'02', name:['Reading','읽기'], ko:['읽기','Reading'], desc:['Graded stories where every word is one tap from its meaning and can be saved to your word bank.','수준별 글에서 모르는 단어를 누르면 바로 뜻을 보고 단어장에 저장해요.']},
+  {glyph:'쓰', no:'03', name:['Writing','쓰기'], ko:['쓰기','Writing'], desc:['Build syllable blocks from scratch, then write short answers and get line-by-line corrections.','자모로 글자를 직접 조합하고, 짧은 글을 써서 문장별 첨삭을 받아요.']},
+  {glyph:'말', no:'04', name:['Speaking','말하기'], ko:['말하기','Speaking'], desc:['Shadow native audio and see which syllables need work, with tips on linking and final consonants.','원어민 음성을 따라 말하고, 연음과 받침 팁으로 약한 음절을 고쳐요.']}
+];
+const SCRIPT = [
+  {who:['Staff','직원'], text:'어서 오세요. 주문하시겠어요?', en:'Welcome. Are you ready to order?'},
+  {who:['Customer','손님'], text:'아이스 아메리카노 한 잔하고 치즈 케이크 하나 주세요.', en:'One iced americano and a cheesecake, please.'},
+  {who:['Staff','직원'], text:'드시고 가세요, 아니면 포장해 드릴까요?', en:'For here, or shall I pack it to go?'},
+  {who:['Customer','손님'], text:'먹고 갈게요.', en:'I’ll eat here.'},
+  {who:['Staff','직원'], text:'네, 모두 만 이천 원입니다.', en:'Okay, that’s 12,000 won in total.'}
+];
+const LQ = [
+  {q:'손님은 무엇을 주문했어요?', en:'What did the customer order?', opts:['따뜻한 아메리카노와 쿠키','아이스 아메리카노와 치즈 케이크','라테와 치즈 케이크'], a:1},
+  {q:'손님은 어디에서 먹어요?', en:'Where will the customer eat?', opts:['카페에서','집에서','회사에서'], a:0},
+  {q:'모두 얼마예요?', en:'How much is it in total?', opts:['2,000원','10,200원','12,000원'], a:2}
+];
+const GLOSS = {
+  '벚꽃':{base:'벚꽃', pos:['noun','명사'], en:'cherry blossom', ex:'벚꽃이 정말 예뻐요. — The cherry blossoms are really pretty.'},
+  '활짝':{base:'활짝', pos:['adverb','부사'], en:'wide open; in full bloom', ex:'꽃이 활짝 폈어요. — The flowers are in full bloom.'},
+  '구경':{base:'구경', pos:['noun','명사'], en:'looking around, sightseeing', ex:'시장 구경을 가요. — Let’s go look around the market.'},
+  '붐벼요':{base:'붐비다', pos:['verb','동사'], en:'to be crowded', ex:'주말에는 지하철이 붐벼요. — The subway is crowded on weekends.'},
+  '도시락':{base:'도시락', pos:['noun','명사'], en:'packed lunch, lunch box', ex:'엄마가 도시락을 싸 줬어요. — Mom packed me a lunch.'},
+  '분위기':{base:'분위기', pos:['noun','명사'], en:'atmosphere, mood', ex:'이 카페는 분위기가 좋아요. — This café has a nice vibe.'},
+  '서둘러야':{base:'서두르다', pos:['verb','동사'], en:'to hurry', ex:'늦었어요. 서둘러요! — We’re late. Hurry!'}
+};
+const PARAS = [
+  ['매년 4월이 되면 서울 곳곳에 ',['벚꽃'],'이 ',['활짝'],' 펴요. 특히 여의도와 석촌호수는 벚꽃 ',['구경'],'을 하러 온 사람들로 ',['붐벼요'],'.'],
+  ['사람들은 꽃 아래에서 사진을 찍고, 돗자리를 펴고 앉아서 ',['도시락'],'을 먹어요. 밤에는 조명이 켜져서 낮과는 다른 ',['분위기'],'를 느낄 수 있어요.'],
+  ['하지만 벚꽃은 일주일 정도만 피기 때문에 구경하고 싶으면 ',['서둘러야'],' 해요.']
+];
+const RQ = [
+  {q:'벚꽃은 언제 펴요?', en:'When do the blossoms bloom?', opts:['4월','7월','10월'], a:0},
+  {q:'밤에는 왜 분위기가 달라요?', en:'Why is the mood different at night?', opts:['조명이 켜져서','사람이 없어서','비가 와서'], a:0}
+];
+const JL = [['ㄱ',0],['ㄴ',2],['ㄷ',3],['ㄹ',5],['ㅁ',6],['ㅂ',7],['ㅅ',9],['ㅇ',11],['ㅈ',12],['ㅎ',18]];
+const JV = [['ㅏ',0],['ㅓ',4],['ㅗ',8],['ㅜ',13],['ㅡ',18],['ㅣ',20]];
+const TARGETS = [{ch:'한',L:18,V:0,T:4,en:'han · 한국'},{ch:'글',L:0,V:18,T:8,en:'geul · writing'},{ch:'말',L:6,V:0,T:8,en:'mal · speech'},{ch:'공',L:0,V:8,T:21,en:'gong · ball'}];
+const SENTS = [
+  {text:'주말에 뭐 했어요?', roman:'ju-ma-re mwo hae-sseo-yo?', en:'What did you do on the weekend?', pron:'[주마레 뭐 해써요]', score:86, weak:[6,7], tip:['Great rhythm. “했어요” should link into [해써요] — hold the ㅆ a touch longer, and let your pitch rise at the end because it’s a question.','리듬이 좋아요. “했어요”는 [해써요]로 이어 읽어요. ㅆ을 조금 더 길게, 질문이니까 끝을 올려 주세요.']},
+  {text:'밥 먹었어요?', roman:'bap meo-geo-sseo-yo?', en:'Have you eaten?', pron:'[밤머거써요]', score:79, weak:[0,3], tip:['“밥” before ㅁ becomes [밤] — the ㅂ turns nasal. Try saying 밤머거써요 in one breath.','“밥” 뒤에 ㅁ이 오면 [밤]으로 소리 나요. 밤머거써요를 한 번에 말해 보세요.']},
+  {text:'다시 한번 말해 주세요.', roman:'da-si han-beon mal-hae ju-se-yo', en:'Could you say that again?', pron:'[다시 한번 마래 주세요]', score:91, weak:[7], tip:['Very clear! In 말해, natives soften the ㅎ so it sounds close to [마래].','아주 또렷해요! 말해의 ㅎ은 약하게 [마래]처럼 발음해요.']}
+];
+const REC = {
+  vocab:[['벚꽃','cherry blossom','due'],['구경','sightseeing, looking around','due'],['치맥','chicken + beer','new'],['분위기','atmosphere, mood','d3'],['포장하다','to pack to go','d5']],
+  mistakes:[['왔어서 → 와서','-아서/어서 never takes the past tense','chat'],['홍대에 → 홍대에서','Place of an action takes 에서','writing'],['[밥 머거] → [밤머거]','ㅂ before ㅁ becomes nasal','speaking'],['맛있었어서 → 맛있어서','Same rule as 와서','writing']],
+  phrases:[['밥 먹었어요?','Casual “how are you?”','speaking'],['잘 먹겠습니다','Said before eating','chat'],['수고하셨습니다','“Thanks for your hard work”','chatM']]
+};
+const RTAG = {due:['Due today','오늘 복습'],new:['New','새 단어'],d3:['In 3 days','3일 후'],d5:['In 5 days','5일 후'],chat:['Chat · Jiwoo','대화 · 지우'],chatM:['Chat · Minho','대화 · 민호'],writing:['Writing','쓰기'],speaking:['Speaking','말하기']};
+const COLORS = [['Chat','대화','#23493F'],['Listening','듣기','#5B7FA6'],['Reading','읽기','#C9A24A'],['Writing','쓰기','#C8502A'],['Speaking','말하기','#9B8BBF']];
+const WEEK = [[10,6,5,0,4],[12,0,8,6,5],[8,7,0,0,6],[15,5,6,8,0],[10,8,7,0,5],[6,4,0,0,0],[0,0,0,0,0]];
+const DAYS = [['Mon','월'],['Tue','화'],['Wed','수'],['Thu','목'],['Fri','금'],['Sat','토'],['Sun','일']];
+const WD = [['Sunday','일요일'],['Monday','월요일'],['Tuesday','화요일'],['Wednesday','수요일'],['Thursday','목요일'],['Friday','금요일'],['Saturday','토요일']];
+const MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const T = {
+en:{
+ navHow:'How it works', navTutors:'Tutors', navAbout:'About us', login:'Log in', startFree:'Start free', themeTitle:'Toggle dark mode',
+ heroEyebrow:'한국어, 대화로 배워요', heroH1:'Learn Korean by texting a real tutor.',
+ heroP:'Pick a tutor and chat the way Koreans actually message each other. Mistakes are corrected gently, right inside the conversation — then short listening, reading, writing and speaking drills lock in what you used.',
+ ctaTutor:'Choose a tutor', ctaLevel:'Take the 5-min level check', heroNote:'From your very first ㄱ to TOPIK 6 · Explanations in English',
+ mockName:'Jiwoo Kim', mockRole:'Everyday talk', correction:'CORRECTION', mockRule:'-아서/어서 never takes the past tense.',
+ callout:'Hunie saves every correction to your mistake notes.',
+ howH2:'Start with conversation. Lock it in with four skills.', howP:'Words and grammar from yesterday’s chat come back the next day as listening, reading, writing and speaking practice.',
+ guidesEyebrow:'MEET YOUR GUIDES', guidesH2:'Hunie and Jeongie walk with you, every step.',
+ guidesP:'Named after 훈민정음 — the original name of Hangul — our two guides show up when you need a nudge, a hint or a small celebration.',
+ hunName:'훈이 Hunie', hunRole:'Grammar & writing buddy', hunDesc:'Never without his pencil. Hunie keeps your mistake notes tidy, explains why a sentence went wrong, and cheers when you build your first syllable block.',
+ jeongName:'정이 Jeongie', jeongRole:'Expressions & culture guide', jeongDesc:'Always carrying her “Learn Korean” book. Jeongie brings you the expression of the day, shows how Koreans really say things, and celebrates your speaking wins.',
+ tutorsH2:'Who will you talk to today?', seeAll:'See all tutors', finalH2:'Your first message can just be “안녕하세요.”', startFree2:'Start for free',
+ footerLinks:'Terms · Privacy · Help',
+ aboutEyebrow:'ABOUT US', aboutH1:'Korean is best learned the way it’s lived — in conversation.',
+ aboutP1:'Hangul Now connects learners around the world with Korean tutors inside a messenger they already know how to use. No classrooms, no scheduling — just a chat that fits between the rest of your day.',
+ aboutP2:'Every message becomes material: corrections turn into mistake notes, new words become flashcards, and tomorrow’s listening and speaking drills are built from what you actually tried to say.',
+ originLabel:'THE NAME BEHIND OUR GUIDES', originH:'훈민정음 · “the proper sounds for teaching the people”',
+ originP:'In 1443, King Sejong created an alphabet so that anyone could learn to read and write. That idea — that Korean should be easy to start — is the reason we exist. Our guides Hunie (훈) and Jeongie (정) take their names from it.',
+ princH:'What we believe', contactH:'Say hello', contactP:'Questions about learning, tutoring with us, or bringing Hangul Now to your school or company — we read every message.',
+ cLearners:'Learners & support', cPartners:'Schools, companies & tutors', cOffice:'Seoul, Republic of Korea',
+ emmaLevel:'Beginner 2 · 12-day streak',
+ homeDate:'Saturday, September 26', homeHello:'Good morning, Emma.', homeHelloSub:'좋은 아침이에요', levelFrom:'Beginner 2 → Beginner 3',
+ planH:'Today’s plan', exprLabel:'EXPRESSION OF THE DAY',
+ exprDesc:'Literally “Have you eaten?” — but really a warm “How are you?” Answer with “네, 먹었어요. ○○ 씨는요?”',
+ exprBtn:'Say it out loud', streakT:'12 days in a row', continueChat:'Continue your chat', reviewLabel:'Time to review', reviewT:'18 words · 3 corrected sentences',
+ reviewP:'Yesterday you mixed up “-아서/어서” with the past tense. Want to rebuild that sentence?',
+ tutorsH1:'Who would you like to talk to?', tutorsP:'Pick a tutor and a chat room opens right away. You can switch any time.', startChat:'Start chatting',
+ chats:'Chats', newTutor:'+ New tutor', placeholder:'Reply in Korean — mistakes are welcome', send:'Send', savedNotes:'Saved to mistake notes', tapTr:'Tap to translate',
+ lEyebrow:'LISTENING · BEGINNER 2', lTitle:'Ordering at a café', lTitleSub:'카페에서 주문하기', lSub:'Listen twice, then answer. Open the script only when you’re stuck.',
+ lDictLabel:'DICTATION', lDictHint:'Type the missing word you heard.',
+ rEyebrow:'READING · BEGINNER 3 · 3 MIN', rSubtitle:'When the cherry blossoms bloom, Seoul turns pink · Tap an underlined word to see its meaning.', rCheck:'CHECK YOUR UNDERSTANDING',
+ rEmpty:'Tap any underlined word — Hunie will show its meaning and an example here.', grammarH:'Grammar in this story', g1:'to come/go in order to…', g2:'because…',
+ wTitle:'Writing practice', wTab1:'Build a syllable', wTab2:'Write sentences', jamoPrompt:'Combine a consonant, a vowel and a final consonant to make', nextSyl:'Next syllable',
+ jamoNote:'Every Korean syllable is a block: consonant + vowel (+ optional final). ㅎ + ㅏ + ㄴ = 한.',
+ sentPrompt:'What did you do last weekend? Write three sentences.', sentHint:'Try using', getFb:'Get feedback', fbFrom:'Feedback from Seoyeon', pastTense:'past tense',
+ fb1:'Use 에서 for the place where an action happens (eating, studying, meeting). 에 is for where you go or where something is.',
+ fb2:'Never put 았/었 before -아서/어서 — the main verb carries the tense. 맛있다 → 맛있어서',
+ sEyebrow:'SPEAKING · SHADOWING', sTitle:'Say it like a native', soundsLike:'sounds like', native:'Native', next:'Next', pronLabel:'Pronunciation', pronHint:'Practice the syllables marked in red.', tipFrom:'Tip from Haneul',
+ recH1:'My progress', weekH:'Study time this week', skillH:'Skill levels', skillTip:'Writing is growing the slowest. Add one sentence exercise a day this week?'
+},
+ko:{
+ navHow:'학습 방법', navTutors:'튜터', navAbout:'회사 소개', login:'로그인', startFree:'무료로 시작', themeTitle:'다크 모드 전환',
+ heroEyebrow:'Learn Korean by chatting', heroH1:'실제 튜터와 메시지를 주고받으며 한국어를 배워요.',
+ heroP:'튜터를 고르고, 한국 사람들이 실제로 메시지를 주고받는 방식 그대로 대화해요. 실수는 대화 안에서 바로 부드럽게 고쳐 주고, 짧은 듣기·읽기·쓰기·말하기 연습으로 쓴 표현을 다시 익혀요.',
+ ctaTutor:'튜터 고르기', ctaLevel:'5분 레벨 테스트', heroNote:'첫 자음 ㄱ부터 TOPIK 6급까지 · 영어 해설 제공',
+ mockName:'김지우', mockRole:'일상 회화', correction:'고쳐 쓰기', mockRule:'-아서/어서 앞에는 과거형을 쓰지 않아요.',
+ callout:'훈이가 모든 교정을 오답 노트에 모아 둬요.',
+ howH2:'대화로 시작하고, 네 가지 기술로 굳혀요.', howP:'어제 대화에서 나온 단어와 문법이 다음 날 듣기·읽기·쓰기·말하기 연습으로 다시 돌아와요.',
+ guidesEyebrow:'학습 도우미', guidesH2:'훈이와 정이가 한 걸음씩 함께해요.',
+ guidesP:'한글의 원래 이름인 훈민정음에서 이름을 따온 두 친구가, 힌트가 필요할 때나 칭찬받을 때 나타나요.',
+ hunName:'훈이 Hunie', hunRole:'문법 · 쓰기 친구', hunDesc:'연필을 늘 들고 다니는 훈이는 오답 노트를 정리하고, 문장이 왜 틀렸는지 알려 주고, 첫 글자를 완성하면 함께 기뻐해요.',
+ jeongName:'정이 Jeongie', jeongRole:'표현 · 문화 안내자', jeongDesc:'“Learn Korean” 책을 품에 안은 정이는 오늘의 표현을 전해 주고, 한국 사람들이 실제로 쓰는 말투를 보여 주고, 말하기 성공을 축하해요.',
+ tutorsH2:'오늘은 누구와 이야기할까요?', seeAll:'튜터 전체 보기', finalH2:'첫 메시지는 “안녕하세요”면 충분해요.', startFree2:'무료로 시작하기',
+ footerLinks:'이용약관 · 개인정보처리방침 · 고객센터',
+ aboutEyebrow:'회사 소개', aboutH1:'한국어는 대화 속에서 가장 잘 배울 수 있다고 믿어요.',
+ aboutP1:'Hangul Now는 전 세계 학습자와 한국어 튜터를 익숙한 메신저 화면으로 연결해요. 교실도, 일정 조율도 없이 하루 틈틈이 나누는 대화가 곧 수업이 돼요.',
+ aboutP2:'모든 메시지가 학습 자료가 돼요. 교정은 오답 노트로, 새 단어는 단어 카드로, 내일의 듣기·말하기 연습은 내가 실제로 말하려 했던 문장으로 만들어져요.',
+ originLabel:'도우미 이름의 유래', originH:'훈민정음 · “백성을 가르치는 바른 소리”',
+ originP:'1443년 세종대왕은 누구나 쉽게 읽고 쓸 수 있도록 한글을 만들었어요. 한국어는 쉽게 시작할 수 있어야 한다는 그 생각이 저희가 존재하는 이유예요. 훈이(훈)와 정이(정)의 이름도 여기에서 왔어요.',
+ princH:'우리가 믿는 것', contactH:'문의하기', contactP:'학습 문의, 튜터 지원, 학교나 회사 도입 상담까지 — 모든 메시지를 꼼꼼히 읽어요.',
+ cLearners:'학습자 · 고객 지원', cPartners:'학교 · 기업 · 튜터 제휴', cOffice:'대한민국 서울',
+ emmaLevel:'초급 2 · 12일 연속',
+ homeDate:'9월 26일 토요일', homeHello:'좋은 아침이에요, 에마 씨.', homeHelloSub:'', levelFrom:'초급 2 → 초급 3',
+ planH:'오늘의 계획', exprLabel:'오늘의 표현',
+ exprDesc:'직역하면 “밥 먹었어요?”지만 실제로는 “잘 지내요?” 같은 따뜻한 인사예요. “네, 먹었어요. ○○ 씨는요?”로 답해 보세요.',
+ exprBtn:'소리 내어 말해 보기', streakT:'12일 연속 공부 중', continueChat:'이어서 대화하기', reviewLabel:'복습할 시간이에요', reviewT:'단어 18개 · 교정 문장 3개',
+ reviewP:'어제 “-아서/어서”에 과거형을 붙였어요. 그 문장을 다시 만들어 볼까요?',
+ tutorsH1:'어떤 튜터와 이야기할까요?', tutorsP:'튜터를 고르면 바로 채팅방이 열려요. 언제든 바꿀 수 있어요.', startChat:'대화 시작',
+ chats:'채팅', newTutor:'+ 새 튜터', placeholder:'한국어로 답해 보세요. 틀려도 괜찮아요', send:'전송', savedNotes:'오답 노트에 저장됨', tapTr:'눌러서 번역 보기',
+ lEyebrow:'듣기 · 초급 2', lTitle:'카페에서 주문하기', lTitleSub:'Ordering at a café', lSub:'두 번 듣고 문제를 풀어 보세요. 막힐 때만 대본을 열어요.',
+ lDictLabel:'받아쓰기', lDictHint:'들은 단어를 빈칸에 써 보세요.',
+ rEyebrow:'읽기 · 초급 3 · 3분', rSubtitle:'밑줄 친 단어를 누르면 뜻을 볼 수 있어요.', rCheck:'내용 확인',
+ rEmpty:'밑줄 친 단어를 눌러 보세요. 훈이가 뜻과 예문을 보여 줄게요.', grammarH:'이 글의 문법', g1:'목적 (~하려고 오다/가다)', g2:'이유 (~때문에)',
+ wTitle:'쓰기 연습', wTab1:'글자 만들기', wTab2:'문장 쓰기', jamoPrompt:'자음 + 모음 + 받침으로 만들어 보세요:', nextSyl:'다음 글자',
+ jamoNote:'한국어 글자는 블록이에요: 자음 + 모음 (+ 받침). ㅎ + ㅏ + ㄴ = 한.',
+ sentPrompt:'지난 주말에 뭐 했어요? 세 문장으로 써 보세요.', sentHint:'써 볼 표현:', getFb:'첨삭 받기', fbFrom:'서연 튜터의 첨삭', pastTense:'과거형',
+ fb1:'먹다, 공부하다, 만나다처럼 행동이 일어나는 장소에는 ‘에서’를 써요. ‘에’는 가는 곳이나 있는 곳에 써요.',
+ fb2:'-아서/어서 앞에는 았/었을 붙이지 않아요. 시제는 뒤 문장이 나타내요. 맛있다 → 맛있어서',
+ sEyebrow:'말하기 · 따라 말하기', sTitle:'원어민처럼 말해 보기', soundsLike:'실제 발음', native:'원어민', next:'다음', pronLabel:'발음 정확도', pronHint:'빨간 글자만 다시 연습해 보세요.', tipFrom:'하늘 튜터의 팁',
+ recH1:'나의 학습 기록', weekH:'이번 주 학습 시간', skillH:'영역별 실력', skillTip:'쓰기가 가장 천천히 늘고 있어요. 이번 주는 문장 쓰기를 하루 한 번 추가해 볼까요?'
+}};
+
+function fmtTime(hm, L){ let [h,m]=hm.split(':').map(Number); const pm=h>=12; const h12=h%12||12; return L===1?(pm?'오후 ':'오전 ')+h12+':'+String(m).padStart(2,'0'):h12+':'+String(m).padStart(2,'0')+(pm?' PM':' AM'); }
+function fmtDate(iso, L){ const d=new Date(iso+'T12:00:00'); return L===1?`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()][1]}`:`${WD[d.getDay()][0]}, ${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; }
+function listDate(iso, hm, L){ if(iso===TODAY) return fmtTime(hm,L); if(iso==='2026-09-25') return L?'어제':'Yesterday'; const d=new Date(iso+'T12:00:00'); return L?`${d.getMonth()+1}월 ${d.getDate()}일`:MON[d.getMonth()].slice(0,3)+' '+d.getDate(); }
+function nowHM(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+
+class Component extends DCLogic {
+  state = { page:null, lang:null, theme:null, tutorId:'jiwoo', msgs:JSON.parse(JSON.stringify(SEED)), draft:'', typing:false, w:1200, trAll:false, trOpen:{}, filter:'all', playing:false, prog:0.18, speed:1, showScript:false, lAns:{}, dict:'', wordKey:null, saved:{}, rAns:{}, wTab:'jamo', ti:0, L:null, V:null, T:null, wText:'지난 주말에 친구를 만났어요. 우리는 홍대에 떡볶이를 먹었어요. 정말 맛있었어서 또 가고 싶어요.', wChecked:false, sIdx:0, rec:'idle', recTab:'vocab', unread:{minho:1, seoyeon:1}, ri:0 };
+  msgRef = React.createRef();
+  componentDidMount(){
+    this.onResize=()=>this.setState({w:window.innerWidth}); this.onResize(); window.addEventListener('resize',this.onResize);
+    let lang=null, theme=null; try{lang=localStorage.getItem('hn-lang'); theme=localStorage.getItem('hn-theme');}catch(e){}
+    this.setState({lang, theme}); this.applyTheme();
+  }
+  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); clearInterval(this.iv); clearTimeout(this.tt); }
+  componentDidUpdate(pp,ps){
+    this.applyTheme();
+    const el=this.msgRef.current; if(el && (ps.msgs!==this.state.msgs||ps.page!==this.state.page||ps.tutorId!==this.state.tutorId||ps.typing!==this.state.typing)) el.scrollTop=el.scrollHeight;
+  }
+  themeNow(){ return this.state.theme ?? this.props.theme ?? 'light'; }
+  langNow(){ return this.state.lang ?? this.props.language ?? 'en'; }
+  applyTheme(){ document.documentElement.setAttribute('data-theme', this.themeNow()); }
+  setLang(l){ this.setState({lang:l}); try{localStorage.setItem('hn-lang',l);}catch(e){} }
+  setTheme(t){ this.setState({theme:t}); try{localStorage.setItem('hn-theme',t);}catch(e){} }
+  go(p){ this.setState({page:p}); window.scrollTo(0,0); }
+  openTutor(id){ const u={...this.state.unread}; delete u[id]; this.setState({page:'chat', tutorId:id, unread:u}); window.scrollTo(0,0); }
+  sendText(text){
+    text=(text||'').trim(); if(!text) return;
+    const id=this.state.tutorId;
+    const list=[...this.state.msgs[id], {from:'me', text, time:nowHM(), pending:true}];
+    this.setState({msgs:{...this.state.msgs,[id]:list}, draft:'', typing:true});
+    clearTimeout(this.tt);
+    this.tt=setTimeout(()=>{
+      const r=REPLIES[this.state.ri%REPLIES.length];
+      const cur=this.state.msgs[id].map(m=>({...m,pending:false}));
+      cur.push({from:'t', text:r.text, tr:r.tr, time:nowHM()});
+      this.setState({msgs:{...this.state.msgs,[id]:cur}, typing:false, ri:this.state.ri+1});
+    },1600);
+  }
+  togglePlay(){
+    if(this.state.playing){ clearInterval(this.iv); this.setState({playing:false}); return; }
+    if(this.state.prog>=1) this.setState({prog:0});
+    this.setState({playing:true});
+    this.iv=setInterval(()=>{ const p=Math.min(1,this.state.prog+0.25/108*this.state.speed); this.setState({prog:p}); if(p>=1){clearInterval(this.iv);this.setState({playing:false});} },250);
+  }
+  renderVals(){
+    const s=this.state, P=this.props;
+    const lang=this.langNow(), L=lang==='ko'?1:0, t=T[lang];
+    const theme=this.themeNow(), dark=theme==='dark';
+    const page=s.page ?? P.startPage ?? 'intro';
+    const wide=s.w>=860;
+    const showRoman=P.showRomanization ?? true;
+    const tz=tu=>({...tu, name:L?tu.ko:tu.en, alt:L?tu.en:tu.ko, role:tu.role[L], pace:tu.pace[L], quote:tu.quote[L], tagLabels:tu.tags.map(k=>TAGS[k][L])});
+    const tutor=tz(TUTORS.find(x=>x.id===s.tutorId));
+    const go=p=>()=>this.go(p);
+    const goChat = go('chat');
+    const goWriting = go('writing');
+    const goSpeaking = go('speaking');
+    const goReading = go('reading');
+    const goTutors = go('tutors');
+    const unreadTotal=Object.values(s.unread).reduce((a,b)=>a+b,0);
+    const navDef=[
+      {label:L?'학습 (LEARN)':'LEARN', items:[['home',L?'오늘의 학습':'Today','오','Daily Plan'],['tutors',L?'튜터 선택':'Tutors','튜','3 Tutors'],['chat',L?'튜터 채팅':'Chat','대',L?'실시간 대화':'Live Chat']]},
+      {label:L?'4대 영역 연습 (PRACTICE)':'PRACTICE', items:[['listening',L?'듣기 연습':'Listening','듣','Audio STT'],['reading',L?'읽기 독해':'Reading','읽','Kiwi POS'],['writing',L?'쓰기 조합':'Writing','쓰','Diff Blocks'],['speaking',L?'말하기 코치':'Speaking','말','Voice Coach']]},
+      {label:L?'나의 기록 (YOU)':'YOU', items:[['record',L?'학습 기록':'My progress','기','SRS Stats'],['about',L?'서비스 소개':'About us','소','Our Story']]}
+    ];
+    const mk=([k,l,g,tag])=>{
+      const a=page===k;
+      return {label:l,glyph:g,tag:tag||'',go:go(k),bg:a?'var(--accent)':'transparent',fg:a?'#F5F2EB':'var(--ink2)',bd:a?'rgba(245,242,235,.35)':'var(--line3)',fw:a?'600':'500',hasBadge:k==='chat'&&unreadTotal>0,badge:unreadTotal};
+    };
+    const navGroups=navDef.map(g=>({label:g.label, items:g.items.map(mk)}));
+    const navFlat=navDef.flatMap(g=>g.items).map(it=>{const n=mk(it);const a=page===it[0];return {...n,bd:a?'var(--accent)':'var(--line)',bg:a?'var(--accent)':'var(--card)'};});
+
+    const msgList=s.msgs[s.tutorId]||[];
+    const msgs=msgList.map((m,i)=>{
+      const prev=msgList[i-1], first=!prev||prev.from!==m.from||!!m.date;
+      const trOpen=s.trAll||!!s.trOpen[s.tutorId+i];
+      return {...m, isTutor:m.from==='t', isMe:m.from==='me', hasDate:!!m.date, dateLabel:m.date?fmtDate(m.date,L):'', timeLabel:fmtTime(m.time,L), first, mt:first&&i>0?'8px':'0', avOp:first?1:0,
+        rad:m.from==='t'?(first?'4px 14px 14px 14px':'14px'):(first?'14px 4px 14px 14px':'14px'),
+        showTr:m.from==='t'&&trOpen, pending:!!m.pending, hasFix:!!m.fix&&(P.inlineCorrections ?? true), fixWrong:m.fix?.wrong, fixRight:m.fix?.right, fixNote:m.fix?.note[L],
+        toggleTr:()=>this.setState({trOpen:{...s.trOpen,[s.tutorId+i]:!s.trOpen[s.tutorId+i]}})};
+    });
+    const lastDate=l=>{let d=TODAY;for(const m of l) if(m.date) d=m.date; return d;};
+    const chatList=TUTORS.map(tu=>{const l=s.msgs[tu.id], last=l[l.length-1];return {...tz(tu), open:()=>this.openTutor(tu.id), last:last.text, time:listDate(lastDate(l),last.time,L), unread:s.unread[tu.id]||0, hasUnread:!!s.unread[tu.id], bg:tu.id===s.tutorId?'var(--chip)':'var(--card)'};});
+    const jl=s.msgs.jiwoo;
+    const typingDots=React.createElement('div',{style:{background:'var(--tbubble)',borderRadius:14,padding:'12px 14px',display:'flex',gap:4}},[0,1,2].map(i=>React.createElement('span',{key:i,style:{width:6,height:6,borderRadius:3,background:'#8A96A0',animation:`dot 1.2s ${i*0.15}s infinite`}})));
+
+    const filterOpts=[['all',L?'전체':'All'],...['daily','business','topik','pron','beginner'].map(k=>[k,TAGS[k][L]])];
+    const filters=filterOpts.map(([k,l])=>{const a=s.filter===k;return {label:l,go:()=>this.setState({filter:k}),bg:a?'var(--solid)':'var(--card)',fg:a?'var(--on-solid)':'var(--ink2)',bd:a?'var(--solid)':'var(--line)'};});
+    const tutorList=TUTORS.filter(tu=>s.filter==='all'||tu.tags.includes(s.filter)).map(tu=>{const z=tz(tu);return {...z,open:()=>this.openTutor(tu.id),status:(tu.online?(L?'지금 접속 중 · ':'Online now · '):(L?'몇 시간 내 답장 · ':'Replies within hours · '))+z.pace};});
+
+    const planDef=[['chat','대',['Reply to Jiwoo','지우에게 답장하기'],['Keep the Han River chat going','한강 이야기 이어 가기'],'5',false],['listening','듣',['Ordering at a café','카페에서 주문하기'],['Listening · Beginner 2','듣기 · 초급 2'],'3',true],['reading','읽',['Cherry blossom season','벚꽃 구경'],['Reading · 7 new words','읽기 · 새 단어 7개'],'4',false],['speaking','말',['Shadow 3 sentences','세 문장 따라 말하기'],['Speaking · linking sounds','말하기 · 연음'],'3',false]];
+    const plan=planDef.map(([k,g,ti,sub,min,done])=>({glyph:g,title:ti[L],sub:sub[L],min:min+(L?'분':' min'),go:k==='chat'?()=>this.openTutor('jiwoo'):go(k),check:done?'✓':'',ring:done?'var(--accent)':'var(--line3)',fill:done?'var(--accent)':'transparent',tc:done?'var(--faint)':'var(--ink)',td:done?'line-through':'none'}));
+    const week=DAYS.map((d,i)=>({d:L?d[1]:d[0][0],bg:i<6?'var(--accent)':'transparent',bd:i<6?'var(--accent)':'var(--line3)'}));
+
+    const bars=Array.from({length:48},(_,i)=>{const h=18+Math.abs(Math.sin(i*1.7)*50+Math.sin(i*.45)*28);return {h:Math.min(100,h)+'%',c:i/48<s.prog?'#F2C94C':'#4A4D46'};});
+    const sec=Math.round(s.prog*108);
+    const lQs=LQ.map((q,qi)=>({no:qi+1,q:q.q,en:q.en,opts:q.opts.map((o,oi)=>{const picked=s.lAns[qi]===oi, answered=s.lAns[qi]!=null, right=oi===q.a;
+      return {text:o,pick:()=>this.setState({lAns:{...s.lAns,[qi]:oi}}),bd:answered&&right?'var(--accent-ink)':picked?'var(--hot)':'var(--line)',bg:answered&&right?'var(--accent-soft)':picked?'var(--hot-soft)':'var(--card)',mark:answered&&right?(L?'정답':'Correct'):picked?(L?'다시 해 봐요':'Try again'):'',mc:right?'var(--accent-ink)':'var(--hot)'};})}));
+    const dictOk=s.dict.trim()==='포장해';
+
+    const paras=PARAS.map(p=>({segs:p.map(seg=>{ if(typeof seg==='string') return {t:seg,bb:'none',bg:'transparent',cur:'auto',click:null};
+      const k=seg[0], a=s.wordKey===k; return {t:k,bb:'2px solid '+(s.saved[k]?'var(--accent-ink)':'var(--gold)'),bg:a?'var(--hi)':'transparent',cur:'pointer',click:()=>this.setState({wordKey:k})};})}));
+    const rQs=RQ.map((q,qi)=>({no:qi+1,q:q.q,en:q.en,opts:q.opts.map((o,oi)=>{const picked=s.rAns[qi]===oi,right=oi===q.a;return {text:o,pick:()=>this.setState({rAns:{...s.rAns,[qi]:oi}}),bd:picked?(right?'var(--accent-ink)':'var(--hot)'):'var(--line)',bg:picked?(right?'var(--accent-soft)':'var(--hot-soft)'):'var(--card)'};})}));
+    const gw=GLOSS[s.wordKey];
+
+    const tg=TARGETS[s.ti%TARGETS.length];
+    let composed='?';
+    if(s.L!=null&&s.V==null) composed=JL.find(j=>j[1]===s.L)[0];
+    if(s.L!=null&&s.V!=null) composed=String.fromCharCode(0xAC00+(s.L*21+s.V)*28+(s.T||0));
+    const ok=s.L===tg.L&&s.V===tg.V&&(s.T||0)===tg.T;
+    const JT=[[L?'없음':'none',0],['ㄱ',1],['ㄴ',4],['ㄹ',8],['ㅁ',16],['ㅇ',21]];
+    const row=(label,arr,key)=>({label,keys:arr.map(([ch,v])=>{const a=s[key]===v;return {ch,fs:ch.length>1?'13px':'20px',pick:()=>this.setState({[key]:v}),bg:a?'var(--accent)':'var(--card)',fg:a?'#fff':'var(--ink)',bd:a?'var(--accent)':'var(--line)'};})});
+
+    const sent=SENTS[s.sIdx%SENTS.length];
+    const recDone=s.rec==='done';
+    const sylls=[...sent.text].map((ch,i)=>{const w=recDone&&sent.weak.includes(i);return {ch:ch===' '?'\u00A0':ch,c:w?'var(--hot)':'var(--ink)',u:w?'var(--hot)':'transparent'};});
+
+    const legend=COLORS.map(c=>({n:c[L],c:c[2]}));
+    const weekBars=WEEK.map((mins,i)=>({d:DAYS[i][L],tc:i===5?'var(--ink)':'var(--faint)',parts:mins.map((m,j)=>({h:(m*3.4)+'px',c:COLORS[j][2]}))}));
+    const tabDef=[['vocab',L?'단어장':'Word bank',342],['mistakes',L?'오답 노트':'Mistake notes',57],['phrases',L?'저장한 표현':'Saved phrases',24]];
+    const recTabs=tabDef.map(([k,l,c])=>({label:l,count:c,go:()=>this.setState({recTab:k}),fg:s.recTab===k?'var(--ink)':'var(--faint)',bd:s.recTab===k?'var(--ink)':'transparent'}));
+    const recRows=REC[s.recTab].map(([a,b,c])=>({a,b,c:RTAG[c][L],tc:c==='due'?'var(--hot)':'var(--ink2)',tb:c==='due'?'var(--hot-soft)':'var(--chip)'}));
+
+    const principles=L?[
+      {n:1,t:'대화가 먼저',d:'문법표보다 실제 대화가 먼저예요. 규칙은 필요한 순간에, 필요한 만큼만 알려 줘요.'},
+      {n:2,t:'실수는 자료예요',d:'틀린 문장은 실패가 아니라 다음 연습의 재료예요. 모든 교정은 오답 노트에 쌓여요.'},
+      {n:3,t:'짧게, 매일',d:'하루 15분이면 충분해요. 잊어버릴 즈음 다시 보여 주는 복습으로 오래 기억하게 해요.'}
+    ]:[
+      {n:1,t:'Conversation first',d:'Real exchanges come before grammar tables. Rules show up when you need them, and only as much as you need.'},
+      {n:2,t:'Mistakes are material',d:'A wrong sentence isn’t a failure — it’s tomorrow’s lesson. Every correction is kept in your mistake notes.'},
+      {n:3,t:'Short, every day',d:'Fifteen minutes is enough. Reviews arrive right before you’d forget, so words actually stick.'}
+    ];
+    const steps=L?[{n:1,t:'5분 레벨 테스트',p:'듣기 문제 몇 개와 짧은 자기소개로 지금 수준을 확인해요. 결과에 맞춰 첫 주 계획이 만들어져요.'},{n:2,t:'나와 맞는 튜터 선택',p:'일상 회화, 비즈니스, TOPIK, 발음 교정까지. 속도와 말투가 다른 튜터 중에서 골라요.'},{n:3,t:'하루 15분',p:'대화 한 번, 짧은 연습 두 개. 새 단어와 교정 문장은 잊을 즈음 다시 나타나요.'}]
+      :[{n:1,t:'A 5-minute level check',p:'A few listening questions and a short self-introduction. Your first week is planned from the result.'},{n:2,t:'Pick a tutor who fits',p:'Everyday talk, business Korean, TOPIK prep or pronunciation — each tutor has their own pace and style.'},{n:3,t:'Fifteen minutes a day',p:'One chat, two short drills. New words and corrected sentences resurface right when you’re about to forget them.'}];
+
+    return {
+      t, isMkt:page==='intro'||page==='about', isIntro:page==='intro', isAbout:page==='about', isApp:page!=='intro'&&page!=='about', wide, narrow:!wide, showRoman,
+      isDark:dark, isLight:!dark, toggleTheme:()=>this.setTheme(dark?'light':'dark'), themeShort:dark?(L?'라이트':'Light'):(L?'다크':'Dark'),
+      setEn:()=>this.setLang('en'), setKo:()=>this.setLang('ko'), toggleLang:()=>this.setLang(L?'en':'ko'), langShort:L?'EN':'한국어',
+      enBg:L?'transparent':'var(--card)', enFg:L?'var(--faint)':'var(--ink)', koBg:L?'var(--card)':'transparent', koFg:L?'var(--ink)':'var(--faint)',
+      aboutNavC:page==='about'?'var(--ink)':'var(--sub)', aboutNavW:page==='about'?'700':'400',
+      pHome:page==='home', pTutors:page==='tutors', pChat:page==='chat', pListening:page==='listening', pReading:page==='reading', pWriting:page==='writing', pSpeaking:page==='speaking', pRecord:page==='record',
+      goHome:go('home'), goTutors:go('tutors'), goIntro:go('intro'), goAbout:go('about'), goSpeaking:go('speaking'), goRecord:go('record'), goChat:go('chat'), goListening:go('listening'), goReading:go('reading'), goWriting:go('writing'), openJiwoo:()=>this.openTutor('jiwoo'),
+      goHow:()=>{ if(page!=='intro'){this.setState({page:'intro'}); setTimeout(()=>{const el=document.getElementById('how'); if(el) window.scrollTo(0,el.offsetTop);},60);} else {const el=document.getElementById('how'); if(el) window.scrollTo(0,el.offsetTop);} },
+      skills:SKILLS.map(k=>({glyph:k.glyph,no:k.no,name:k.name[L],ko:k.ko[L],desc:k.desc[L]})), steps, principles, tutorsIntro:TUTORS.slice(0,4).map(tz), navGroups, navFlat,
+      plan, week, lastJiwooTime:fmtTime(jl[jl.length-1].time,L),
+      filters, tutorList,
+      chatH:wide?'100vh':'calc(100vh - 53px)', chatList, tutor, msgs, msgRef:this.msgRef, typing:s.typing, typingDots,
+      trLabel:s.trAll?(L?'영어 번역 숨기기':'Hide English'):(L?'영어 번역 보기':'Show English'), trBtnBg:s.trAll?'var(--tbubble)':'transparent', toggleAllTr:()=>this.setState({trAll:!s.trAll}),
+      quick:QUICK.map(([q,en])=>({text:q,en:L?'':en,send:()=>this.sendText(q)})),
+      draft:s.draft, onDraft:e=>this.setState({draft:e.target.value}), onKey:e=>{if(e.key==='Enter'&&!e.nativeEvent.isComposing){e.preventDefault();this.sendText(s.draft);}}, send:()=>this.sendText(s.draft),
+      sendBg:s.draft.trim()?'#F2C94C':'var(--chip)', sendFg:s.draft.trim()?'#1C1F1E':'var(--faint)',
+      bars, playLabel:s.playing?(L?'일시정지':'Pause'):(s.prog>=1?(L?'다시 듣기':'Replay'):(L?'재생':'Play')), playTime:Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'), togglePlay:()=>this.togglePlay(),
+      speeds:[0.75,1,1.25].map(v=>({label:v.toFixed(2).replace(/0$/,'')+'×',go:()=>this.setState({speed:v}),bg:s.speed===v?'#F5F2EB':'transparent',fg:s.speed===v?'#1C1F1E':'#B8B4AA'})),
+      showScript:s.showScript, scriptLabel:s.showScript?(L?'대본 숨기기':'Hide script'):(L?'대본 보기':'Show script'), toggleScript:()=>this.setState({showScript:!s.showScript}), script:SCRIPT.map(l=>({...l,who:l.who[L]})), lQs,
+      dict:s.dict, onDict:e=>this.setState({dict:e.target.value}), dictBd:dictOk?'var(--accent-ink)':s.dict?'var(--hot)':'var(--line3)', dictColor:dictOk?'var(--accent-ink)':'var(--faint)',
+      dictMsg:dictOk?(L?'정답! 포장하다는 “가져가게 싸다”라는 뜻이에요.':'Correct — 포장하다 means “to pack to go.”'):s.dict?(L?'아쉬워요. 0:40부터 다시 들어 보세요.':'Not quite. Replay from 0:40.'):(L?'힌트: “싸서 가져가다”라는 뜻이에요.':'Hint: it means “to pack up / take out.”'),
+      paras, rQs, hasWord:!!s.wordKey, noWord:!s.wordKey, word:gw?{...gw,pos:gw.pos[L]}:{}, saveLabel:s.saved[s.wordKey]?(L?'단어장에 저장됨 ✓':'Saved to word bank ✓'):(L?'+ 단어장에 저장':'+ Save to word bank'), saveWord:()=>this.setState({saved:{...s.saved,[s.wordKey]:!s.saved[s.wordKey]}}),
+      wJamo:s.wTab==='jamo', wSent:s.wTab==='sent', wTabJamo:()=>this.setState({wTab:'jamo'}), wTabSent:()=>this.setState({wTab:'sent'}), wJamoBg:s.wTab==='jamo'?'var(--card)':'transparent', wSentBg:s.wTab==='sent'?'var(--card)':'transparent',
+      target:tg, composed, jamoOk:ok, blockBd:ok?'var(--accent-ink)':'var(--line)', jamoMsg:ok?(L?'완벽해요! '+tg.ch+' 완성!':'Perfect! '+tg.ch+' is built.'):(s.L==null?(L?'첫 자음부터 골라 보세요':'Start with the first consonant'):(L?'계속해 보세요…':'Keep going…')), jamoMsgC:ok?'var(--accent-ink)':'var(--faint)',
+      jamoRows:[row(L?'1 · 첫 자음':'1 · First consonant',JL,'L'),row(L?'2 · 모음':'2 · Vowel',JV,'V'),row(L?'3 · 받침':'3 · Final consonant (batchim)',JT,'T')],
+      nextTarget:()=>this.setState({ti:s.ti+1,L:null,V:null,T:null}),
+      wText:s.wText, onWText:e=>this.setState({wText:e.target.value,wChecked:false}), wCountLabel:s.wText.replace(/\s/g,'').length+(L?'자':' characters'), checkW:()=>this.setState({wChecked:true}), wChecked:s.wChecked,
+      sent, sentTip:sent.tip[L], sylls, sIdxLabel:(s.sIdx%SENTS.length+1)+' / '+SENTS.length, recDone,
+      recLabel:s.rec==='rec'?(L?'멈춤':'Stop'):recDone?(L?'다시':'Retry'):(L?'녹음':'Record'), recBg:s.rec==='rec'?'var(--hot)':'var(--solid)', recFg:s.rec==='rec'?'#fff':'var(--on-solid)', recAnim:s.rec==='rec'?'pulse 1.2s infinite':'none',
+      recHint:s.rec==='rec'?(L?'듣고 있어요… 문장을 소리 내어 읽어 주세요':'Listening… read the sentence aloud'):recDone?(L?'눌러서 다시 해 보세요':'Tap to try again'):(L?'누르고 문장을 소리 내어 읽어 보세요':'Tap and read the sentence aloud'),
+      toggleRec:()=>this.setState({rec:s.rec==='rec'?'done':'rec'}), nextSent:()=>this.setState({sIdx:s.sIdx+1,rec:'idle'}),
+      stats:L?[{label:'이번 주',value:'3시간 20분',sub:'지난주보다 40분 더'},{label:'연속 학습',value:'12일',sub:'최고 기록 19일'},{label:'익힌 단어',value:'342',sub:'복습할 단어 18개'},{label:'교정받은 문장',value:'57',sub:'41개는 이제 바르게 써요'}]
+        :[{label:'This week',value:'3h 20m',sub:'+40 min vs last week'},{label:'Streak',value:'12 days',sub:'Best: 19 days'},{label:'Words learned',value:'342',sub:'18 due for review'},{label:'Sentences corrected',value:'57',sub:'41 now used correctly'}],
+      legend, weekBars,
+      skillLv:[{g:'듣',n:L?'듣기':'Listening',lv:L?'초급 3':'Beginner 3',w:'72%',c:COLORS[1][2]},{g:'읽',n:L?'읽기':'Reading',lv:L?'초급 3':'Beginner 3',w:'68%',c:COLORS[2][2]},{g:'쓰',n:L?'쓰기':'Writing',lv:L?'초급 2':'Beginner 2',w:'44%',c:COLORS[3][2]},{g:'말',n:L?'말하기':'Speaking',lv:L?'초급 2':'Beginner 2',w:'55%',c:COLORS[4][2]}],
+      recTabs, recRows,
+      planMeta:L?'4개 중 1개 완료 · 약 15분':'1 of 4 done · about 15 min'
+    };
+  }
+}
+</script>
+
+
+</body></html>

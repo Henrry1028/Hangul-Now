@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 사용자 프로필 및 개인 설정
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 일일 학습 계획 (DailyPlan) 및 스트릭
+    match /daily_plans/{planId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 튜터 목록 (누구나 읽기 가능)
+    match /tutors/{tutorId} {
+      allow read: if true;
+      allow write: if false; // 관리자 전용
+    }
+
+    // 대화방 및 메시지 (참여자만 읽기/쓰기)
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null;
+
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // 오답 노트 및 어휘장 (SRS)
+    match /mistake_notes/{noteId} {
+      allow read, write: if request.auth != null;
+    }
+    match /vocab_items/{vocabId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 레슨 콘텐츠 (듣기/읽기/쓰기/말하기)
+    match /lessons/{lessonId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // 학습 시도 및 평가 기록 (Attempts)
+    match /attempts/{attemptId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

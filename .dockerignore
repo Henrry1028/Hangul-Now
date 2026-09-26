@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+.venv
+__pycache__
+*.md
+Hangul Now.html
+Hangul Now 교육플랫폼 디자인.pdf
