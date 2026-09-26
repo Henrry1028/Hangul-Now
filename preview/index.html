@@ -32,19 +32,42 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',sys
 *{box-sizing:border-box}
 a{color:var(--accent-ink);text-decoration:none}a:hover{color:var(--hot)}
 button,textarea,input{font-family:inherit;color:inherit}
+.marketing-header__nav{scrollbar-width:none}
+.marketing-header__nav::-webkit-scrollbar{display:none}
+@media(max-width:760px){
+  .marketing-header{align-items:stretch!important;flex-direction:column;gap:10px!important;padding:10px 16px!important}
+  .marketing-header__nav{width:100%;flex-wrap:nowrap!important;gap:12px!important;overflow-x:auto;padding-bottom:2px}
+  .marketing-header__nav>*{flex:none}
+}
 @keyframes dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(200,80,42,.45)}100%{box-shadow:0 0 0 22px rgba(200,80,42,0)}}
+/* 훈이 좌우 왕복 (18초 한 바퀴): 왼쪽 차 → 걸어감(책) → 오른쪽 연필 → 걸어옴(책) → 왼쪽 두루마리 */
+@keyframes hunWalk{0%,12%{left:0}35%,55%{left:calc(100% - 150px)}78%,100%{left:0}}
+@keyframes hunBob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-3deg)}50%{transform:translateX(-50%) translateY(-9px) rotate(3deg)}}
+@keyframes hunIdle{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-3px)}}
+@keyframes pTea{0%,11%{opacity:1}13%,97%{opacity:0}100%{opacity:1}}
+@keyframes pBook{0%,11%{opacity:0}13%,34%{opacity:1}36%,54%{opacity:0}56%,77%{opacity:1}79%,100%{opacity:0}}
+@keyframes pPencil{0%,34%{opacity:0}36%,54%{opacity:1}56%,100%{opacity:0}}
+@keyframes pScroll{0%,77%{opacity:0}79%,97%{opacity:1}100%{opacity:0}}
+.hun-walk{position:absolute;left:0;bottom:0;width:150px;height:150px;z-index:2;pointer-events:none;animation:hunWalk 18s ease-in-out infinite}
+.hun-pose{position:absolute;left:50%;bottom:0;height:150px;width:auto;opacity:0;transform:translateX(-50%);filter:drop-shadow(0 14px 20px rgba(0,0,0,.22));user-select:none}
+.hun-pose.tea{animation:pTea 18s linear infinite,hunIdle 2.4s ease-in-out infinite}
+.hun-pose.book{animation:pBook 18s linear infinite,hunBob .5s ease-in-out infinite}
+.hun-pose.pencil{animation:pPencil 18s linear infinite,hunIdle 1.6s ease-in-out infinite}
+.hun-pose.scroll{animation:pScroll 18s linear infinite,hunIdle 2s ease-in-out infinite}
+.mock-body{transition:opacity .35s ease,transform .35s ease}
+@media(prefers-reduced-motion:reduce){.hun-walk,.hun-pose{animation:none}.hun-pose.pencil{opacity:1}.mock-body{transition:none}}
 </style>
 </helmet>
 
-<sc-if value="{{ isMkt }}" hint-placeholder-val="{{ true }}">
-<div style="min-height:100vh;background:var(--bg);overflow-x:clip">
-  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(20px,5vw,64px);border-bottom:1px solid var(--line);flex-wrap:wrap">
+<div style="min-height:100vh;background:var(--bg);display:flex;flex-direction:column">
+
+  <header class="marketing-header" style="position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(20px,5vw,64px);border-bottom:1px solid var(--line);background:var(--bg);flex-wrap:wrap">
     <button sc-camel-on-click="{{ goIntro }}" style="display:flex;align-items:center;gap:10px;border:0;background:none;cursor:pointer;padding:0">
       <div style="width:36px;height:36px;border-radius:9px;background:var(--accent);color:#F5F2EB;display:grid;place-items:center;font:700 20px 'Gowun Batang',serif">한</div>
       <span style="font:600 21px 'Newsreader',serif;letter-spacing:-.01em;color:var(--ink)">Hangul Now</span>
     </button>
-    <nav style="display:flex;align-items:center;gap:20px;font-size:14px;flex-wrap:wrap">
+    <nav class="marketing-header__nav" style="display:flex;align-items:center;gap:20px;font-size:14px;flex-wrap:wrap">
       <button sc-camel-on-click="{{ goHow }}" style="border:0;background:none;color:var(--sub);font-size:14px;cursor:pointer">{{ t.navHow }}</button>
       <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:none;color:var(--sub);font-size:14px;cursor:pointer">{{ t.navTutors }}</button>
       <button sc-camel-on-click="{{ goAbout }}" style="border:0;background:none;color:{{ aboutNavC }};font-size:14px;cursor:pointer;font-weight:{{ aboutNavW }}">{{ t.navAbout }}</button>
@@ -57,6 +80,9 @@ button,textarea,input{font-family:inherit;color:inherit}
       <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:var(--solid);color:var(--on-solid);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer">{{ t.startFree }}</button>
     </nav>
   </header>
+
+  <sc-if value="{{ isMkt }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;background:var(--bg);overflow-x:clip">
 
   <sc-if value="{{ isIntro }}" hint-placeholder-val="{{ true }}">
   <div data-screen-label="01 Landing">
@@ -72,23 +98,26 @@ button,textarea,input{font-family:inherit;color:inherit}
         <span style="font-size:13.5px;color:var(--faint)">{{ t.heroNote }}</span>
       </div>
       <div style="position:relative;justify-self:center;width:min(100%,380px);margin-top:40px">
-        <img src="./assets/캐릭터-정이.png" alt="Jeongie" style="position:absolute;right:-100px;top:-120px;width:130px;z-index:2;transform:rotate(8deg);pointer-events:none">
         <div style="background:var(--chat);border-radius:30px;padding:18px 14px 20px;box-shadow:0 30px 60px -30px rgba(0,0,0,.35);border:8px solid #1C1F1E;position:relative;z-index:1">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px 14px"><span style="font-size:15px;font-weight:700">{{ t.mockName }}</span><span style="font-size:11px;color:var(--chat-ink)">{{ t.mockRole }}</span></div>
-          <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5">
-            <div style="display:flex;gap:8px"><div style="width:34px;height:34px;border-radius:13px;background:#E9C2A6;color:#1C1F1E;flex:none;display:grid;place-items:center;font-size:11px;font-weight:700">지우</div><div style="background:var(--tbubble);padding:9px 12px;border-radius:4px 14px 14px 14px;max-width:78%">주말에 뭐 했어요?</div></div>
-            <div style="align-self:flex-end;background:var(--bubble);color:#1C1F1E;padding:9px 12px;border-radius:14px 4px 14px 14px;max-width:80%">비가 많이 <span style="text-decoration:line-through;color:#8a6d00">왔어서</span> 집에 있었어요.</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px 14px"><span style="font-size:15px;font-weight:700">{{ t.mockName }}</span><span style="font-size:11px;color:var(--chat-ink)">{{ mock.role }}</span></div>
+          <div class="mock-body" style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;min-height:250px;opacity:{{ mockOp }};transform:translateY({{ mockY }})">
+            <div style="display:flex;gap:8px"><div style="width:34px;height:34px;border-radius:13px;background:#E9C2A6;color:#1C1F1E;flex:none;display:grid;place-items:center;font-size:11px;font-weight:700">지우</div><div style="background:var(--tbubble);padding:9px 12px;border-radius:4px 14px 14px 14px;max-width:78%">{{ mock.q }}</div></div>
+            <div style="align-self:flex-end;background:var(--bubble);color:#1C1F1E;padding:9px 12px;border-radius:14px 4px 14px 14px;max-width:80%">{{ mock.pre }}<span style="text-decoration:line-through;color:#8a6d00">{{ mock.wrong }}</span>{{ mock.post }}</div>
             <div style="align-self:flex-end;background:var(--tbubble);border-radius:12px;padding:10px 12px;max-width:86%;font-size:12.5px;display:flex;flex-direction:column;gap:4px;border:1px solid rgba(0,0,0,.06)">
               <span style="font-weight:700;color:var(--accent-ink);font-size:11px;letter-spacing:.06em">{{ t.correction }}</span>
-              <span>비가 많이 <b style="color:var(--accent-ink)">와서</b> 집에 있었어요.</span>
-              <span style="color:var(--sub)">{{ t.mockRule }}</span>
+              <span>{{ mock.pre }}<b style="color:var(--accent-ink)">{{ mock.right }}</b>{{ mock.post }}</span>
+              <span style="color:var(--sub)">{{ mock.rule }}</span>
             </div>
-            <div style="display:flex;gap:8px"><div style="width:34px;height:34px;flex:none"></div><div style="background:var(--tbubble);padding:9px 12px;border-radius:14px;max-width:78%">잘했어요! 집에서 뭐 했어요?</div></div>
+            <div style="display:flex;gap:8px"><div style="width:34px;height:34px;flex:none"></div><div style="background:var(--tbubble);padding:9px 12px;border-radius:14px;max-width:78%">{{ mock.reply }}</div></div>
           </div>
         </div>
-        <div style="display:flex;align-items:flex-end;gap:10px;margin:10px 0 0 -60px">
-          <img src="./assets/캐릭터_훈이.png" alt="Hunie" style="width:130px;flex:none;margin-top:-50px;position:relative;z-index:2;pointer-events:none">
-          <div style="background:var(--solid);color:var(--on-solid);padding:10px 14px;border-radius:12px 12px 12px 4px;font-size:12.5px;line-height:1.45;margin-bottom:22px;max-width:220px">{{ t.callout }}</div>
+        <div style="position:relative;height:100px">
+          <div class="hun-walk" role="img" aria-label="Hunie">
+            <img class="hun-pose tea" src="./assets/훈이_tea.png" alt="">
+            <img class="hun-pose book" src="./assets/훈이_book.png" alt="">
+            <img class="hun-pose pencil" src="./assets/훈이_pencil.png" alt="">
+            <img class="hun-pose scroll" src="./assets/훈이_scroll.png" alt="">
+          </div>
         </div>
       </div>
     </section>
@@ -311,9 +340,9 @@ button,textarea,input{font-family:inherit;color:inherit}
 </sc-if>
 
 <sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;min-height:100vh;background:var(--bg)">
+<div style="display:flex;flex:1;background:var(--bg);min-height:calc(100vh - 69px)">
   <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
-  <aside style="width:240px;flex:none;position:sticky;top:0;height:100vh;border-right:1px solid var(--line);background:var(--bg2);display:flex;flex-direction:column;padding:20px 14px;gap:20px;overflow-y:auto">
+  <aside style="width:240px;flex:none;position:sticky;top:69px;height:calc(100vh - 69px);border-right:1px solid var(--line);background:var(--bg2);display:flex;flex-direction:column;padding:20px 14px;gap:20px;overflow-y:auto">
     <button sc-camel-on-click="{{ goIntro }}" style="display:flex;align-items:center;gap:10px;border:0;background:none;cursor:pointer;padding:4px 6px;text-align:left">
       <div style="width:32px;height:32px;border-radius:8px;background:var(--accent);color:#F5F2EB;display:grid;place-items:center;font:700 18px 'Gowun Batang',serif">한</div>
       <span style="font:600 19px 'Newsreader',serif;color:var(--ink)">Hangul Now</span>
@@ -335,15 +364,15 @@ button,textarea,input{font-family:inherit;color:inherit}
         </sc-for>
       </div>
     </sc-for>
-    <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px">
-        <div style="display:flex;background:var(--seg);border-radius:999px;padding:3px"><button sc-camel-on-click="{{ setEn }}" style="border:0;background:{{ enBg }};color:{{ enFg }};border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer">EN</button><button sc-camel-on-click="{{ setKo }}" style="border:0;background:{{ koBg }};color:{{ koFg }};border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer">한국어</button></div>
-        <button sc-camel-on-click="{{ toggleTheme }}" title="{{ t.themeTitle }}" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer">
-          <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if>
-          <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if>
-        </button>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid var(--line)">
+    <div style="margin-top:auto;border-top:1px solid var(--line);padding-top:14px">
+
+
+
+
+
+
+
+      <div style="display:flex;align-items:center;gap:10px;padding:4px 6px">
         <div style="width:34px;height:34px;border-radius:50%;background:#D7DCE3;color:#1C1F1E;display:grid;place-items:center;font-size:13px;font-weight:700">E</div>
         <div style="display:flex;flex-direction:column;line-height:1.35"><span style="font-size:14px;font-weight:600">Emma Clarke</span><span style="font-size:12px;color:var(--faint)">{{ t.emmaLevel }}</span></div>
       </div>
@@ -353,12 +382,12 @@ button,textarea,input{font-family:inherit;color:inherit}
 
   <main style="flex:1;min-width:0;display:flex;flex-direction:column">
     <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
-      <div style="position:sticky;top:0;z-index:5;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 12px;align-items:center">
+      <div style="position:sticky;top:69px;z-index:5;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 12px;align-items:center">
         <sc-for list="{{ navFlat }}" as="n" hint-placeholder-count="6">
           <button sc-camel-on-click="{{ n.go }}" style="flex:none;border:1px solid {{ n.bd }};background:{{ n.bg }};color:{{ n.fg }};padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer">{{ n.label }}</button>
         </sc-for>
-        <button sc-camel-on-click="{{ toggleLang }}" style="flex:none;border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer">{{ langShort }}</button>
-        <button sc-camel-on-click="{{ toggleTheme }}" style="flex:none;border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer">{{ themeShort }}</button>
+
+
       </div>
     </sc-if>
 
@@ -872,6 +901,12 @@ const REPLIES = [
   {text:'그럴 때는 “같이 갈까요?”처럼 ‘-(으)ㄹ까요?’를 써 보세요.', tr:'Try ‘-(으)ㄹ까요?’ there, like “같이 갈까요?” (Shall we go together?)'},
   {text:'하하, 재미있네요. 그다음에는 뭐 했어요?', tr:'Haha, that’s fun. What did you do after that?'}
 ];
+const MOCKS = [
+  {role:['Everyday talk','일상 회화'], q:'주말에 뭐 했어요?', pre:'비가 많이 ', wrong:'왔어서', right:'와서', post:' 집에 있었어요.', rule:['-아서/어서 never takes the past tense.','-아서/어서 앞에는 과거형을 쓰지 않아요.'], reply:'잘했어요! 집에서 뭐 했어요?'},
+  {role:['Particles','조사'], q:'어제 어디에서 저녁 먹었어요?', pre:'친구하고 홍대', wrong:'에', right:'에서', post:' 떡볶이를 먹었어요.', rule:['Use 에서 for the place where an action happens.','행동이 일어나는 장소에는 ‘에서’를 써요.'], reply:'와, 맛있었겠어요! 많이 매웠어요?'},
+  {role:['Object marker','목적격 조사'], q:'요즘 뭘 배우고 있어요?', pre:'요즘 한국어', wrong:'을', right:'를', post:' 배우고 있어요.', rule:['After a vowel, use 를 instead of 을.','받침이 없으면 ‘을’ 대신 ‘를’을 써요.'], reply:'멋져요! 얼마나 배웠어요?'},
+  {role:['Spelling','맞춤법'], q:'내일 뭐 할 거예요?', pre:'내일 친구를 ', wrong:'만날 거에요', right:'만날 거예요', post:'.', rule:['It’s 거예요, never 거에요.','‘거에요’가 아니라 ‘거예요’가 맞아요.'], reply:'좋네요! 어디에서 만나요?'}
+];
 const QUICK = [['다시 한번 말해 주세요','Say it again'],['무슨 뜻이에요?','What does it mean?'],['천천히 말해 주세요','Slower please'],['예문 보여 주세요','Show an example']];
 const SKILLS = [
   {glyph:'듣', no:'01', name:['Listening','듣기'], ko:['듣기','Listening'], desc:['Short real-life dialogues — cafés, subways, phone calls — at adjustable speed, with dictation.','카페, 지하철, 전화 등 실제 상황 대화를 속도 조절과 받아쓰기로 연습해요.']},
@@ -931,7 +966,7 @@ const MON = ['January','February','March','April','May','June','July','August','
 
 const T = {
 en:{
- navHow:'How it works', navTutors:'Tutors', navAbout:'About us', login:'Log in', startFree:'Start free', themeTitle:'Toggle dark mode',
+ navHow:'How it works', navTutors:'Curriculum', navAbout:'About us', login:'Log in', startFree:'Start free', themeTitle:'Toggle dark mode',
  heroEyebrow:'한국어, 대화로 배워요', heroH1:'Learn Korean by texting a real tutor.',
  heroP:'Pick a tutor and chat the way Koreans actually message each other. Mistakes are corrected gently, right inside the conversation — then short listening, reading, writing and speaking drills lock in what you used.',
  ctaTutor:'Choose a tutor', ctaLevel:'Take the 5-min level check', heroNote:'From your very first ㄱ to TOPIK 6 · Explanations in English',
@@ -972,7 +1007,7 @@ en:{
  recH1:'My progress', weekH:'Study time this week', skillH:'Skill levels', skillTip:'Writing is growing the slowest. Add one sentence exercise a day this week?'
 },
 ko:{
- navHow:'학습 방법', navTutors:'튜터', navAbout:'회사 소개', login:'로그인', startFree:'무료로 시작', themeTitle:'다크 모드 전환',
+ navHow:'학습 방법', navTutors:'커리큘럼', navAbout:'회사 소개', login:'로그인', startFree:'무료로 시작', themeTitle:'다크 모드 전환',
  heroEyebrow:'Learn Korean by chatting', heroH1:'실제 튜터와 메시지를 주고받으며 한국어를 배워요.',
  heroP:'튜터를 고르고, 한국 사람들이 실제로 메시지를 주고받는 방식 그대로 대화해요. 실수는 대화 안에서 바로 부드럽게 고쳐 주고, 짧은 듣기·읽기·쓰기·말하기 연습으로 쓴 표현을 다시 익혀요.',
  ctaTutor:'튜터 고르기', ctaLevel:'5분 레벨 테스트', heroNote:'첫 자음 ㄱ부터 TOPIK 6급까지 · 영어 해설 제공',
@@ -1019,14 +1054,18 @@ function listDate(iso, hm, L){ if(iso===TODAY) return fmtTime(hm,L); if(iso==='2
 function nowHM(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 
 class Component extends DCLogic {
-  state = { page:null, lang:null, theme:null, tutorId:'jiwoo', msgs:JSON.parse(JSON.stringify(SEED)), draft:'', typing:false, w:1200, trAll:false, trOpen:{}, filter:'all', playing:false, prog:0.18, speed:1, showScript:false, lAns:{}, dict:'', wordKey:null, saved:{}, rAns:{}, wTab:'jamo', ti:0, L:null, V:null, T:null, wText:'지난 주말에 친구를 만났어요. 우리는 홍대에 떡볶이를 먹었어요. 정말 맛있었어서 또 가고 싶어요.', wChecked:false, sIdx:0, rec:'idle', recTab:'vocab', unread:{minho:1, seoyeon:1}, ri:0 };
+  state = { page:null, lang:null, theme:null, tutorId:'jiwoo', msgs:JSON.parse(JSON.stringify(SEED)), draft:'', typing:false, w:1200, trAll:false, trOpen:{}, filter:'all', playing:false, prog:0.18, speed:1, showScript:false, lAns:{}, dict:'', wordKey:null, saved:{}, rAns:{}, wTab:'jamo', ti:0, L:null, V:null, T:null, wText:'지난 주말에 친구를 만났어요. 우리는 홍대에 떡볶이를 먹었어요. 정말 맛있었어서 또 가고 싶어요.', wChecked:false, sIdx:0, rec:'idle', recTab:'vocab', unread:{minho:1, seoyeon:1}, ri:0, mockIdx:0, mockOn:true };
   msgRef = React.createRef();
   componentDidMount(){
     this.onResize=()=>this.setState({w:window.innerWidth}); this.onResize(); window.addEventListener('resize',this.onResize);
     let lang=null, theme=null; try{lang=localStorage.getItem('hn-lang'); theme=localStorage.getItem('hn-theme');}catch(e){}
     this.setState({lang, theme}); this.applyTheme();
+    this.mockIv=setInterval(()=>{
+      this.setState({mockOn:false});
+      this.mockTt=setTimeout(()=>this.setState({mockIdx:this.state.mockIdx+1, mockOn:true}),380);
+    },4200);
   }
-  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); clearInterval(this.iv); clearTimeout(this.tt); }
+  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); clearInterval(this.iv); clearTimeout(this.tt); clearInterval(this.mockIv); clearTimeout(this.mockTt); }
   componentDidUpdate(pp,ps){
     this.applyTheme();
     const el=this.msgRef.current; if(el && (ps.msgs!==this.state.msgs||ps.page!==this.state.page||ps.tutorId!==this.state.tutorId||ps.typing!==this.state.typing)) el.scrollTop=el.scrollHeight;
@@ -1074,7 +1113,7 @@ class Component extends DCLogic {
     const goTutors = go('tutors');
     const unreadTotal=Object.values(s.unread).reduce((a,b)=>a+b,0);
     const navDef=[
-      {label:L?'학습 (LEARN)':'LEARN', items:[['home',L?'오늘의 학습':'Today','오','Daily Plan'],['tutors',L?'튜터 선택':'Tutors','튜','3 Tutors'],['chat',L?'튜터 채팅':'Chat','대',L?'실시간 대화':'Live Chat']]},
+      {label:L?'학습 (LEARN)':'LEARN', items:[['home',L?'오늘의 학습':'Today','오','Daily Plan'],['tutors',L?'커리큘럼':'Curriculum','커','Curriculum'],['chat',L?'튜터 채팅':'Chat','대',L?'실시간 대화':'Live Chat']]},
       {label:L?'4대 영역 연습 (PRACTICE)':'PRACTICE', items:[['listening',L?'듣기 연습':'Listening','듣','Audio STT'],['reading',L?'읽기 독해':'Reading','읽','Kiwi POS'],['writing',L?'쓰기 조합':'Writing','쓰','Diff Blocks'],['speaking',L?'말하기 코치':'Speaking','말','Voice Coach']]},
       {label:L?'나의 기록 (YOU)':'YOU', items:[['record',L?'학습 기록':'My progress','기','SRS Stats'],['about',L?'서비스 소개':'About us','소','Our Story']]}
     ];
@@ -1096,6 +1135,8 @@ class Component extends DCLogic {
     });
     const lastDate=l=>{let d=TODAY;for(const m of l) if(m.date) d=m.date; return d;};
     const chatList=TUTORS.map(tu=>{const l=s.msgs[tu.id], last=l[l.length-1];return {...tz(tu), open:()=>this.openTutor(tu.id), last:last.text, time:listDate(lastDate(l),last.time,L), unread:s.unread[tu.id]||0, hasUnread:!!s.unread[tu.id], bg:tu.id===s.tutorId?'var(--chip)':'var(--card)'};});
+    const mk0=MOCKS[s.mockIdx%MOCKS.length];
+    const mock={...mk0, role:mk0.role[L], rule:mk0.rule[L]};
     const jl=s.msgs.jiwoo;
     const typingDots=React.createElement('div',{style:{background:'var(--tbubble)',borderRadius:14,padding:'12px 14px',display:'flex',gap:4}},[0,1,2].map(i=>React.createElement('span',{key:i,style:{width:6,height:6,borderRadius:3,background:'#8A96A0',animation:`dot 1.2s ${i*0.15}s infinite`}})));
 
@@ -1158,9 +1199,10 @@ class Component extends DCLogic {
       goHome:go('home'), goTutors:go('tutors'), goIntro:go('intro'), goAbout:go('about'), goSpeaking:go('speaking'), goRecord:go('record'), goChat:go('chat'), goListening:go('listening'), goReading:go('reading'), goWriting:go('writing'), openJiwoo:()=>this.openTutor('jiwoo'),
       goHow:()=>{ if(page!=='intro'){this.setState({page:'intro'}); setTimeout(()=>{const el=document.getElementById('how'); if(el) window.scrollTo(0,el.offsetTop);},60);} else {const el=document.getElementById('how'); if(el) window.scrollTo(0,el.offsetTop);} },
       skills:SKILLS.map(k=>({glyph:k.glyph,no:k.no,name:k.name[L],ko:k.ko[L],desc:k.desc[L]})), steps, principles, tutorsIntro:TUTORS.slice(0,4).map(tz), navGroups, navFlat,
+      mock, mockOp:s.mockOn?1:0, mockY:s.mockOn?'0':'8px',
       plan, week, lastJiwooTime:fmtTime(jl[jl.length-1].time,L),
       filters, tutorList,
-      chatH:wide?'100vh':'calc(100vh - 53px)', chatList, tutor, msgs, msgRef:this.msgRef, typing:s.typing, typingDots,
+      chatH:wide?'calc(100vh - 69px)':'calc(100vh - 122px)', chatList, tutor, msgs, msgRef:this.msgRef, typing:s.typing, typingDots,
       trLabel:s.trAll?(L?'영어 번역 숨기기':'Hide English'):(L?'영어 번역 보기':'Show English'), trBtnBg:s.trAll?'var(--tbubble)':'transparent', toggleAllTr:()=>this.setState({trAll:!s.trAll}),
       quick:QUICK.map(([q,en])=>({text:q,en:L?'':en,send:()=>this.sendText(q)})),
       draft:s.draft, onDraft:e=>this.setState({draft:e.target.value}), onKey:e=>{if(e.key==='Enter'&&!e.nativeEvent.isComposing){e.preventDefault();this.sendText(s.draft);}}, send:()=>this.sendText(s.draft),
