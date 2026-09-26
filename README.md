@@ -1,149 +1,165 @@
-# Hangul Now (훈민정음) - Google 생태계 풀스택 교육 플랫폼
+# Hangul Now (훈민정음)
 
-> **Google Gemini API + Google Cloud Platform + Firebase App Hosting & Cloud Run 기반**
-> (Hnageul Copilot Multi-Agent 오케스트레이션 및 형태소 분석 엔진 통합)
+영어권 학습자가 AI 튜터와 메신저처럼 대화하며 한국어를 연습할 수 있는 교육 플랫폼입니다. 대화, 문장 교정, 작문 첨삭, 발음 평가, 형태소 분석 및 복습 콘텐츠 생성을 하나의 Express 애플리케이션으로 제공합니다.
 
-Hangul Now는 영어를 사용하는 외국인 학습자가 메신저 형태의 AI 튜터 대화를 중심으로 한국어를 배우고, 대화에서 나온 표현을 듣기·읽기·쓰기·말하기의 4대 영역과 망각 곡선 기반 간격 반복(SRS) 복습으로 완성하는 차세대 한국어 학습 플랫폼입니다.
+## 주요 기능
 
----
+- 지우·민호·수진 등 페르소나 기반 AI 한국어 튜터 대화
+- 문법, 맞춤법 및 자연스러운 표현 교정
+- 문법·발음·어휘 서브 에이전트를 이용한 병렬 코칭
+- 한국어 형태소 분석, 문장 성분 표시 및 로마자 변환
+- 작문 첨삭과 발음 평가
+- 학습 세션 요약 및 오답 기반 복습 퀴즈 생성
+- Firebase Admin 연동 시 대화와 학습 기록 저장
+- Gemini API 키가 없을 때도 확인 가능한 데모 응답
 
-## 1. Google 생태계 풀스택 아키텍처
+## 기술 구성
 
-```mermaid
-flowchart TD
-    subgraph Client ["클라이언트 계층 (반응형 웹 / 모바일 브라우저)"]
-        UI["10개 핵심 화면 UI (소개, 튜터, 채팅, 4대 학습, 학습 기록)"]
-        Audio["Web Audio API / MediaRecorder"]
-    end
+| 영역 | 기술 |
+| --- | --- |
+| 웹 서버 | Node.js, Express, ESM |
+| 프런트엔드 | `preview/`의 정적 HTML/CSS/JavaScript SPA |
+| 생성형 AI | Google Gemini API |
+| 언어 처리 | Kiwi NLP, 자체 한국어 분석 및 로마자 변환 모듈 |
+| 데이터 | Firebase Admin, Firestore, Firebase Storage |
+| 배포 | Docker, Google Cloud Run, Firebase Hosting/App Hosting |
 
-    subgraph Hosting ["Google 호스팅 & 인프라"]
-        AppHosting["Firebase App Hosting / Google Cloud Run (Container)"]
-        CDN["Google Global Anycast CDN"]
-    end
+> 현재 프런트엔드는 React/Vite 빌드가 아니라 Express가 `preview/` 디렉터리를 직접 제공하는 구조입니다.
 
-    subgraph Backend ["Hangul Now 풀스택 백엔드 (Node.js ESM)"]
-        ExpressServer["통합 Express API Gateway"]
-        POS["한국어 형태소 분석기 (Kiwi POS & 국어 로마자 표기 엔진)"]
-        Orchestrator["Multi-Agent Orchestrator (지휘 에이전트)"]
-        FirebaseAdmin["Firebase Admin SDK (Firestore & Auth)"]
-    end
+## 빠른 시작
 
-    subgraph GoogleAI ["Google AI & Gemini 모델 계층"]
-        GeminiChat["gemini-3.8-flash (초저지연 실시간 튜터 대화)"]
-        GeminiCoaching["gemini-3.7-flash (문법/발음/어휘 Multi-Agent 분석)"]
-        GeminiSTT["gemini-2.5-flash (정밀 음성 전사)"]
-        GoogleTTS["gemini-3.8-flash-lite-tts / Cloud TTS (뉴럴 음성 합성)"]
-    end
+### 요구 사항
 
-    UI --> CDN --> AppHosting
-    AppHosting --> ExpressServer
-    ExpressServer --> POS
-    ExpressServer --> Orchestrator
-    ExpressServer --> FirebaseAdmin
-    Orchestrator --> GeminiCoaching
-    ExpressServer --> GeminiChat
-    ExpressServer --> GoogleTTS
-    Audio -.-> ExpressServer
+- Node.js 20 이상
+- npm
+- 선택 사항: Google Gemini API 키
+- 선택 사항: Firebase 서비스 계정
+
+### 설치
+
+```bash
+git clone https://github.com/Henrry1028/Hangul-Now.git
+cd Hangul-Now
+npm install
 ```
 
----
+### 환경변수
 
-## 2. 핵심 구현 및 통합 기술
+`.env.example`을 `.env`로 복사한 후 필요한 값을 입력합니다.
 
-### 1) Multi-Agent AI 코칭 시스템 (`src/agents/`)
-- **Main Orchestrator (`orchestrator.mjs`)**: 학습자의 발화 및 작문을 3개 서브 에이전트로 병렬 분기 후 통합 합성
-- **Grammar Sub-Agent (`grammar-agent.mjs`)**: 조사, 어미, 시제, 경어체(높임말) 오류 정밀 진단
-- **Phonetics Sub-Agent (`phonetics-agent.mjs`)**: 자음/모음, 받침, 연음, 비음화, 억양 분석
-- **Vocabulary Sub-Agent (`vocabulary-agent.mjs`)**: 어휘 난이도(CEFR 레벨) 평가 및 자연스러운 대체 표현 추천
-- **Context Compactor (`context-compactor.mjs`)**: 대화 컨텍스트 요약 및 토큰 최적화
+```dotenv
+GEMINI_API_KEY=your_gemini_api_key
+PORT=3000
+```
 
-### 2) 한국어 형태소 분석 및 언어학 엔진 (`src/pos/`)
-- **Kiwi-NLP 어댑터**: 문장 내 단어 분해, 어간/어미/조사 분리
-- **품사 색상 토큰화 (5-Class & Role)**: 주어(Subject), 화제(Topic), 목적어(Object), 서술어(Predicate) 자동 시각화
-- **국립국어원 표준 로마자 표기법 변환**: `romanize.ts` 탑재
-- **유니코드 한글 자모 조합 공식**: 초·중·종성 실시간 합성 및 분해
+Firebase를 연결하려면 다음 값을 추가할 수 있습니다.
 
-### 3) Firebase & Google Cloud 배포 최적화
-- **Google Cloud Run**: 프로덕션용 경량 `Dockerfile` 및 자동 포트 바인딩
-- **Firebase App Hosting**: `apphosting.yaml` 기반 차세대 풀스택 서버리스 배포
-- **Firebase Firestore & Storage**: `firestore.rules`, `storage.rules` 보안 규칙 및 30일 보관 정책
+```dotenv
+FIREBASE_SERVICE_ACCOUNT_KEY=base64_or_json_service_account
+FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+```
 
----
+`FIREBASE_SERVICE_ACCOUNT_KEY`는 서비스 계정 JSON 문자열 또는 해당 JSON을 Base64로 인코딩한 값입니다. 비밀키가 포함된 `.env` 파일은 커밋하지 마세요.
 
-## 3. 프로젝트 디렉터리 구성
+### 실행
+
+```bash
+npm run dev
+```
+
+브라우저에서 <http://localhost:3000>으로 접속합니다.
+
+서버 상태는 다음 주소에서 확인할 수 있습니다.
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+## 프로젝트 구조
 
 ```text
-훈민정음/
-├── preview/                      # 최적화된 독립형 웹 프로토타입 (10개 화면, 107KB)
-│   ├── index.html                # 10개 화면 SPA
-│   ├── js/dc-runtime.js          # 리액트 런타임 브릿지
-│   └── assets/                   # 캐릭터 이미지 (훈이, 정이)
+Hangul-Now/
+├── preview/                    # 정적 웹 UI와 캐릭터 에셋
+│   ├── index.html
+│   ├── js/dc-runtime.js
+│   └── assets/
 ├── src/
-│   ├── agents/                   # Multi-Agent 오케스트레이션 엔진
-│   │   ├── orchestrator.mjs      # 메인 오케스트레이터
-│   │   ├── grammar-agent.mjs     # 문법 에이전트
-│   │   ├── phonetics-agent.mjs   # 발음/음성학 에이전트
-│   │   ├── vocabulary-agent.mjs  # 어휘 에이전트
-│   │   └── context-compactor.mjs # 컨텍스트 압축기
-│   ├── pos/                      # 한국어 형태소 및 언어학 처리 엔진
-│   ├── firebase.js               # Firebase Admin SDK 연동 (Firestore/Auth)
-│   ├── geminiService.js          # Google Gemini API 직접 연동 서비스
-│   ├── tts-verification.mjs      # 음성 평가 및 발음 검증 파이프라인
-│   └── usage-meter.mjs           # 토큰 사용량 및 계측기
-├── apphosting.yaml               # Firebase App Hosting 구성
-├── Dockerfile                    # Google Cloud Run 배포용 Dockerfile
-├── .dockerignore                 # 도커 빌드 제외 설정
-├── firebase.json                 # Firebase 플랫폼 구성
-├── firestore.rules               # Firestore 보안 규칙
-├── storage.rules                 # Storage 보안 규칙
-├── server.js                     # 엔터프라이즈 풀스택 Express 서버
-├── package.json                  # 프로젝트 메타데이터 및 의존성
-└── README.md                     # 기술 가이드
+│   ├── agents/                 # 문법·발음·어휘 에이전트와 오케스트레이터
+│   ├── pos/                    # 형태소 분석, 문장 성분, 로마자 변환
+│   ├── firebase.js             # Firebase Admin 초기화
+│   ├── geminiService.js        # Gemini 대화·교정·평가 서비스
+│   ├── tts-verification.mjs    # 한국어 음성 텍스트 검증
+│   └── usage-meter.mjs         # 모델 사용량 계측
+├── server.js                   # Express API 및 정적 파일 서버
+├── Dockerfile                  # Cloud Run용 컨테이너 설정
+├── firebase.json               # Firebase Hosting 설정
+├── apphosting.yaml             # Firebase App Hosting 설정
+└── package.json
 ```
 
----
+## API
 
-## 4. 백엔드 REST API 명세
+| 메서드 | 경로 | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/health` | 서버, Gemini 및 Firebase 연결 상태 확인 |
+| `POST` | `/api/chat` | AI 튜터 대화 생성 |
+| `POST` | `/api/correction` | 문장 오류 분석 및 교정 |
+| `POST` | `/api/coaching` | 문법·발음·어휘 통합 코칭 |
+| `POST` | `/api/pos/tag` | 형태소 및 문장 성분 분석 |
+| `POST` | `/api/romanize` | 한국어 로마자 변환 |
+| `POST` | `/api/writing/feedback` | 작문 첨삭과 점수 생성 |
+| `POST` | `/api/speaking/assess` | 발음 평가 결과 생성 |
+| `POST` | `/api/session/artifact` | 학습 세션 요약 생성 |
+| `POST` | `/api/session/quiz` | 오답 기반 복습 퀴즈 생성 |
 
-| 메소드 | URI | 요청 페이로드 | 응답 및 기능 설명 |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/health` | - | 시스템 상태, Gemini 모델 계층, Firebase 연동 확인 |
-| `POST` | `/api/chat` | `{ tutorId, message, history, userId? }` | Gemini 3.8 Flash 실시간 튜터 대화 생성 및 Firestore 저장 |
-| `POST` | `/api/coaching` | `{ userText, userAudio?, tutorId }` | **Multi-Agent 병렬 코칭 (문법+발음+어휘)** 종합 피드백 |
-| `POST` | `/api/correction` | `{ sentence, userId? }` | 문장 교정 카드(JSON) 생성 및 오답 노트 자동 등록 |
-| `POST` | `/api/pos/tag` | `{ sentence }` | 형태소 분해, 5대 품사 분류, 문장 성분(Role) 매핑 |
-| `POST` | `/api/romanize` | `{ text }` | 국립국어원 표준 로마자 표기 변환 |
-| `POST` | `/api/writing/feedback` | `{ topic, content }` | 작문 첨삭(diff) 및 총평 피드백 |
-| `POST` | `/api/speaking/assess` | `{ targetSentence, userTranscript }` | 음절 단위 발음 정확도 점수 및 팁 |
-| `POST` | `/api/session/artifact` | `{ sessionData }` | 학습 세션 마크다운 요약 아티팩트 자동 생성 |
-| `POST` | `/api/session/quiz` | `{ mistakeItems }` | 오답 기반 맞춤형 복습 퀴즈 생성 |
+대화 요청 예시:
 
----
-
-## 5. 실행 및 배포 가이드
-
-### (1) 로컬 개발 환경 실행
 ```bash
-# 의존성 설치
-npm install
-
-# 서버 실행 (로컬 웹 + API)
-npm run dev
-
-# 접속 주소: http://localhost:3000
+curl -X POST http://localhost:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"tutorId":"jiwoo","message":"안녕하세요!"}'
 ```
 
-### (2) Google Cloud Run 배포
+## AI 모델 설정
+
+- 일반 대화·교정·작문·발음 서비스는 `src/geminiService.js`에 지정된 Gemini 모델을 사용합니다.
+- 멀티 에이전트 코칭은 `src/agents/orchestrator.mjs`의 전용 모델 설정을 사용합니다.
+- `/api/health` 응답에서 서버가 노출하는 모델 계층과 API 키 설정 여부를 확인할 수 있습니다.
+
+모델 이름은 실제 Google Gemini API에서 사용할 수 있는 모델 ID와 일치해야 합니다.
+
+## 배포
+
+### Docker
+
 ```bash
-# Google Cloud 빌드 및 Cloud Run 원클릭 배포
+docker build -t hangul-now .
+docker run --rm -p 3000:8080 --env-file .env hangul-now
+```
+
+### Google Cloud Run
+
+```bash
 gcloud run deploy hangul-now \
   --source . \
   --region asia-northeast3 \
   --allow-unauthenticated
 ```
 
-### (3) Firebase App Hosting 배포
+### Firebase
+
+`firebase.json`, `firestore.rules`, `storage.rules`, `apphosting.yaml`을 배포 환경에 맞게 검토한 후 Firebase CLI로 배포합니다.
+
 ```bash
-# Firebase CLI 로그인 및 App Hosting 초기화
-firebase apphosting:backends:create --project <PROJECT_ID>
+firebase deploy
 ```
+
+## 보안 참고사항
+
+- `.env`와 Firebase 서비스 계정 키를 Git에 커밋하지 마세요.
+- 현재 Firestore 규칙은 인증 사용자에게 비교적 넓은 쓰기 권한을 허용하므로 프로덕션 배포 전에 사용자 소유권 검증을 강화하세요.
+- 공개 배포에서는 CORS 허용 범위와 API 요청 크기 제한을 서비스 요구사항에 맞게 조정하세요.
+
+## 라이선스
+
+이 프로젝트의 패키지 메타데이터는 ISC 라이선스를 사용합니다.
