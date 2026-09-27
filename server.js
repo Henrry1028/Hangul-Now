@@ -8,6 +8,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import textToSpeech from "@google-cloud/text-to-speech";
 
 import {
   generateTutorChat,
@@ -47,6 +48,49 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || "0.0.0.0";
 
+const parseServiceAccount = raw => {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  try {
+    return JSON.parse(Buffer.from(trimmed, "base64").toString("utf8"));
+  } catch {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return null;
+    }
+  }
+};
+
+const ttsServiceAccount = parseServiceAccount(
+  process.env.GOOGLE_CLOUD_TTS_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+);
+const TUTOR_TTS_VOICES = Object.freeze({
+  jiwoo: { name: "ko-KR-Neural2-A", gender: "FEMALE", speakingRate: 0.9, pitch: 1 },
+  minho: { name: "ko-KR-Neural2-C", gender: "MALE", speakingRate: 0.98, pitch: -1 },
+  seoyeon: { name: "ko-KR-Neural2-B", gender: "FEMALE", speakingRate: 0.88, pitch: -0.5 },
+  haneul: { name: "ko-KR-Neural2-C", gender: "MALE", speakingRate: 0.88, pitch: 1.5 }
+});
+
+let cloudTtsClient;
+const getCloudTtsClient = () => {
+  if (cloudTtsClient) return cloudTtsClient;
+  if (ttsServiceAccount?.client_email && ttsServiceAccount?.private_key) {
+    cloudTtsClient = new textToSpeech.TextToSpeechClient({
+      projectId: ttsServiceAccount.project_id,
+      credentials: {
+        client_email: ttsServiceAccount.client_email,
+        private_key: ttsServiceAccount.private_key
+      }
+    });
+    return cloudTtsClient;
+  }
+  const canUseAdc = Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.K_SERVICE || process.env.GAE_SERVICE);
+  if (!canUseAdc) return null;
+  cloudTtsClient = new textToSpeech.TextToSpeechClient();
+  return cloudTtsClient;
+};
+
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
@@ -68,9 +112,10 @@ app.get("/api/health", (req, res) => {
         chat: process.env.GEMINI_DIALOGUE_MODEL || "gemini-3.8-flash",
         coaching: process.env.GEMINI_PREMIUM_MODEL || "gemini-3.7-flash",
         stt: "gemini-2.5-flash",
-        tts: "gemini-3.8-flash-lite-tts"
+        tts: "Google Cloud TTS Neural2"
       },
       geminiConfigured: hasGemini,
+      cloudTtsConfigured: Boolean(ttsServiceAccount || process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.K_SERVICE || process.env.GAE_SERVICE),
       firebaseAdmin: isFirebaseReady ? "Connected (Firestore & Auth)" : "Demo / In-memory Mock",
       posEngine: "Kiwi-NLP Morphological Analyzer Enabled",
       multiAgentOrchestrator: "Enabled (Grammar + Phonetics + Vocabulary)"
@@ -244,7 +289,55 @@ app.post("/api/speaking/assess", async (req, res) => {
 });
 
 // ============================================================
-// 8. 학습 세션 완료 리포트 및 복습 퀴즈 자동 생성
+// 8. 선택 튜터 한국어 읽기 API
+// ============================================================
+app.post("/api/tts", async (req, res) => {
+  try {
+    const text = String(req.body?.text || "").trim();
+    const tutorId = TUTOR_TTS_VOICES[req.body?.tutorId] ? req.body.tutorId : "jiwoo";
+
+    if (!text || !/[ㄱ-ㅎㅏ-ㅣ가-힣]/u.test(text)) {
+      return res.status(400).json({ error: "읽을 한글 텍스트가 필요합니다." });
+    }
+    if (text.length > 500) {
+      return res.status(400).json({ error: "한 번에 읽을 수 있는 텍스트는 500자까지입니다." });
+    }
+
+    const voice = TUTOR_TTS_VOICES[tutorId];
+    const client = getCloudTtsClient();
+    if (!client) {
+      return res.status(503).json({ error: "Google Cloud TTS 인증 정보가 설정되지 않았습니다." });
+    }
+    const [response] = await client.synthesizeSpeech({
+      input: { text },
+      voice: {
+        languageCode: "ko-KR",
+        name: voice.name,
+        ssmlGender: voice.gender
+      },
+      audioConfig: {
+        audioEncoding: "MP3",
+        speakingRate: voice.speakingRate,
+        pitch: voice.pitch
+      }
+    });
+    if (!response.audioContent) throw new Error("음성 합성 결과가 비어 있습니다.");
+
+    res.set({
+      "Content-Type": "audio/mpeg",
+      "Cache-Control": "private, max-age=86400",
+      "X-Tutor-Voice": voice.name,
+      "X-TTS-Provider": "Google-Cloud-TTS-Neural2"
+    });
+    res.send(Buffer.from(response.audioContent));
+  } catch (err) {
+    console.error("Tutor TTS 오류:", err.message);
+    res.status(503).json({ error: "튜터 음성을 생성하지 못했습니다." });
+  }
+});
+
+// ============================================================
+// 9. 학습 세션 완료 리포트 및 복습 퀴즈 자동 생성
 // ============================================================
 app.post("/api/session/artifact", async (req, res) => {
   try {
@@ -267,14 +360,14 @@ app.post("/api/session/quiz", async (req, res) => {
 });
 
 // ============================================================
-// 9. SPA 클라이언트 라우팅 지원 (HTML5 PushState)
+// 10. SPA 클라이언트 라우팅 지원 (HTML5 PushState)
 // ============================================================
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "preview", "index.html"));
 });
 
 // ============================================================
-// 10. 서버 기동 및 프로덕션 그레이스풀 셧다운
+// 11. 서버 기동 및 프로덕션 그레이스풀 셧다운
 // ============================================================
 const server = app.listen(PORT, HOST, () => {
   console.log(`================================================================`);

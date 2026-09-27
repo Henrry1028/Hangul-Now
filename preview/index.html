@@ -7,6 +7,9 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="./js/dc-runtime.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
 <style>
 /* === 훈이 & 정이 3D 캐릭터 입체화 및 부유 그림자 효과 === */
@@ -32,6 +35,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',sys
 *{box-sizing:border-box}
 a{color:var(--accent-ink);text-decoration:none}a:hover{color:var(--hot)}
 button,textarea,input{font-family:inherit;color:inherit}
+.brand-logo{display:block;width:auto;max-width:100%;object-fit:contain}
+.brand-logo--header{height:36px}
 .marketing-header__nav{scrollbar-width:none}
 .marketing-header__nav::-webkit-scrollbar{display:none}
 @media(max-width:760px){
@@ -41,31 +46,128 @@ button,textarea,input{font-family:inherit;color:inherit}
 }
 @keyframes dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(200,80,42,.45)}100%{box-shadow:0 0 0 22px rgba(200,80,42,0)}}
-/* 훈이 좌우 왕복 (18초 한 바퀴): 왼쪽 차 → 걸어감(책) → 오른쪽 연필 → 걸어옴(책) → 왼쪽 두루마리 */
-@keyframes hunWalk{0%,12%{left:0}35%,55%{left:calc(100% - 150px)}78%,100%{left:0}}
-@keyframes hunBob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-3deg)}50%{transform:translateX(-50%) translateY(-9px) rotate(3deg)}}
+/* 훈이 (14초 한 바퀴): 왼쪽 차 → 오른쪽 연필 → 제자리 좌우 흔들기(책) → 두루마리 → 사라졌다 왼쪽에서 다시 등장 */
+@keyframes hunWalk{0%,16.6%{left:0}16.7%,99.9%{left:calc(100% - 150px)}100%{left:0}}
+@keyframes hunSway{0%,100%{transform:translateX(calc(-50% - 5px)) rotate(-5deg)}50%{transform:translateX(calc(-50% + 5px)) rotate(5deg)}}
 @keyframes hunIdle{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-3px)}}
-@keyframes pTea{0%,11%{opacity:1}13%,97%{opacity:0}100%{opacity:1}}
-@keyframes pBook{0%,11%{opacity:0}13%,34%{opacity:1}36%,54%{opacity:0}56%,77%{opacity:1}79%,100%{opacity:0}}
-@keyframes pPencil{0%,34%{opacity:0}36%,54%{opacity:1}56%,100%{opacity:0}}
-@keyframes pScroll{0%,77%{opacity:0}79%,97%{opacity:1}100%{opacity:0}}
-.hun-walk{position:absolute;left:0;bottom:0;width:150px;height:150px;z-index:2;pointer-events:none;animation:hunWalk 18s ease-in-out infinite}
+@keyframes pTea{0%{opacity:0}2.5%,14%{opacity:1}16.5%,100%{opacity:0}}
+@keyframes pPencil{0%,16.7%{opacity:0}19.2%,42.4%{opacity:1}44.9%,100%{opacity:0}}
+@keyframes pSway{0%,42.4%{opacity:0}44.9%,71.9%{opacity:1}74.5%,100%{opacity:0}}
+@keyframes pScroll{0%,71.9%{opacity:0}74.5%,96.4%{opacity:1}98.9%,100%{opacity:0}}
+.hun-walk{position:absolute;left:0;bottom:0;width:150px;height:150px;z-index:2;pointer-events:none;animation:hunWalk 14s linear infinite}
 .hun-pose{position:absolute;left:50%;bottom:0;height:150px;width:auto;opacity:0;transform:translateX(-50%);filter:drop-shadow(0 14px 20px rgba(0,0,0,.22));user-select:none}
-.hun-pose.tea{animation:pTea 18s linear infinite,hunIdle 2.4s ease-in-out infinite}
-.hun-pose.book{animation:pBook 18s linear infinite,hunBob .5s ease-in-out infinite}
-.hun-pose.pencil{animation:pPencil 18s linear infinite,hunIdle 1.6s ease-in-out infinite}
-.hun-pose.scroll{animation:pScroll 18s linear infinite,hunIdle 2s ease-in-out infinite}
+.hun-pose.tea{animation:pTea 14s linear infinite,hunIdle 2.4s ease-in-out infinite}
+.hun-pose.pencil{animation:pPencil 14s linear infinite,hunIdle 1.6s ease-in-out infinite}
+.hun-pose.sway{transform-origin:50% 100%;animation:pSway 14s linear infinite,hunSway 1.3s ease-in-out infinite}
+.hun-pose.scroll{animation:pScroll 14s linear infinite,hunIdle 2s ease-in-out infinite}
 .mock-body{transition:opacity .35s ease,transform .35s ease}
 @media(prefers-reduced-motion:reduce){.hun-walk,.hun-pose{animation:none}.hun-pose.pencil{opacity:1}.mock-body{transition:none}}
+
+/* SVG 키보드 & 손 오버레이 애니메이션 */
+.key-node rect{transition:fill 0.15s ease,stroke 0.15s ease,filter 0.15s ease;cursor:pointer}
+.key-node:hover rect{filter:brightness(0.96)}
+.key-target rect{fill:#B25353 !important;stroke:#8E3636 !important;filter:drop-shadow(0 4px 14px rgba(178,83,83,0.45)) !important}
+.key-error rect{fill:#E53935 !important;stroke:#B71C1C !important;animation:keyShake 0.25s ease-in-out !important}
+@keyframes keyShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.hand-layer{pointer-events:none;filter:brightness(0);transition:opacity 150ms ease-out}
+[data-theme="dark"] .hand-layer{filter:brightness(0) invert(1)}
+.finger-active{fill:rgba(178,83,83,0.72) !important;stroke:#8E3636 !important;stroke-width:1.8 !important}
+@keyframes jeongCelebrate{0%{opacity:0;transform:translateY(12px) scale(.88) rotate(-4deg)}55%{opacity:1;transform:translateY(-5px) scale(1.04) rotate(2deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+.writing-build-stage{display:grid;grid-template-columns:190px minmax(120px,150px);align-items:end;justify-content:center;gap:16px}
+.writing-build-block{width:190px;height:190px}
+.jeong-celebration{width:100%;max-height:178px;object-fit:contain;object-position:center bottom;pointer-events:none;filter:drop-shadow(0 12px 18px rgba(0,0,0,.24));animation:jeongCelebrate .55s cubic-bezier(.2,.8,.2,1) both}
+.tutor-speech-button{border:1px solid var(--line);background:var(--card);color:var(--accent-ink);border-radius:999px;min-height:38px;padding:8px 11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;transition:transform .15s ease,background .15s ease,border-color .15s ease}
+.tutor-speech-button:hover{transform:translateY(-1px);border-color:var(--accent)}
+.tutor-speech-button:focus-visible{outline:3px solid rgba(35,73,63,.22);outline-offset:2px}
+.tutor-speech-button.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
+@media(max-width:520px){.writing-build-stage{grid-template-columns:166px 96px;gap:8px}.writing-build-block{width:166px!important;height:166px!important;font-size:96px!important}.jeong-celebration{max-height:150px}.tutor-speech-button .speech-label{display:none}}
+@media(prefers-reduced-motion:reduce){.jeong-celebration{animation:none}.tutor-speech-button{transition:none}}
+@media(min-width:860px){
+  .writing-screen{height:calc(100vh - 69px);max-width:1440px!important;padding:12px 24px!important;gap:10px!important;overflow:hidden}
+  .writing-page-header{min-height:42px;flex:none}
+  .writing-page-header>div:first-child{gap:1px!important}
+  .writing-page-header h1{font-size:30px!important;line-height:1!important}
+  .writing-build-content{display:grid!important;grid-template-rows:auto minmax(270px,38vh) minmax(0,1fr);gap:10px!important;flex:1;min-height:0}
+  .writing-level-bar{padding:7px 12px!important;min-height:42px}
+  .writing-main-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important;align-items:stretch!important;min-height:0}
+  .writing-target-card,.writing-jamo-card{height:100%;min-height:0;overflow:hidden;padding:12px!important;gap:8px!important;border-radius:16px!important}
+  .writing-target-header{padding:8px 12px!important;gap:8px!important;flex-wrap:nowrap!important;border-radius:12px!important}
+  .writing-target-header>div:first-child{gap:1px!important;min-width:0}
+  .writing-target-header>div:first-child>span{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .target-letter-badge{width:54px!important;height:54px!important;border-radius:13px!important;font-size:36px!important}
+  .writing-word-progress{gap:6px!important}
+  .writing-word-progress span{font-size:28px!important}
+  .writing-canvas-section{gap:5px!important;padding:0!important;min-height:0;flex:1;justify-content:center}
+  .writing-build-stage{grid-template-columns:128px 104px;gap:10px}
+  .writing-build-block{width:128px!important;height:128px!important;font-size:76px!important;border-radius:15px!important}
+  .jeong-celebration{max-height:116px}
+  .writing-canvas-section>div:last-child{gap:1px!important}
+  .writing-canvas-section>div:last-child span:first-child{font-size:13px!important}
+  .writing-actions{padding-top:7px!important;gap:7px!important}
+  .writing-actions button{padding:7px 12px!important;font-size:12px!important}
+  .writing-jamo-row{gap:4px!important}
+  .writing-jamo-row>div:first-child span{font-size:12px!important}
+  .writing-jamo-row>div:last-child{gap:4px!important}
+  .writing-jamo-key{min-width:34px!important;height:34px!important;border-radius:8px!important;font-size:16px!important}
+  .writing-jamo-note{font-size:11px!important;line-height:1.35!important;padding-top:6px!important}
+  .writing-keyboard-card{min-height:0;overflow:hidden;padding:9px 12px!important;gap:6px!important;border-radius:16px!important}
+  .writing-keyboard-header{min-height:38px;flex:none;gap:8px!important;padding-bottom:5px!important;flex-wrap:nowrap!important}
+  .writing-keyboard-header>div:first-child>div:last-child span:first-child{font-size:13px!important}
+  .writing-keyboard-header>div:first-child>div:last-child span:last-child{display:none}
+  .writing-keyboard-header button{padding:5px 10px!important;font-size:11px!important}
+  .writing-keyboard-header>div:last-child>div:last-child{padding:5px 10px!important}
+  .writing-keyboard-header>div:last-child>div:last-child span{font-size:11px!important}
+  .writing-keyboard-viewport{flex:1;min-height:0;padding:4px!important;border-radius:12px!important}
+  #virtual-keyboard-root{width:100%!important;max-width:none!important;height:100%;min-height:0;align-items:center}
+  #virtual-keyboard-root svg{width:100%!important;height:100%!important;max-width:100%!important}
+  .writing-keyboard-footer{min-height:24px;flex:none;padding-top:4px!important;gap:6px!important}
+  .writing-keyboard-footer span{font-size:10.5px!important}
+}
+@media(min-width:860px) and (min-height:1050px){
+  .writing-screen{padding:18px 28px!important;gap:14px!important}
+  .writing-page-header{min-height:52px}
+  .writing-page-header h1{font-size:38px!important}
+  .writing-build-content{grid-template-rows:auto minmax(400px,40vh) minmax(0,1fr);gap:14px!important}
+  .writing-level-bar{min-height:50px;padding:9px 16px!important}
+  .writing-target-card,.writing-jamo-card{padding:20px!important;gap:14px!important;border-radius:20px!important}
+  .writing-target-header{padding:12px 16px!important}
+  .writing-target-header>div:first-child>span{font-size:13px!important}
+  .target-letter-badge{width:68px!important;height:68px!important;font-size:44px!important}
+  .writing-canvas-section{gap:10px!important}
+  .writing-build-stage{grid-template-columns:clamp(160px,15vh,210px) 140px;gap:16px}
+  .writing-build-block{width:clamp(160px,15vh,210px)!important;height:clamp(160px,15vh,210px)!important;font-size:clamp(92px,8vh,118px)!important}
+  .jeong-celebration{max-height:178px}
+  .writing-canvas-section>div:last-child span:first-child{font-size:15px!important}
+  .writing-actions{padding-top:10px!important}
+  .writing-actions button{padding:9px 16px!important;font-size:13px!important}
+  .writing-jamo-row{gap:7px!important}
+  .writing-jamo-row>div:first-child span{font-size:14px!important}
+  .writing-jamo-row>div:last-child{gap:6px!important}
+  .writing-jamo-key{min-width:42px!important;height:42px!important;border-radius:10px!important;font-size:19px!important}
+  .writing-jamo-note{font-size:13px!important;line-height:1.5!important;padding-top:10px!important}
+  .writing-keyboard-card{padding:12px 16px!important;gap:9px!important;border-radius:20px!important}
+  .writing-keyboard-header{min-height:44px}
+  .writing-keyboard-header>div:first-child>div:last-child span:first-child{font-size:15px!important}
+  .writing-keyboard-header button{font-size:12px!important}
+  .writing-keyboard-footer{min-height:28px}
+  .writing-keyboard-footer span{font-size:12px!important}
+}
+@media(min-width:860px) and (max-height:800px){
+  .writing-target-card,.writing-jamo-card{gap:5px!important}
+  .writing-canvas-section>div:last-child span:last-child{display:none}
+  .writing-actions{padding-top:4px!important}
+  .writing-jamo-row{gap:3px!important}
+  .writing-jamo-key{height:32px!important}
+  .writing-jamo-note{line-height:1.2!important;padding-top:4px!important}
+}
 </style>
 </helmet>
 
 <div style="min-height:100vh;background:var(--bg);display:flex;flex-direction:column">
 
   <header class="marketing-header" style="position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(20px,5vw,64px);border-bottom:1px solid var(--line);background:var(--bg);flex-wrap:wrap">
-    <button sc-camel-on-click="{{ goIntro }}" style="display:flex;align-items:center;gap:10px;border:0;background:none;cursor:pointer;padding:0">
-      <div style="width:36px;height:36px;border-radius:9px;background:var(--accent);color:#F5F2EB;display:grid;place-items:center;font:700 20px 'Gowun Batang',serif">한</div>
-      <span style="font:600 21px 'Newsreader',serif;letter-spacing:-.01em;color:var(--ink)">Hangul Now</span>
+    <button sc-camel-on-click="{{ goIntro }}" aria-label="Hangul Now home" style="display:flex;align-items:center;border:0;background:none;cursor:pointer;padding:0">
+      <img class="brand-logo brand-logo--header" src="./assets/hangul-now-logo.png" alt="Hangul Now">
     </button>
     <nav class="marketing-header__nav" style="display:flex;align-items:center;gap:20px;font-size:14px;flex-wrap:wrap">
       <button sc-camel-on-click="{{ goHow }}" style="border:0;background:none;color:var(--sub);font-size:14px;cursor:pointer">{{ t.navHow }}</button>
@@ -76,7 +178,8 @@ button,textarea,input{font-family:inherit;color:inherit}
         <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if>
         <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if>
       </button>
-      <button sc-camel-on-click="{{ goHome }}" style="border:0;background:none;color:var(--ink);font-size:14px;cursor:pointer">{{ t.login }}</button>
+      <sc-if value="{{ isNotLoggedIn }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ loginWithGoogle }}" style="border:0;background:none;color:var(--ink);font-size:14px;cursor:pointer">{{ t.login }}</button></sc-if>
+      <sc-if value="{{ isLoggedIn }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ goHome }}" style="border:0;background:none;color:var(--ink);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px"><span style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700">{{ userInitial }}</span><span>{{ userName }}</span></button></sc-if>
       <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:var(--solid);color:var(--on-solid);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer">{{ t.startFree }}</button>
     </nav>
   </header>
@@ -114,8 +217,8 @@ button,textarea,input{font-family:inherit;color:inherit}
         <div style="position:relative;height:100px">
           <div class="hun-walk" role="img" aria-label="Hunie">
             <img class="hun-pose tea" src="./assets/훈이_tea.png" alt="">
-            <img class="hun-pose book" src="./assets/훈이_book.png" alt="">
             <img class="hun-pose pencil" src="./assets/훈이_pencil.png" alt="">
+            <img class="hun-pose sway" src="./assets/훈이_book.png" alt="">
             <img class="hun-pose scroll" src="./assets/훈이_scroll.png" alt="">
           </div>
         </div>
@@ -343,10 +446,6 @@ button,textarea,input{font-family:inherit;color:inherit}
 <div style="display:flex;flex:1;background:var(--bg);min-height:calc(100vh - 69px)">
   <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
   <aside style="width:240px;flex:none;position:sticky;top:69px;height:calc(100vh - 69px);border-right:1px solid var(--line);background:var(--bg2);display:flex;flex-direction:column;padding:20px 14px;gap:20px;overflow-y:auto">
-    <button sc-camel-on-click="{{ goIntro }}" style="display:flex;align-items:center;gap:10px;border:0;background:none;cursor:pointer;padding:4px 6px;text-align:left">
-      <div style="width:32px;height:32px;border-radius:8px;background:var(--accent);color:#F5F2EB;display:grid;place-items:center;font:700 18px 'Gowun Batang',serif">한</div>
-      <span style="font:600 19px 'Newsreader',serif;color:var(--ink)">Hangul Now</span>
-    </button>
     <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="3">
       <div style="display:flex;flex-direction:column;gap:2px">
         <span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--faint);padding:0 10px 6px">{{ g.label }}</span>
@@ -364,18 +463,49 @@ button,textarea,input{font-family:inherit;color:inherit}
         </sc-for>
       </div>
     </sc-for>
-    <div style="margin-top:auto;border-top:1px solid var(--line);padding-top:14px">
-
-
-
-
-
-
-
-      <div style="display:flex;align-items:center;gap:10px;padding:4px 6px">
-        <div style="width:34px;height:34px;border-radius:50%;background:#D7DCE3;color:#1C1F1E;display:grid;place-items:center;font-size:13px;font-weight:700">E</div>
-        <div style="display:flex;flex-direction:column;line-height:1.35"><span style="font-size:14px;font-weight:600">Emma Clarke</span><span style="font-size:12px;color:var(--faint)">{{ t.emmaLevel }}</span></div>
+    <div style="margin-top:auto;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px">
+      <!-- 🌟 선택된 전담 튜터 프로필 카드 (두번째 첨부 영역) -->
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.02)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--accent);text-transform:uppercase">{{ tutorCardLabel }}</span>
+          <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:none;color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;padding:0;display:flex;align-items:center;gap:2px">
+            <span>{{ changeTutorLabel }}</span> ↺
+          </button>
+        </div>
+        <div sc-camel-on-click="{{ goChat }}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <div style="width:40px;height:40px;border-radius:13px;background:{{ tutor.color }};color:#1C1F1E;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;position:relative">
+            {{ tutor.initial }}
+            <span style="position:absolute;bottom:-2px;right:-2px;width:15px;height:15px;border-radius:50%;background:{{ tutor.genderBg }};color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;border:1.5px solid var(--card)">{{ tutor.genderSymbol }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;line-height:1.3;min-width:0">
+            <span style="font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)">{{ tutor.name }}</span>
+            <span style="font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ tutor.role }}</span>
+          </div>
+        </div>
       </div>
+
+      <!-- 🌟 사용자 계정 및 Google 로그인 상태 -->
+      <sc-if value="{{ isLoggedIn }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px">
+          <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
+            <div style="width:32px;height:32px;border-radius:50%;background:#D7DCE3;color:#1C1F1E;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;overflow:hidden">
+              <sc-if value="{{ hasUserPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ userPhoto }}" alt="" style="width:100%;height:100%;object-fit:cover"></sc-if>
+              <sc-if value="{{ noUserPhoto }}" hint-placeholder-val="{{ true }}">{{ userInitial }}</sc-if>
+            </div>
+            <div style="display:flex;flex-direction:column;line-height:1.3;min-width:0">
+              <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</span>
+              <span style="font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userEmail }}</span>
+            </div>
+          </div>
+          <button sc-camel-on-click="{{ logoutFirebase }}" title="로그아웃" style="border:0;background:none;color:var(--faint);font-size:13px;cursor:pointer;padding:2px 4px;flex:none">✕</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isNotLoggedIn }}" hint-placeholder-val="{{ true }}">
+        <button sc-camel-on-click="{{ loginWithGoogle }}" style="display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 10px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;width:100%;transition:background .15s">
+          <svg width="13" height="13" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span>{{ googleLoginLabel }}</span>
+        </button>
+      </sc-if>
     </div>
   </aside>
   </sc-if>
@@ -545,11 +675,25 @@ button,textarea,input{font-family:inherit;color:inherit}
         </sc-for>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px">
-        <sc-for list="{{ tutorList }}" as="tu" hint-placeholder-count="6">
-          <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px">
+        <sc-for list="{{ tutorList }}" as="tu" hint-placeholder-count="4">
+          <div style="background:var(--card);border:{{ tu.cardBd }};border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 4px 16px rgba(0,0,0,0.03);position:relative">
+            <sc-if value="{{ tu.isSelected }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:14px;right:14px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px">
+                내 전담 튜터 ✓
+              </div>
+            </sc-if>
             <div style="display:flex;gap:14px;align-items:center">
-              <div style="position:relative;flex:none"><div style="width:60px;height:60px;border-radius:22px;background:{{ tu.color }};color:#1C1F1E;display:grid;place-items:center;font-weight:700">{{ tu.initial }}</div><sc-if value="{{ tu.online }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:#3E9B6A;border:2.5px solid var(--card)"></span></sc-if></div>
-              <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:17px;font-weight:700">{{ tu.name }} <span style="font:400 14px 'Gowun Batang',serif;color:var(--faint)">{{ tu.alt }}</span></span><span style="font-size:13.5px;color:var(--sub)">{{ tu.role }}</span></div>
+              <div style="position:relative;flex:none">
+                <div style="width:60px;height:60px;border-radius:22px;background:{{ tu.color }};color:#1C1F1E;display:grid;place-items:center;font-weight:700;font-size:16px">{{ tu.initial }}</div>
+                <span style="position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;border-radius:50%;background:{{ tu.genderBg }};color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;border:2px solid var(--card)">{{ tu.genderSymbol }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:17px;font-weight:700">{{ tu.name }}</span>
+                  <span style="font-size:11.5px;padding:1px 6px;border-radius:4px;background:rgba(0,0,0,0.06);font-weight:600">{{ tu.genderLabel }}</span>
+                </div>
+                <span style="font-size:13.5px;color:var(--sub)">{{ tu.role }}</span>
+              </div>
             </div>
             <p style="margin:0;font:400 16px/1.55 'Newsreader','Gowun Batang',serif;color:var(--ink2);min-height:50px">“{{ tu.quote }}”</p>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -557,7 +701,7 @@ button,textarea,input{font-family:inherit;color:inherit}
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line2);padding-top:14px;gap:10px">
               <span style="font-size:12.5px;color:var(--faint)">{{ tu.status }}</span>
-              <button sc-camel-on-click="{{ tu.open }}" style="border:0;background:var(--accent);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;flex:none">{{ t.startChat }}</button>
+              <button sc-camel-on-click="{{ tu.open }}" style="border:0;background:{{ tu.btnBg }};color:#fff;padding:10px 18px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;flex:none">{{ tu.btnLabel }}</button>
             </div>
           </div>
         </sc-for>
@@ -566,29 +710,27 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <sc-if value="{{ pChat }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="04 Chat" style="display:flex;height:{{ chatH }};min-height:520px">
-      <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
-      <div style="width:300px;flex:none;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column">
-        <div style="padding:20px 18px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:19px;font-weight:700">{{ t.chats }}</span><button sc-camel-on-click="{{ goTutors }}" style="border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 10px;font-size:12.5px;cursor:pointer">{{ t.newTutor }}</button></div>
-        <div style="flex:1;overflow-y:auto">
-          <sc-for list="{{ chatList }}" as="c" hint-placeholder-count="5">
-            <button sc-camel-on-click="{{ c.open }}" style="display:flex;gap:12px;align-items:center;width:100%;padding:11px 18px;border:0;background:{{ c.bg }};cursor:pointer;text-align:left">
-              <div style="width:46px;height:46px;border-radius:17px;background:{{ c.color }};color:#1C1F1E;display:grid;place-items:center;font-size:12.5px;font-weight:700;flex:none">{{ c.initial }}</div>
-              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
-                <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:14.5px;font-weight:600">{{ c.name }}</span><span style="font-size:11.5px;color:var(--faint);flex:none">{{ c.time }}</span></div>
-                <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.last }}</span><sc-if value="{{ c.hasUnread }}" hint-placeholder-val="{{ false }}"><span style="background:var(--hot);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;flex:none">{{ c.unread }}</span></sc-if></div>
-              </div>
-            </button>
-          </sc-for>
-        </div>
-      </div>
-      </sc-if>
-
+    <div data-screen-label="04 Chat" style="display:flex;height:{{ chatH }};min-height:520px;flex:1">
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--chat)">
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(0,0,0,.06);flex-wrap:wrap">
-          <div style="width:38px;height:38px;border-radius:14px;background:{{ tutor.color }};color:#1C1F1E;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none">{{ tutor.initial }}</div>
-          <div style="flex:1;min-width:140px;display:flex;flex-direction:column;line-height:1.35"><span style="font-size:16px;font-weight:700">{{ tutor.name }}</span><span style="font-size:12px;color:var(--chat-ink)">{{ tutor.role }} · {{ tutor.pace }}</span></div>
-          <button sc-camel-on-click="{{ toggleAllTr }}" style="border:1px solid var(--line3);background:{{ trBtnBg }};border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer">{{ trLabel }}</button>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid rgba(0,0,0,.08);background:var(--card);flex-wrap:wrap">
+          <div style="width:42px;height:42px;border-radius:15px;background:{{ tutor.color }};color:#1C1F1E;display:grid;place-items:center;font-size:13.5px;font-weight:700;flex:none;position:relative">
+            {{ tutor.initial }}
+            <span style="position:absolute;bottom:-2px;right:-2px;width:15px;height:15px;border-radius:50%;background:{{ tutor.genderBg }};color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;border:1.5px solid var(--card)">{{ tutor.genderSymbol }}</span>
+          </div>
+          <div style="flex:1;min-width:140px;display:flex;flex-direction:column;line-height:1.35">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:16.5px;font-weight:700;color:var(--ink)">{{ tutor.name }}</span>
+              <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:var(--chip);font-weight:600;color:var(--sub)">{{ tutor.genderLabel }}</span>
+              <span style="font-size:11.5px;color:#3E9B6A;font-weight:600">● {{ t.onlineLabel }}</span>
+            </div>
+            <span style="font-size:12.5px;color:var(--sub)">{{ tutor.role }} · {{ tutor.pace }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button sc-camel-on-click="{{ goTutors }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px">
+              <span>{{ changeTutorLabel }}</span> ↺
+            </button>
+            <button sc-camel-on-click="{{ toggleAllTr }}" style="border:1px solid var(--line3);background:{{ trBtnBg }};border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer">{{ trLabel }}</button>
+          </div>
         </div>
         <div ref="{{ msgRef }}" style="flex:1;overflow-y:auto;padding:16px 18px 20px;display:flex;flex-direction:column;gap:6px">
           <sc-for list="{{ msgs }}" as="m" hint-placeholder-count="4">
@@ -694,9 +836,14 @@ button,textarea,input{font-family:inherit;color:inherit}
     <sc-if value="{{ pReading }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="06 Reading" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:28px;align-items:start">
       <div style="grid-column:span 2;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:clamp(24px,4vw,44px);display:flex;flex-direction:column;gap:22px">
-        <div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">{{ t.rEyebrow }}</span><h1 style="margin:0;font:700 clamp(24px,3vw,32px)/1.4 'Gowun Batang',serif">벚꽃이 피면, 서울은 분홍색이 돼요</h1><span style="font-size:14px;color:var(--faint)">{{ t.rSubtitle }}</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">{{ t.rEyebrow }}</span><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h1 style="margin:0;font:700 clamp(24px,3vw,32px)/1.4 'Gowun Batang',serif">벚꽃이 피면, 서울은 분홍색이 돼요</h1><button class="tutor-speech-button" sc-camel-on-click="{{ speakReadingFull }}" title="{{ readingFullSpeechTitle }}" aria-label="{{ readingFullSpeechTitle }}" style="background:{{ readingFullSpeechBg }};border-color:{{ readingFullSpeechBd }};color:{{ readingFullSpeechFg }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg><span class="speech-label">{{ readingFullSpeechLabel }}</span></button><button sc-camel-on-click="{{ toggleReadingTr }}" style="border:1px solid var(--line3);background:{{ rTrBtnBg }};color:{{ rTrBtnFg }};border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">{{ rTrLabel }}</button></div><span style="font-size:14px;color:var(--faint)">{{ t.rSubtitle }}</span></div>
         <sc-for list="{{ paras }}" as="para" hint-placeholder-count="3">
-          <p style="margin:0;font:400 19px/2 'Gowun Batang',serif;color:var(--ink);text-wrap:pretty"><sc-for list="{{ para.segs }}" as="s" hint-placeholder-count="3"><span sc-camel-on-click="{{ s.click }}" style="border-bottom:{{ s.bb }};background:{{ s.bg }};cursor:{{ s.cur }};border-radius:3px">{{ s.t }}</span></sc-for></p>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <p style="margin:0;font:400 19px/2 'Gowun Batang',serif;color:var(--ink);text-wrap:pretty"><sc-for list="{{ para.segs }}" as="s" hint-placeholder-count="3"><span sc-camel-on-click="{{ s.click }}" style="border-bottom:{{ s.bb }};background:{{ s.bg }};cursor:{{ s.cur }};border-radius:3px">{{ s.t }}</span></sc-for></p>
+            <sc-if value="{{ para.showTr }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:0;padding-left:12px;border-left:2px solid var(--line3);font-size:15px;line-height:1.7;color:var(--sub);text-wrap:pretty">{{ para.en }}</p>
+            </sc-if>
+          </div>
         </sc-for>
         <div style="border-top:1px solid var(--line2);padding-top:22px;display:flex;flex-direction:column;gap:18px">
           <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">{{ t.rCheck }}</span>
@@ -711,10 +858,10 @@ button,textarea,input{font-family:inherit;color:inherit}
         <sc-if value="{{ hasWord }}" hint-placeholder-val="{{ false }}">
           <div style="background:#23493F;color:#F5F2EB;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:10px">
             <span style="font-size:12px;color:#A9C1B6">{{ word.pos }}</span>
-            <span style="font:700 32px 'Gowun Batang',serif">{{ word.base }}</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="font:700 32px 'Gowun Batang',serif">{{ word.base }}</span><button class="tutor-speech-button" sc-camel-on-click="{{ speakReadingWord }}" title="{{ readingWordSpeechTitle }}" aria-label="{{ readingWordSpeechTitle }}" style="background:{{ readingWordSpeechBg }};border-color:{{ readingWordSpeechBd }};color:{{ readingWordSpeechFg }};min-height:34px;padding:6px 10px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg></button></div>
             <span style="font-size:16px">{{ word.en }}</span>
             <span style="font-size:14px;color:#DCE5E0;border-top:1px solid rgba(245,242,235,.18);padding-top:10px;line-height:1.55">{{ word.ex }}</span>
-            <button sc-camel-on-click="{{ saveWord }}" style="align-self:flex-start;border:0;background:#F5F2EB;color:#23493F;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">{{ saveLabel }}</button>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><button sc-camel-on-click="{{ saveWord }}" style="border:0;background:#F5F2EB;color:#23493F;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">{{ saveLabel }}</button><button class="tutor-speech-button" sc-camel-on-click="{{ speakReadingExample }}" title="{{ readingExSpeechTitle }}" aria-label="{{ readingExSpeechTitle }}" style="background:{{ readingExSpeechBg }};border-color:{{ readingExSpeechBd }};color:{{ readingExSpeechFg }};min-height:34px;padding:6px 10px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg><span style="font-size:11px">{{ readingExSpeechLabel }}</span></button></div>
           </div>
         </sc-if>
         <sc-if value="{{ noWord }}" hint-placeholder-val="{{ true }}">
@@ -733,39 +880,253 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <sc-if value="{{ pWriting }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="07 Writing" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+    <div class="writing-screen" data-screen-label="07 Writing" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+      <div class="writing-page-header" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
         <div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">WRITING</span><h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.wTitle }}</h1></div>
         <div style="display:flex;background:var(--seg);border-radius:12px;padding:4px">
           <button sc-camel-on-click="{{ wTabJamo }}" style="border:0;background:{{ wJamoBg }};border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer">{{ t.wTab1 }}</button>
+          <button sc-camel-on-click="{{ wTabWord }}" style="border:0;background:{{ wWordBg }};border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer">{{ t.wTab3 }}</button>
           <button sc-camel-on-click="{{ wTabSent }}" style="border:0;background:{{ wSentBg }};border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer">{{ t.wTab2 }}</button>
         </div>
       </div>
-      <sc-if value="{{ wJamo }}" hint-placeholder-val="{{ true }}">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px">
-          <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;position:relative">
-            <span style="font-size:15px;color:var(--sub)">{{ t.jamoPrompt }} <b style="color:var(--ink);font-family:'Gowun Batang',serif;font-size:18px">{{ target.ch }}</b> <span style="color:var(--faint)">({{ target.en }})</span></span>
-            <div style="width:200px;height:200px;border-radius:20px;background:var(--bg);border:2px solid {{ blockBd }};display:grid;place-items:center;font:700 120px/1 'Gowun Batang',serif;position:relative">{{ composed }}
-              <span style="position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:100px 100px;background-position:-1px -1px;opacity:.6;pointer-events:none;border-radius:18px"></span>
-            </div>
-            <span style="font-size:14.5px;font-weight:600;color:{{ jamoMsgC }}">{{ jamoMsg }}</span>
-            <sc-if value="{{ jamoOk }}" hint-placeholder-val="{{ false }}"><img src="./assets/캐릭터_훈이.png" alt="" style="position:absolute;right:10px;bottom:10px;width:96px;pointer-events:none"></sc-if>
-            <button sc-camel-on-click="{{ nextTarget }}" style="border:1px solid var(--ink);background:transparent;border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer">{{ t.nextSyl }}</button>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:18px">
-            <sc-for list="{{ jamoRows }}" as="row" hint-placeholder-count="3">
-              <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600;color:var(--sub)">{{ row.label }}</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ row.keys }}" as="k" hint-placeholder-count="6"><button sc-camel-on-click="{{ k.pick }}" style="min-width:48px;height:48px;padding:0 8px;border-radius:12px;border:1.5px solid {{ k.bd }};background:{{ k.bg }};color:{{ k.fg }};font:600 {{ k.fs }} 'Pretendard',sans-serif;cursor:pointer">{{ k.ch }}</button></sc-for></div>
+      <sc-if value="{{ wBuild }}" hint-placeholder-val="{{ true }}">
+        <div class="writing-build-content" style="display:flex;flex-direction:column;gap:24px">
+
+          <!-- 🌟 상단: 난이도 레벨 선택 바 (Basic / Expanded / Advanced) -->
+          <div class="writing-level-bar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 18px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:var(--accent);text-transform:uppercase">LEVEL SELECT</span>
+              <div style="display:flex;background:var(--seg);border-radius:10px;padding:3px">
+                <sc-for list="{{ jLevels }}" as="lv" hint-placeholder-count="3">
+                  <button sc-camel-on-click="{{ lv.pick }}" style="border:0;background:{{ lv.bg }};color:{{ lv.fg }};border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">{{ lv.label }}</button>
+                </sc-for>
               </div>
-            </sc-for>
-            <span style="font-size:13.5px;color:var(--faint);line-height:1.6;border-top:1px solid var(--line);padding-top:14px">{{ t.jamoNote }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:12.5px;color:var(--faint)">{{ targetIdxLabel }}</span>
+              <button sc-camel-on-click="{{ nextTarget }}" style="border:1px solid var(--line3);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px">
+                <span>{{ nextLabel }}</span> ➔
+              </button>
+            </div>
           </div>
+
+          <!-- 🌟 메인 영역: 좌측 [목표 글자 강조 + 캔버스] + 우측 [자모 블록 선택기] -->
+          <div class="writing-main-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:24px;align-items:start">
+
+            <!-- 좌측: 제시된 한글 글자 크고 선명하게 재배치 + 조합 박스 -->
+            <div class="writing-target-card" style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:20px;box-shadow:0 4px 16px rgba(0,0,0,0.03);position:relative">
+
+              <!-- 🎯 1. 제시된 목표 한글 글자 강조 헤더 (사용자 요청 1번) -->
+              <div class="writing-target-header" style="background:linear-gradient(135deg, rgba(35,73,63,0.08) 0%, rgba(200,80,42,0.06) 100%);border:1.5px solid var(--line);border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--hot);text-transform:uppercase">🎯 TARGET LETTER</span>
+                    <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:var(--chip);color:var(--sub);font-weight:600">{{ target.level }}</span>
+                  </div>
+                  <span style="font-size:13.5px;color:var(--ink2);line-height:1.4">{{ targetPromptText }}</span>
+                  <span style="font-size:12px;color:var(--faint);font-family:'IBM Plex Mono',monospace">{{ target.hint }}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex:none;margin-left:auto">
+                  <button class="tutor-speech-button" sc-camel-on-click="{{ speakTarget }}" title="{{ targetSpeechTitle }}" aria-label="{{ targetSpeechTitle }}" style="background:{{ targetSpeechBg }};border-color:{{ targetSpeechBd }};color:{{ targetSpeechFg }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg>
+                    <span class="speech-label">{{ targetSpeechLabel }}</span>
+                  </button>
+                  <!-- 커다란 목표 글자 뱃지 -->
+                  <div class="target-letter-badge" style="width:72px;height:72px;border-radius:18px;background:var(--accent);color:#fff;display:grid;place-items:center;font:700 46px/1 'Gowun Batang',serif;box-shadow:0 8px 20px rgba(35,73,63,0.28);text-align:center">
+                    {{ target.ch }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 단어 만들기: 단어 전체와 현재 음절 위치 -->
+              <sc-if value="{{ isWordMode }}" hint-placeholder-val="{{ false }}">
+                <div class="writing-word-progress" style="display:flex;justify-content:center;gap:10px">
+                  <sc-for list="{{ wordSyls }}" as="ws"><span style="font:700 36px/1.2 'Gowun Batang',serif;color:{{ ws.c }};border-bottom:3px solid {{ ws.bd }};padding:0 4px">{{ ws.ch }}</span></sc-for>
+                </div>
+              </sc-if>
+
+              <!-- 🧩 2. 현재 내가 조합 중인 글자 캔버스 -->
+              <div class="writing-canvas-section" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 0">
+                <div class="writing-build-stage">
+                  <div class="writing-build-block" style="border-radius:20px;background:var(--bg);border:2.5px solid {{ blockBd }};display:grid;place-items:center;font:700 110px/1 'Gowun Batang',serif;position:relative;box-shadow:inset 0 2px 8px rgba(0,0,0,0.04)">
+                    {{ composed }}
+                    <!-- 훈민정음 격자 방안지 라인 -->
+                    <span style="position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:50% 50%;background-position:-1px -1px;opacity:.55;pointer-events:none;border-radius:18px"></span>
+                  </div>
+                  <sc-if value="{{ showJeongCelebration }}" hint-placeholder-val="{{ false }}">
+                    <img class="jeong-celebration" src="{{ jeongPose.src }}" alt="{{ jeongPose.alt }}">
+                  </sc-if>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <span style="font-size:15px;font-weight:700;color:{{ jamoMsgC }}">{{ jamoMsg }}</span>
+                  <span style="font-size:12.5px;color:var(--faint)">{{ target.en }}</span>
+                </div>
+              </div>
+
+              <!-- 하단 액션 버튼 -->
+              <div class="writing-actions" style="display:flex;gap:10px;justify-content:center;border-top:1px solid var(--line2);padding-top:16px">
+                <button sc-camel-on-click="{{ resetTarget }}" style="border:1px solid var(--line);background:var(--bg);color:var(--sub);border-radius:10px;padding:9px 16px;font-size:13.5px;cursor:pointer">↺ {{ t.resetSyllable }}</button>
+                <button sc-camel-on-click="{{ nextTarget }}" style="border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+                  <span>{{ nextLabel }}</span> ➔
+                </button>
+              </div>
+            </div>
+
+            <!-- 우측: 자모 버튼 패널 (초성/중성/종성 버튼군) -->
+            <div class="writing-jamo-card" style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 4px 16px rgba(0,0,0,0.03)">
+              <sc-for list="{{ jamoRows }}" as="row" hint-placeholder-count="3">
+                <div class="writing-jamo-row" style="display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:13.5px;font-weight:700;color:var(--ink)">{{ row.label }}</span>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <sc-for list="{{ row.keys }}" as="k" hint-placeholder-count="6">
+                      <button class="writing-jamo-key" sc-camel-on-click="{{ k.pick }}" style="min-width:44px;height:44px;padding:0 6px;border-radius:11px;border:1.5px solid {{ k.bd }};background:{{ k.bg }};color:{{ k.fg }};font:600 {{ k.fs }} 'Pretendard',sans-serif;cursor:pointer;transition:transform .1s">
+                        {{ k.ch }}
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <span class="writing-jamo-note" style="font-size:13px;color:var(--faint);line-height:1.6;border-top:1px solid var(--line2);padding-top:12px">{{ t.jamoNote }}</span>
+            </div>
+
+          </div>
+
+          <!-- 🌟 3. 한컴 타자 연습 스타일 QWERTY 키보드 & 손가락 그림자 오버레이 (사용자 요청 1, 2, 3번) -->
+          <div class="writing-keyboard-card" style="background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:20px;box-shadow:0 6px 20px rgba(0,0,0,0.03)">
+
+            <!-- 키보드 헤더 & 컨트롤 그룹 -->
+            <div class="writing-keyboard-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line2);padding-bottom:14px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:15px">⌨️</div>
+                <div style="display:flex;flex-direction:column;line-height:1.3">
+                  <span style="font-size:15px;font-weight:700;color:var(--ink)">한컴 타자 키보드 & 손가락 그림자 가이드</span>
+                  <span style="font-size:12px;color:var(--sub)">QWERTY 키보드 위 손가락 그림자 위치로 한글 2벌식 타자를 익혀요</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <!-- 손 그림자 On/Off 토글 버튼 -->
+                <button sc-camel-on-click="{{ toggleHandShadow }}" style="border:1px solid var(--line3);background:var(--bg2);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s">
+                  <span>🖐️</span>
+                  <span>손 그림자</span>
+                </button>
+                <!-- QWERTY 한글 설정 영문 가이드 열기 버튼 -->
+                <button sc-camel-on-click="{{ toggleKbGuide }}" style="border:1px solid var(--accent);background:rgba(35,73,63,0.08);color:var(--accent-ink);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s">
+                  <span>🌐</span>
+                  <span>QWERTY Korean Setup Guide</span>
+                </button>
+                <!-- 진행 단계 뱃지 -->
+                <div style="background:linear-gradient(135deg,rgba(35,73,63,0.12),rgba(200,80,42,0.1));border:1px solid var(--accent);border-radius:999px;padding:6px 16px;display:flex;align-items:center;gap:6px">
+                  <span style="font-size:13px;font-weight:700;color:var(--accent-ink)">{{ activeStepGuide }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 🌐 미국식 QWERTY 키보드로 한글 입력하는 방법 (영어 상세 가이드, 사용자 요청 2번) -->
+            <sc-if value="{{ showKbGuide }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--bg2);border:1.5px solid var(--accent);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 24px rgba(35,73,63,0.08)">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+                  <div style="display:flex;flex-direction:column;gap:4px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="font:700 16px 'Newsreader',serif;color:var(--ink)">🌐 How to Type Korean on a Standard US QWERTY Keyboard</span>
+                      <span style="font-size:11px;padding:2px 8px;border-radius:999px;background:var(--accent);color:#fff;font-weight:700">Windows & Mac</span>
+                    </div>
+                    <span style="font-size:13px;color:var(--sub);line-height:1.5">You do NOT need Korean printed on your physical keycaps! Your OS will automatically map US QWERTY keys directly to the standard Korean 2-Set (두벌식) layout.</span>
+                  </div>
+                  <div style="display:flex;background:var(--seg);border-radius:10px;padding:3px">
+                    <button sc-camel-on-click="{{ setKbGuideWin }}" style="border:0;background:{{ winTabBg }};color:{{ winTabFg }};border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer">🪟 Windows</button>
+                    <button sc-camel-on-click="{{ setKbGuideMac }}" style="border:0;background:{{ macTabBg }};color:{{ macTabFg }};border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer">🍎 macOS</button>
+                  </div>
+                </div>
+
+                <!-- Windows 가이드 -->
+                <sc-if value="{{ isWinTab }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px">
+                    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:700;color:var(--accent)">STEP 1</span>
+                      <span style="font-size:13.5px;font-weight:600;color:var(--ink)">Open Language Settings</span>
+                      <span style="font-size:12.5px;color:var(--sub);line-height:1.5">Press <kbd style="background:var(--seg);padding:1px 5px;border-radius:4px;border:1px solid var(--line);font-size:11px">Win + I</kbd> → Go to <b>Time & language</b> → <b>Language & region</b>.</span>
+                    </div>
+                    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:700;color:var(--accent)">STEP 2</span>
+                      <span style="font-size:13.5px;font-weight:600;color:var(--ink)">Add Korean Language</span>
+                      <span style="font-size:12.5px;color:var(--sub);line-height:1.5">Click <b>"Add a language"</b>, search for <b>Korean (한국어)</b>, and click <b>Install</b>.</span>
+                    </div>
+                    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:700;color:var(--accent)">STEP 3</span>
+                      <span style="font-size:13.5px;font-weight:600;color:var(--ink)">Automatic Microsoft IME</span>
+                      <span style="font-size:12.5px;color:var(--sub);line-height:1.5">The official <b>"Microsoft IME"</b> is automatically enabled with Korean 2-Set mapping.</span>
+                    </div>
+                    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:700;color:var(--accent)">STEP 4</span>
+                      <span style="font-size:13.5px;font-weight:600;color:var(--ink)">Toggle & Start Typing</span>
+                      <span style="font-size:12.5px;color:var(--sub);line-height:1.5">Press <kbd style="background:var(--seg);padding:1px 5px;border-radius:4px;border:1px solid var(--line);font-size:11px">Win + Space</kbd> or click the taskbar language icon to switch. Press <kbd style="background:var(--seg);padding:1px 5px;border-radius:4px;border:1px solid var(--line);font-size:11px">Right Alt</kbd> to toggle Han/Eng!</span>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- macOS 가이드 -->
+                <sc-if value="{{ isMacTab }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px">
+                    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:700;color:var(--accent)">STEP 1</span>
+                      <span style="font-size:13.5px;font-weight:600;color:var(--ink)">Open Keyboard Settings</span>
+                      <span style="font-size:12.5px;color:var(--sub);line-height:1.5">Go to Apple menu  → <b>System Settings</b> → <b>Keyboard</b> → <b>Input Sources</b>.</span>
+                    </div>
+                    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:700;color:var(--accent)">STEP 2</span>
+                      <span style="font-size:13.5px;font-weight:600;color:var(--ink)">Add 2-Set Korean</span>
+                      <span style="font-size:12.5px;color:var(--sub);line-height:1.5">Click the <b>"+"</b> button, select <b>Korean</b>, and choose <b>2-Set Korean (두벌식)</b>.</span>
+                    </div>
+                    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:700;color:var(--accent)">STEP 3</span>
+                      <span style="font-size:13.5px;font-weight:600;color:var(--ink)">Toggle Shortcut</span>
+                      <span style="font-size:12.5px;color:var(--sub);line-height:1.5">Switch easily using <kbd style="background:var(--seg);padding:1px 5px;border-radius:4px;border:1px solid var(--line);font-size:11px">Control + Space</kbd> (or <kbd style="background:var(--seg);padding:1px 5px;border-radius:4px;border:1px solid var(--line);font-size:11px">Globe 🌐</kbd> key), or the menu bar icon.</span>
+                    </div>
+                    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:700;color:var(--accent)">STEP 4</span>
+                      <span style="font-size:13.5px;font-weight:600;color:var(--ink)">Direct QWERTY Mapping</span>
+                      <span style="font-size:12.5px;color:var(--sub);line-height:1.5">Your English keys automatically type Korean syllables directly (e.g. G=ㅎ, K=ㅏ, S=ㄴ ➔ 한)!</span>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <!-- ⌨️ 첨부 이미지 스타일의 SVG 물리키 배치 가상 키보드 + 손 오버레이 (Setup Guide가 열려 있으면 숨김) -->
+            <sc-if value="{{ showKbArea }}" hint-placeholder-val="{{ true }}">
+            <div class="writing-keyboard-viewport" style="position:relative;background:var(--bg);border:1px solid var(--line2);border-radius:18px;padding:12px;display:flex;flex-direction:column;align-items:center;overflow:hidden;box-shadow:inset 0 2px 8px rgba(0,0,0,0.02);width:100%">
+              <div id="virtual-keyboard-root" style="width:100%;max-width:980px;display:flex;justify-content:center"></div>
+            </div>
+
+            <!-- 하단 추천 손가락 및 키 위치 안내 -->
+            <div class="writing-keyboard-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line2);padding-top:14px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--faint);text-transform:uppercase">RECOMMENDED FINGER</span>
+                <span style="font-size:13px;font-weight:700;color:var(--accent-ink)">{{ activeFingerLabel }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)">
+                <span style="width:12px;height:12px;border-radius:3px;background:#B25353;display:inline-block"></span>
+                <span>버건디 키 = 현재 눌러야 할 키 (Target Key)</span>
+              </div>
+            </div>
+            </sc-if>
+
+          </div>
+
         </div>
       </sc-if>
       <sc-if value="{{ wSent }}" hint-placeholder-val="{{ false }}">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px;align-items:start">
           <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px">
-            <span style="font-size:17px;font-weight:600">{{ t.sentPrompt }}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+              <span style="font-size:17px;font-weight:600">{{ t.sentPrompt }}</span>
+              <button class="tutor-speech-button" sc-camel-on-click="{{ speakSentence }}" title="{{ sentenceSpeechTitle }}" aria-label="{{ sentenceSpeechTitle }}" style="background:{{ sentenceSpeechBg }};border-color:{{ sentenceSpeechBd }};color:{{ sentenceSpeechFg }};flex:none">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg>
+                <span class="speech-label">{{ sentenceSpeechLabel }}</span>
+              </button>
+            </div>
             <span style="font-size:13.5px;color:var(--faint)">{{ t.sentHint }} <span style="font-family:'Gowun Batang',serif;color:var(--ink)">-에서, -아서/어서, -고 싶어요</span></span>
             <textarea value="{{ wText }}" sc-camel-on-change="{{ onWText }}" rows="7" style="border:1px solid var(--line);border-radius:12px;padding:14px;font:400 17px/1.8 'Gowun Batang',serif;resize:vertical;outline:none;background:var(--bg2);color:var(--ink)"></textarea>
             <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">{{ wCountLabel }}</span><button sc-camel-on-click="{{ checkW }}" style="border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:600;cursor:pointer">{{ t.getFb }}</button></div>
@@ -795,7 +1156,7 @@ button,textarea,input{font-family:inherit;color:inherit}
         <sc-if value="{{ showRoman }}" hint-placeholder-val="{{ true }}"><span style="font:400 15px 'IBM Plex Mono',monospace;color:var(--faint)">{{ sent.roman }}</span></sc-if>
         <span style="font-size:15px;color:var(--sub)">“{{ sent.en }}” · {{ t.soundsLike }} <b style="color:var(--ink);font-family:'Gowun Batang',serif">{{ sent.pron }}</b></span>
         <div style="display:flex;align-items:center;gap:28px;margin-top:12px">
-          <button style="width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--bg2);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink2)">{{ t.native }}</button>
+          <button sc-camel-on-click="{{ speakNative }}" title="{{ nativeSpeechTitle }}" style="width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--bg2);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink2)">{{ t.native }} 🔊</button>
           <button sc-camel-on-click="{{ toggleRec }}" style="width:92px;height:92px;border-radius:50%;border:0;background:{{ recBg }};color:{{ recFg }};cursor:pointer;font-size:15px;font-weight:700;animation:{{ recAnim }}">{{ recLabel }}</button>
           <button sc-camel-on-click="{{ nextSent }}" style="width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:var(--bg2);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink2)">{{ t.next }}</button>
         </div>
@@ -863,19 +1224,30 @@ button,textarea,input{font-family:inherit;color:inherit}
 </sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{&quot;startPage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;intro&quot;,&quot;about&quot;,&quot;home&quot;,&quot;tutors&quot;,&quot;chat&quot;,&quot;listening&quot;,&quot;reading&quot;,&quot;writing&quot;,&quot;speaking&quot;,&quot;record&quot;],&quot;default&quot;:&quot;intro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;language&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;en&quot;,&quot;ko&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showRomanization&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;inlineCorrections&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const FIREBASE_CONFIG = Object.freeze({
+  apiKey: "AIzaSyAwz_68lr0jM1T1pdiS7IZ-N-QT90frj8Q",
+  authDomain: "hnageul-copilot-dev-918.firebaseapp.com",
+  projectId: "hnageul-copilot-dev-918",
+  storageBucket: "hnageul-copilot-dev-918.firebasestorage.app",
+  messagingSenderId: "313423647793",
+  appId: "1:313423647793:web:48323f7d3a0809274f3110"
+});
+
 const TUTORS = [
-  {id:'jiwoo', en:'Jiwoo Kim', ko:'김지우', initial:'지우', color:'#E9C2A6', online:true, tags:['daily','beginner'],
+  {id:'jiwoo', gender:'female', genderKo:'여성', en:'Jiwoo Kim', ko:'김지우', initial:'지우', color:'#E9C2A6', online:true, tags:['daily','beginner'],
    role:['Everyday conversation','일상 회화'], pace:['Speaks slowly','천천히 말해요'], quote:['Text me like you’d text a friend. I’ll show you when to use casual vs polite speech.','친구한테 문자 보내듯 편하게 써요. 반말과 존댓말을 언제 쓰는지도 알려 줄게요.']},
-  {id:'minho', en:'Minho Park', ko:'박민호', initial:'민호', color:'#B9C7A5', online:true, tags:['business','intermediate'],
+  {id:'minho', gender:'male', genderKo:'남성', en:'Minho Park', ko:'박민호', initial:'민호', color:'#B9C7A5', online:true, tags:['business','intermediate'],
    role:['Business Korean','비즈니스 한국어'], pace:['Normal pace','보통 속도'], quote:['Meetings, emails, team dinners — phrases you can use at a Korean office tomorrow.','회의, 이메일, 회식까지. 내일 회사에서 바로 쓰는 표현으로 연습해요.']},
-  {id:'seoyeon', en:'Seoyeon Lee', ko:'이서연', initial:'서연', color:'#C9BEDD', online:false, tags:['topik','intermediate'],
-   role:['TOPIK & grammar','TOPIK · 문법'], pace:['Detailed feedback','꼼꼼한 첨삭'], quote:['I always explain why something is wrong, so you don’t make the same mistake twice.','틀린 이유를 꼭 설명해 드려요. 같은 실수를 두 번 하지 않게요.']},
-  {id:'haneul', en:'Haneul Choi', ko:'최하늘', initial:'하늘', color:'#A9CBD6', online:true, tags:['pron','beginner'],
-   role:['Pronunciation & intonation','발음 · 억양 교정'], pace:['Voice messages','음성 메시지 위주'], quote:['Fix your final consonants and rhythm, and you’ll sound far more natural. Send me a recording.','받침과 리듬만 잡아도 훨씬 자연스러워져요. 녹음해서 보내 주세요.']},
-  {id:'dohyun', en:'Dohyun Jung', ko:'정도현', initial:'도현', color:'#E4D29B', online:false, tags:['daily','intermediate'],
-   role:['Korean through K-dramas','드라마로 배우는 표현'], pace:['Normal pace','보통 속도'], quote:['That line from last night’s drama — let’s talk about how people really use it.','어젯밤 본 드라마 대사, 실제로 어떻게 쓰는지 같이 이야기해요.']},
-  {id:'sora', en:'Sora Han', ko:'한소라', initial:'소라', color:'#EBB7B7', online:true, tags:['beginner','pron'],
-   role:['Absolute beginners','왕초보 · 한글 떼기'], pace:['Lots of English','영어 설명 많이'], quote:['Starting from ㄱ, ㄴ, ㄷ is perfectly fine. We’ll read one letter at a time.','ㄱ, ㄴ, ㄷ부터 시작해도 괜찮아요. 한 글자씩 같이 읽어요.']}
+  {id:'seoyeon', gender:'female', genderKo:'여성', en:'Seoyeon Lee', ko:'이서연', initial:'서연', color:'#C9BEDD', online:true, tags:['topik','intermediate'],
+   role:['TOPIK & grammar','TOPIK · 정밀 문법'], pace:['Detailed feedback','꼼꼼한 첨삭'], quote:['I always explain why something is wrong, so you don’t make the same mistake twice.','틀린 이유를 꼭 설명해 드려요. 같은 실수를 두 번 하지 않게요.']},
+  {id:'haneul', gender:'male', genderKo:'남성', en:'Haneul Choi', ko:'최하늘', initial:'하늘', color:'#A9CBD6', online:true, tags:['pron','beginner'],
+   role:['Pronunciation & intonation','발음 · 억양 교정'], pace:['Voice coaching','발음 팁 위주'], quote:['Fix your final consonants and rhythm, and you’ll sound far more natural. Send me a recording.','받침과 리듬만 잡아도 훨씬 자연스러워져요. 언제든 연습해 봐요.']}
+];
+const JEONG_POSES = [
+  {src:'./assets/정이_축하.png', alt:['Jeongie celebrating with a fan','부채를 들고 축하하는 정이']},
+  {src:'./assets/정이_붓글씨.png', alt:['Jeongie practicing calligraphy','붓글씨를 쓰는 정이']},
+  {src:'./assets/정이_공부.png', alt:['Jeongie studying Hangul','한글을 공부하는 정이']},
+  {src:'./assets/정이_장구.png', alt:['Jeongie playing the janggu','장구를 치며 응원하는 정이']}
 ];
 const TAGS = {daily:['Daily talk','일상 회화'], business:['Business','비즈니스'], topik:['TOPIK','TOPIK'], pron:['Pronunciation','발음'], beginner:['Beginner','초급'], intermediate:['Intermediate','중급']};
 const TODAY='2026-09-26';
@@ -891,9 +1263,7 @@ const SEED = {
   ],
   minho: [{from:'t', text:'월요일 회의 준비는 잘 되고 있어요? 오늘은 자기소개를 연습해 봐요.', tr:'How’s prep for Monday’s meeting going? Let’s practice introducing yourself.', time:'18:40', date:'2026-09-25'}],
   seoyeon: [{from:'t', text:'어제 보낸 작문 첨삭했어요. ‘에’와 ‘에서’만 조심하면 완벽해요!', tr:'I corrected your writing. Just watch 에 vs 에서 and it’s perfect!', time:'21:05', date:'2026-09-24'}],
-  haneul: [{from:'t', text:'“했어요”는 [해써요]처럼 이어서 읽어요. 한번 녹음해 볼까요?', tr:'Read “했어요” linked together, like [hae-sseo-yo]. Want to try recording it?', time:'10:30', date:'2026-09-22'}],
-  dohyun: [{from:'t', text:'안녕하세요! 요즘 어떤 드라마 보고 있어요?', tr:'Hi! What drama are you watching these days?', time:'08:02', date:TODAY}],
-  sora: [{from:'t', text:'반가워요! 오늘은 ‘ㅎ’ 소리를 같이 연습해요. 하, 허, 호, 후!', tr:'Nice to meet you! Let’s practice the ㅎ sound today. Ha, heo, ho, hu!', time:'07:45', date:TODAY}]
+  haneul: [{from:'t', text:'“했어요”는 [해써요]처럼 이어서 읽어요. 한번 녹음해 볼까요?', tr:'Read “했어요” linked together, like [hae-sseo-yo]. Want to try recording it?', time:'10:30', date:'2026-09-22'}]
 };
 const REPLIES = [
   {text:'오, 그렇군요! 조금 더 자세히 말해 줄 수 있어요?', tr:'Oh, I see! Can you tell me a bit more?'},
@@ -940,13 +1310,267 @@ const PARAS = [
   ['사람들은 꽃 아래에서 사진을 찍고, 돗자리를 펴고 앉아서 ',['도시락'],'을 먹어요. 밤에는 조명이 켜져서 낮과는 다른 ',['분위기'],'를 느낄 수 있어요.'],
   ['하지만 벚꽃은 일주일 정도만 피기 때문에 구경하고 싶으면 ',['서둘러야'],' 해요.']
 ];
+// 읽기 지문 문단별 영어 번역 (영어 번역 보기 토글)
+const PARAS_EN = [
+  'Every April, cherry blossoms burst into bloom all over Seoul. Yeouido and Seokchon Lake in particular are packed with people who have come to see the blossoms.',
+  'People take photos under the flowers, spread out mats and sit down to eat their packed lunches. At night the lights come on, so you can feel an atmosphere quite different from the daytime.',
+  'But cherry blossoms only stay in bloom for about a week, so if you want to see them you have to hurry.'
+];
 const RQ = [
   {q:'벚꽃은 언제 펴요?', en:'When do the blossoms bloom?', opts:['4월','7월','10월'], a:0},
   {q:'밤에는 왜 분위기가 달라요?', en:'Why is the mood different at night?', opts:['조명이 켜져서','사람이 없어서','비가 와서'], a:0}
 ];
-const JL = [['ㄱ',0],['ㄴ',2],['ㄷ',3],['ㄹ',5],['ㅁ',6],['ㅂ',7],['ㅅ',9],['ㅇ',11],['ㅈ',12],['ㅎ',18]];
-const JV = [['ㅏ',0],['ㅓ',4],['ㅗ',8],['ㅜ',13],['ㅡ',18],['ㅣ',20]];
-const TARGETS = [{ch:'한',L:18,V:0,T:4,en:'han · 한국'},{ch:'글',L:0,V:18,T:8,en:'geul · writing'},{ch:'말',L:6,V:0,T:8,en:'mal · speech'},{ch:'공',L:0,V:8,T:21,en:'gong · ball'}];
+// [자모, 유니코드 인덱스, 단계(0 Basic · 1 Expanded · 2 Advanced)] — 단계가 올라가도 기존 버튼 위치가 바뀌지 않도록 뒤에만 추가
+const JL = [['ㄱ',0],['ㄴ',2],['ㄷ',3],['ㄹ',5],['ㅁ',6],['ㅂ',7],['ㅅ',9],['ㅇ',11],['ㅈ',12],['ㅎ',18],
+  ['ㅋ',15,1],['ㅌ',16,1],['ㅍ',17,1],['ㅊ',14,1],
+  ['ㄲ',1,2],['ㄸ',4,2],['ㅃ',8,2],['ㅆ',10,2],['ㅉ',13,2]];
+const JV = [['ㅏ',0],['ㅓ',4],['ㅗ',8],['ㅜ',13],['ㅡ',18],['ㅣ',20],
+  ['ㅑ',2,1],['ㅕ',6,1],['ㅛ',12,1],['ㅠ',17,1],['ㅐ',1,1],['ㅔ',5,1],
+  ['ㅒ',3,2],['ㅖ',7,2],['ㅘ',9,2],['ㅙ',10,2],['ㅚ',11,2],['ㅝ',14,2],['ㅞ',15,2],['ㅟ',16,2],['ㅢ',19,2]];
+const JT_EXTRA = [['ㄷ',7,1],['ㅂ',17,1],['ㅅ',19,1],['ㅈ',22,1],['ㅊ',23,1],['ㅋ',24,1],['ㅌ',25,1],['ㅍ',26,1],['ㅎ',27,1],
+  ['ㄲ',2,2],['ㄳ',3,2],['ㄵ',5,2],['ㄶ',6,2],['ㄺ',9,2],['ㄻ',10,2],['ㄼ',11,2],['ㄽ',12,2],['ㄾ',13,2],['ㄿ',14,2],['ㅀ',15,2],['ㅄ',18,2],['ㅆ',20,2]];
+const jLv = (arr, v) => { const j = arr.find(x => x[1] === v); return j ? (j[2] || 0) : 0; };
+const TARGETS_BY_LEVEL = [
+  // 0: Basic (기초)
+  [
+    {ch:'한', L:18, V:0, T:4, en:'han · 한국 (Korea)', hint:'ㅎ + ㅏ + ㄴ', level:'Basic'},
+    {ch:'글', L:0, V:18, T:8, en:'geul · 글자 (Letter)', hint:'ㄱ + ㅡ + ㄹ', level:'Basic'},
+    {ch:'말', L:6, V:0, T:8, en:'mal · 한국말 (Speech)', hint:'ㅁ + ㅏ + ㄹ', level:'Basic'},
+    {ch:'물', L:6, V:13, T:8, en:'mul · 시원한 물 (Water)', hint:'ㅁ + ㅜ + ㄹ', level:'Basic'},
+    {ch:'봄', L:7, V:8, T:16, en:'bom · 따뜻한 봄 (Spring)', hint:'ㅂ + ㅗ + ㅁ', level:'Basic'},
+    {ch:'달', L:3, V:0, T:8, en:'dal · 밝은 달 (Moon)', hint:'ㄷ + ㅏ + ㄹ', level:'Basic'},
+    {ch:'산', L:9, V:0, T:4, en:'san · 푸른 산 (Mountain)', hint:'ㅅ + ㅏ + ㄴ', level:'Basic'},
+    {ch:'공', L:0, V:8, T:21, en:'gong · 둥근 공 (Ball)', hint:'ㄱ + ㅗ + ㅇ', level:'Basic'}
+  ],
+  // 1: Expanded (확장)
+  [
+    {ch:'해', L:18, V:1, T:0, en:'hae · 밝은 해 (Sun)', hint:'ㅎ + ㅐ', level:'Expanded'},
+    {ch:'별', L:7, V:6, T:8, en:'byeol · 밤하늘 별 (Star)', hint:'ㅂ + ㅕ + ㄹ', level:'Expanded'},
+    {ch:'컵', L:15, V:4, T:17, en:'keop · 커피 컵 (Cup)', hint:'ㅋ + ㅓ + ㅂ', level:'Expanded'},
+    {ch:'빛', L:7, V:20, T:23, en:'bit · 따스한 빛 (Light)', hint:'ㅂ + ㅣ + ㅊ', level:'Expanded'},
+    {ch:'책', L:14, V:1, T:1, en:'chaek · 재미있는 책 (Book)', hint:'ㅊ + ㅐ + ㄱ', level:'Expanded'},
+    {ch:'풀', L:17, V:13, T:8, en:'pul · 초록 풀 (Grass)', hint:'ㅍ + ㅜ + ㄹ', level:'Expanded'},
+    {ch:'탑', L:16, V:0, T:17, en:'tap · 높은 탑 (Tower)', hint:'ㅌ + ㅏ + ㅂ', level:'Expanded'},
+    {ch:'숲', L:9, V:13, T:26, en:'sup · 푸른 숲 (Forest)', hint:'ㅅ + ㅜ + ㅍ', level:'Expanded'}
+  ],
+  // 2: Advanced (심화)
+  [
+    {ch:'꿈', L:1, V:13, T:16, en:'kkum · 좋은 꿈 (Dream)', hint:'ㄲ + ㅜ + ㅁ', level:'Advanced'},
+    {ch:'꽃', L:1, V:8, T:23, en:'kkot · 예쁜 꽃 (Flower)', hint:'ㄲ + ㅗ + ㅊ', level:'Advanced'},
+    {ch:'닭', L:3, V:0, T:9, en:'dak · 새벽 닭 (Rooster)', hint:'ㄷ + ㅏ + ㄺ', level:'Advanced'},
+    {ch:'값', L:0, V:0, T:18, en:'gap · 착한 값 (Price)', hint:'ㄱ + ㅏ + ㅄ', level:'Advanced'},
+    {ch:'흙', L:18, V:18, T:9, en:'heuk · 기름진 흙 (Soil)', hint:'ㅎ + ㅡ + ㄺ', level:'Advanced'},
+    {ch:'넓', L:2, V:4, T:11, en:'neol · 넓다 (Wide)', hint:'ㄴ + ㅓ + ㄼ', level:'Advanced'},
+    {ch:'땀', L:4, V:0, T:16, en:'ttam · 구슬땀 (Sweat)', hint:'ㄸ + ㅏ + ㅁ', level:'Advanced'},
+    {ch:'삶', L:9, V:0, T:10, en:'sam · 소중한 삶 (Life)', hint:'ㅅ + ㅏ + ㄻ', level:'Advanced'}
+  ]
+];
+const TARGETS = TARGETS_BY_LEVEL[0];
+// 단어 만들기: 레벨별 단어 (1 기초 · 2 심화). 음절은 유니코드 분해로 초성·중성·종성을 구함
+const WORDS_BY_LEVEL = [
+  [],
+  [
+    {w:'한국', en:'hanguk · Korea'}, {w:'사랑', en:'sarang · Love'}, {w:'친구', en:'chingu · Friend'}, {w:'커피', en:'keopi · Coffee'},
+    {w:'바다', en:'bada · Sea'}, {w:'나무', en:'namu · Tree'}, {w:'학교', en:'hakgyo · School'}, {w:'가족', en:'gajok · Family'}
+  ],
+  [
+    {w:'꽃잎', en:'kkonnip · Petal'}, {w:'떡볶이', en:'tteokbokki · Spicy rice cakes'}, {w:'닭고기', en:'dakgogi · Chicken'}, {w:'과일', en:'gwail · Fruit'},
+    {w:'읽기', en:'ilgi · Reading'}, {w:'쌀밥', en:'ssalbap · Rice'}, {w:'의자', en:'uija · Chair'}, {w:'원숭이', en:'wonsungi · Monkey'}
+  ]
+];
+const JT_ALL = [['ㄱ',1],['ㄴ',4],['ㄹ',8],['ㅁ',16],['ㅇ',21],...JT_EXTRA];
+const decompSyl = ch => { const c = ch.charCodeAt(0) - 0xAC00; return { L: Math.floor(c / 588), V: Math.floor((c % 588) / 28), T: c % 28 }; };
+const jamoHint = d => [JL.find(j => j[1] === d.L)?.[0], JV.find(j => j[1] === d.V)?.[0], d.T ? JT_ALL.find(j => j[1] === d.T)?.[0] : null].filter(Boolean).join(' + ');
+
+const KB_SVG_ROWS = [
+  // Row 0
+  [
+    {id:'Backquote', key:'`', ko:'`', shift:'~', w:56, finger:'LP'},
+    {id:'Digit1', key:'1', ko:'1', shift:'!', w:56, finger:'LP'},
+    {id:'Digit2', key:'2', ko:'2', shift:'@', w:56, finger:'LR'},
+    {id:'Digit3', key:'3', ko:'3', shift:'#', w:56, finger:'LM'},
+    {id:'Digit4', key:'4', ko:'4', shift:'$', w:56, finger:'LI'},
+    {id:'Digit5', key:'5', ko:'5', shift:'%', w:56, finger:'LI'},
+    {id:'Digit6', key:'6', ko:'6', shift:'^', w:56, finger:'RI'},
+    {id:'Digit7', key:'7', ko:'7', shift:'&', w:56, finger:'RI'},
+    {id:'Digit8', key:'8', ko:'8', shift:'*', w:56, finger:'RM'},
+    {id:'Digit9', key:'9', ko:'9', shift:'(', w:56, finger:'RR'},
+    {id:'Digit0', key:'0', ko:'0', shift:')', w:56, finger:'RP'},
+    {id:'Minus', key:'-', ko:'-', shift:'_', w:56, finger:'RP'},
+    {id:'Equal', key:'=', ko:'=', shift:'+', w:56, finger:'RP'},
+    {id:'Backspace', key:'Backspace', ko:'지우기', shift:'', w:114, finger:'RP', isSpecial:true}
+  ],
+  // Row 1
+  [
+    {id:'Tab', key:'Tab', ko:'Tab', shift:'', w:84, finger:'LP', isSpecial:true},
+    {id:'KeyQ', key:'Q', ko:'ㅂ', shift:'ㅃ', w:56, finger:'LP'},
+    {id:'KeyW', key:'W', ko:'ㅈ', shift:'ㅉ', w:56, finger:'LR'},
+    {id:'KeyE', key:'E', ko:'ㄷ', shift:'ㄸ', w:56, finger:'LM'},
+    {id:'KeyR', key:'R', ko:'ㄱ', shift:'ㄲ', w:56, finger:'LI'},
+    {id:'KeyT', key:'T', ko:'ㅅ', shift:'ㅆ', w:56, finger:'LI'},
+    {id:'KeyY', key:'Y', ko:'ㅛ', shift:'', w:56, finger:'RI'},
+    {id:'KeyU', key:'U', ko:'ㅕ', shift:'', w:56, finger:'RI'},
+    {id:'KeyI', key:'I', ko:'ㅑ', shift:'', w:56, finger:'RM'},
+    {id:'KeyO', key:'O', ko:'ㅐ', shift:'ㅒ', w:56, finger:'RR'},
+    {id:'KeyP', key:'P', ko:'ㅔ', shift:'ㅖ', w:56, finger:'RP'},
+    {id:'BracketLeft', key:'[', ko:'[', shift:'{', w:56, finger:'RP'},
+    {id:'BracketRight', key:']', ko:']', shift:'}', w:56, finger:'RP'},
+    {id:'Backslash', key:'\\', ko:'\\', shift:'|', w:86, finger:'RP', isSpecial:true}
+  ],
+  // Row 2
+  [
+    {id:'CapsLock', key:'Caps', ko:'Caps', shift:'', w:100, finger:'LP', isSpecial:true},
+    {id:'KeyA', key:'A', ko:'ㅁ', shift:'', w:56, finger:'LP'},
+    {id:'KeyS', key:'S', ko:'ㄴ', shift:'', w:56, finger:'LR'},
+    {id:'KeyD', key:'D', ko:'ㅇ', shift:'', w:56, finger:'LM'},
+    {id:'KeyF', key:'F', ko:'ㄹ', shift:'', w:56, finger:'LI'},
+    {id:'KeyG', key:'G', ko:'ㅎ', shift:'', w:56, finger:'LI'},
+    {id:'KeyH', key:'H', ko:'ㅗ', shift:'', w:56, finger:'RI'},
+    {id:'KeyJ', key:'J', ko:'ㅓ', shift:'', w:56, finger:'RI'},
+    {id:'KeyK', key:'K', ko:'ㅏ', shift:'', w:56, finger:'RM'},
+    {id:'KeyL', key:'L', ko:'ㅣ', shift:'', w:56, finger:'RR'},
+    {id:'Semicolon', key:';', ko:';', shift:':', w:56, finger:'RP'},
+    {id:'Quote', key:'\'', ko:'\'', shift:'\"', w:56, finger:'RP'},
+    {id:'Enter', key:'Enter', ko:'Enter', shift:'', w:132, finger:'RP', isSpecial:true}
+  ],
+  // Row 3
+  [
+    {id:'ShiftLeft', key:'Shift', ko:'Shift', shift:'', w:140, finger:'LP', isSpecial:true},
+    {id:'KeyZ', key:'Z', ko:'ㅋ', shift:'', w:56, finger:'LP'},
+    {id:'KeyX', key:'X', ko:'ㅌ', shift:'', w:56, finger:'LR'},
+    {id:'KeyC', key:'C', ko:'ㅊ', shift:'', w:56, finger:'LM'},
+    {id:'KeyV', key:'V', ko:'ㅍ', shift:'', w:56, finger:'LI'},
+    {id:'KeyB', key:'B', ko:'ㅠ', shift:'', w:56, finger:'LI'},
+    {id:'KeyN', key:'N', ko:'ㅜ', shift:'', w:56, finger:'RI'},
+    {id:'KeyM', key:'M', ko:'ㅡ', shift:'', w:56, finger:'RI'},
+    {id:'Comma', key:',', ko:',', shift:'<', w:56, finger:'RM'},
+    {id:'Period', key:'.', ko:'.', shift:'>', w:56, finger:'RR'},
+    {id:'Slash', key:'/', ko:'/', shift:'?', w:56, finger:'RP'},
+    {id:'ShiftRight', key:'ShiftR', ko:'Shift', shift:'', w:154, finger:'RP', isSpecial:true}
+  ],
+  // Row 4
+  [
+    {id:'ControlLeft', key:'Ctrl', ko:'Ctrl', shift:'', w:80, finger:'LP', isSpecial:true},
+    {id:'AltLeft', key:'Alt', ko:'Alt', shift:'', w:80, finger:'LT', isSpecial:true},
+    {id:'Space', key:'Space', ko:'Space', shift:'', w:556, finger:'RT', isSpecial:true},
+    {id:'AltRight', key:'AltR', ko:'한/영 (Alt)', shift:'', w:80, finger:'RT', isSpecial:true},
+    {id:'ControlRight', key:'CtrlR', ko:'Ctrl', shift:'', w:100, finger:'RP', isSpecial:true}
+  ]
+];
+
+const KB_MAP = {};
+const KB_GAP = 6;
+const KB_START_X = 30;
+const KB_START_Y = 56;
+const KB_ROW_H = 50;
+const KB_ROW_GAP = 7;
+
+KB_SVG_ROWS.forEach((r, rIdx) => {
+  let curX = KB_START_X;
+  const y = KB_START_Y + rIdx * (KB_ROW_H + KB_ROW_GAP);
+  r.forEach(k => {
+    k.x = curX;
+    k.y = y;
+    k.h = KB_ROW_H;
+    k.cx = curX + k.w / 2;
+    k.cy = y + KB_ROW_H / 2;
+    KB_MAP[k.key] = k;
+    curX += k.w + KB_GAP;
+  });
+});
+
+const HOME_TIPS = {
+  LP: { cx: 166, cy: 182 },
+  LR: { cx: 224, cy: 158 },
+  LM: { cx: 282, cy: 150 },
+  LI: { cx: 340, cy: 160 },
+  LT: { cx: 375, cy: 295 },
+  RT: { cx: 605, cy: 295 },
+  RI: { cx: 640, cy: 160 },
+  RM: { cx: 698, cy: 150 },
+  RR: { cx: 756, cy: 158 },
+  RP: { cx: 814, cy: 182 }
+};
+
+const JAMO_KEY_MAP = {
+  'ㄱ': {key:'R', shift:false, finger:'LI', ko:'왼손 검지', en:'Left Index'},
+  'ㄲ': {key:'R', shift:true, finger:'LI', ko:'왼손 검지 (Shift)', en:'Left Index (Shift)'},
+  'ㄴ': {key:'S', shift:false, finger:'LR', ko:'왼손 약지', en:'Left Ring'},
+  'ㄷ': {key:'E', shift:false, finger:'LM', ko:'왼손 중지', en:'Left Middle'},
+  'ㄸ': {key:'E', shift:true, finger:'LM', ko:'왼손 중지 (Shift)', en:'Left Middle (Shift)'},
+  'ㄹ': {key:'F', shift:false, finger:'LI', ko:'왼손 검지', en:'Left Index'},
+  'ㅁ': {key:'A', shift:false, finger:'LP', ko:'왼손 새끼', en:'Left Pinky'},
+  'ㅂ': {key:'Q', shift:false, finger:'LP', ko:'왼손 새끼', en:'Left Pinky'},
+  'ㅃ': {key:'Q', shift:true, finger:'LP', ko:'왼손 새끼 (Shift)', en:'Left Pinky (Shift)'},
+  'ㅅ': {key:'T', shift:false, finger:'LI', ko:'왼손 검지', en:'Left Index'},
+  'ㅆ': {key:'T', shift:true, finger:'LI', ko:'왼손 검지 (Shift)', en:'Left Index (Shift)'},
+  'ㅇ': {key:'D', shift:false, finger:'LM', ko:'왼손 중지', en:'Left Middle'},
+  'ㅈ': {key:'W', shift:false, finger:'LR', ko:'왼손 약지', en:'Left Ring'},
+  'ㅉ': {key:'W', shift:true, finger:'LR', ko:'왼손 약지 (Shift)', en:'Left Ring (Shift)'},
+  'ㅊ': {key:'C', shift:false, finger:'LM', ko:'왼손 중지', en:'Left Middle'},
+  'ㅋ': {key:'Z', shift:false, finger:'LP', ko:'왼손 새끼', en:'Left Pinky'},
+  'ㅌ': {key:'X', shift:false, finger:'LR', ko:'왼손 약지', en:'Left Ring'},
+  'ㅍ': {key:'V', shift:false, finger:'LI', ko:'왼손 검지', en:'Left Index'},
+  'ㅎ': {key:'G', shift:false, finger:'LI', ko:'왼손 검지', en:'Left Index'},
+  'ㅏ': {key:'K', shift:false, finger:'RM', ko:'오른손 중지', en:'Right Middle'},
+  'ㅐ': {key:'O', shift:false, finger:'RR', ko:'오른손 약지', en:'Right Ring'},
+  'ㅑ': {key:'I', shift:false, finger:'RM', ko:'오른손 중지', en:'Right Middle'},
+  'ㅒ': {key:'O', shift:true, finger:'RR', ko:'오른손 약지 (Shift)', en:'Right Ring (Shift)'},
+  'ㅓ': {key:'J', shift:false, finger:'RI', ko:'오른손 검지', en:'Right Index'},
+  'ㅔ': {key:'P', shift:false, finger:'RP', ko:'오른손 새끼', en:'Right Pinky'},
+  'ㅕ': {key:'U', shift:false, finger:'RI', ko:'오른손 검지', en:'Right Index'},
+  'ㅖ': {key:'P', shift:true, finger:'RP', ko:'오른손 새끼 (Shift)', en:'Right Pinky (Shift)'},
+  'ㅗ': {key:'H', shift:false, finger:'RI', ko:'오른손 검지', en:'Right Index'},
+  'ㅘ': {key:'H', shift:false, finger:'RI', ko:'오른손 검지 (ㅗ+ㅏ)', en:'Right Index'},
+  'ㅙ': {key:'H', shift:false, finger:'RI', ko:'오른손 검지 (ㅗ+ㅐ)', en:'Right Index'},
+  'ㅚ': {key:'H', shift:false, finger:'RI', ko:'오른손 검지 (ㅗ+ㅣ)', en:'Right Index'},
+  'ㅛ': {key:'Y', shift:false, finger:'RI', ko:'오른손 검지', en:'Right Index'},
+  'ㅜ': {key:'N', shift:false, finger:'RI', ko:'오른손 검지', en:'Right Index'},
+  'ㅝ': {key:'N', shift:false, finger:'RI', ko:'오른손 검지 (ㅜ+ㅓ)', en:'Right Index'},
+  'ㅞ': {key:'N', shift:false, finger:'RI', ko:'오른손 검지 (ㅜ+ㅔ)', en:'Right Index'},
+  'ㅟ': {key:'N', shift:false, finger:'RI', ko:'오른손 검지 (ㅜ+ㅣ)', en:'Right Index'},
+  'ㅠ': {key:'B', shift:false, finger:'LI', ko:'왼손 검지', en:'Left Index'},
+  'ㅡ': {key:'M', shift:false, finger:'RI', ko:'오른손 검지', en:'Right Index'},
+  'ㅢ': {key:'M', shift:false, finger:'RI', ko:'오른손 검지 (ㅡ+ㅣ)', en:'Right Index'},
+  'ㅣ': {key:'L', shift:false, finger:'RR', ko:'오른손 약지', en:'Right Ring'},
+  'ㄳ': {key:'R', shift:false, finger:'LI', ko:'왼손 검지 (ㄱ+ㅅ)', en:'Left Index'},
+  'ㄵ': {key:'S', shift:false, finger:'LR', ko:'왼손 약지 (ㄴ+ㅈ)', en:'Left Ring'},
+  'ㄶ': {key:'S', shift:false, finger:'LR', ko:'왼손 약지 (ㄴ+ㅎ)', en:'Left Ring'},
+  'ㄺ': {key:'F', shift:false, finger:'LI', ko:'왼손 검지 (ㄹ+ㄱ)', en:'Left Index'},
+  'ㄻ': {key:'F', shift:false, finger:'LI', ko:'왼손 검지 (ㄹ+ㅁ)', en:'Left Index'},
+  'ㄼ': {key:'F', shift:false, finger:'LI', ko:'왼손 검지 (ㄹ+ㅂ)', en:'Left Index'},
+  'ㄽ': {key:'F', shift:false, finger:'LI', ko:'왼손 검지 (ㄹ+ㅅ)', en:'Left Index'},
+  'ㄾ': {key:'F', shift:false, finger:'LI', ko:'왼손 검지 (ㄹ+ㅌ)', en:'Left Index'},
+  'ㄿ': {key:'F', shift:false, finger:'LI', ko:'왼손 검지 (ㄹ+ㅍ)', en:'Left Index'},
+  'ㅀ': {key:'F', shift:false, finger:'LI', ko:'왼손 검지 (ㄹ+ㅎ)', en:'Left Index'},
+  'ㅄ': {key:'Q', shift:false, finger:'LP', ko:'왼손 새끼 (ㅂ+ㅅ)', en:'Left Pinky'}
+};
+// 두벌식에서 두 번 눌러야 하는 이중모음·겹받침: [첫 타, 둘째 타]
+const JAMO_SEQ = {
+  'ㅘ':['ㅗ','ㅏ'], 'ㅙ':['ㅗ','ㅐ'], 'ㅚ':['ㅗ','ㅣ'], 'ㅝ':['ㅜ','ㅓ'], 'ㅞ':['ㅜ','ㅔ'], 'ㅟ':['ㅜ','ㅣ'], 'ㅢ':['ㅡ','ㅣ'],
+  'ㄳ':['ㄱ','ㅅ'], 'ㄵ':['ㄴ','ㅈ'], 'ㄶ':['ㄴ','ㅎ'], 'ㄺ':['ㄹ','ㄱ'], 'ㄻ':['ㄹ','ㅁ'], 'ㄼ':['ㄹ','ㅂ'], 'ㄽ':['ㄹ','ㅅ'],
+  'ㄾ':['ㄹ','ㅌ'], 'ㄿ':['ㄹ','ㅍ'], 'ㅀ':['ㄹ','ㅎ'], 'ㅄ':['ㅂ','ㅅ']
+};
+
+// ── 손 그림자: 이전에 확정한 실제 사람 손 비율의 고해상도 PNG 실루엣 ──
+const HAND_IMAGE = Object.freeze({
+  left: {
+    src: './assets/hand_realistic_left_v2.png', x: 40, y: 80, width: 320, height: 320,
+    tips: { P:[158,143], R:[215,113], M:[256,103], I:[293,135], T:[308,251] }
+  },
+  right: {
+    src: './assets/hand_realistic_right_v2.png', x: 620, y: 80, width: 320, height: 320,
+    tips: { P:[822,143], R:[765,113], M:[724,103], I:[687,135], T:[672,251] }
+  }
+});
+const buildHandImage = (side, active, target, opacity) => {
+  const hand = HAND_IMAGE[side];
+  const homeTip = active ? hand.tips[active] : null;
+  const dx = target && homeTip ? target[0] - homeTip[0] : 0;
+  const dy = target && homeTip ? target[1] - homeTip[1] : 0;
+  return `<image class="hand-layer" href="${hand.src}" x="${hand.x}" y="${hand.y}" width="${hand.width}" height="${hand.height}" preserveAspectRatio="xMidYMid meet" opacity="${opacity}" transform="translate(${dx.toFixed(1)} ${dy.toFixed(1)})"/>`;
+};
+
 const SENTS = [
   {text:'주말에 뭐 했어요?', roman:'ju-ma-re mwo hae-sseo-yo?', en:'What did you do on the weekend?', pron:'[주마레 뭐 해써요]', score:86, weak:[6,7], tip:['Great rhythm. “했어요” should link into [해써요] — hold the ㅆ a touch longer, and let your pitch rise at the end because it’s a question.','리듬이 좋아요. “했어요”는 [해써요]로 이어 읽어요. ㅆ을 조금 더 길게, 질문이니까 끝을 올려 주세요.']},
   {text:'밥 먹었어요?', roman:'bap meo-geo-sseo-yo?', en:'Have you eaten?', pron:'[밤머거써요]', score:79, weak:[0,3], tip:['“밥” before ㅁ becomes [밤] — the ㅂ turns nasal. Try saying 밤머거써요 in one breath.','“밥” 뒤에 ㅁ이 오면 [밤]으로 소리 나요. 밤머거써요를 한 번에 말해 보세요.']},
@@ -998,13 +1622,14 @@ en:{
  lDictLabel:'DICTATION', lDictHint:'Type the missing word you heard.',
  rEyebrow:'READING · BEGINNER 3 · 3 MIN', rSubtitle:'When the cherry blossoms bloom, Seoul turns pink · Tap an underlined word to see its meaning.', rCheck:'CHECK YOUR UNDERSTANDING',
  rEmpty:'Tap any underlined word — Hunie will show its meaning and an example here.', grammarH:'Grammar in this story', g1:'to come/go in order to…', g2:'because…',
- wTitle:'Writing practice', wTab1:'Build a syllable', wTab2:'Write sentences', jamoPrompt:'Combine a consonant, a vowel and a final consonant to make', nextSyl:'Next syllable',
+ wTitle:'Writing practice', wTab1:'Build a syllable', wTab2:'Write sentences', wTab3:'Build a word', jamoPrompt:'Combine a consonant, a vowel and a final consonant to make', nextSyl:'Next syllable', resetSyllable:'Reset',
  jamoNote:'Every Korean syllable is a block: consonant + vowel (+ optional final). ㅎ + ㅏ + ㄴ = 한.',
  sentPrompt:'What did you do last weekend? Write three sentences.', sentHint:'Try using', getFb:'Get feedback', fbFrom:'Feedback from Seoyeon', pastTense:'past tense',
  fb1:'Use 에서 for the place where an action happens (eating, studying, meeting). 에 is for where you go or where something is.',
  fb2:'Never put 았/었 before -아서/어서 — the main verb carries the tense. 맛있다 → 맛있어서',
  sEyebrow:'SPEAKING · SHADOWING', sTitle:'Say it like a native', soundsLike:'sounds like', native:'Native', next:'Next', pronLabel:'Pronunciation', pronHint:'Practice the syllables marked in red.', tipFrom:'Tip from Haneul',
- recH1:'My progress', weekH:'Study time this week', skillH:'Skill levels', skillTip:'Writing is growing the slowest. Add one sentence exercise a day this week?'
+ recH1:'My progress', weekH:'Study time this week', skillH:'Skill levels', skillTip:'Writing is growing the slowest. Add one sentence exercise a day this week?',
+ onlineLabel:'Online now'
 },
 ko:{
  navHow:'학습 방법', navTutors:'커리큘럼', navAbout:'회사 소개', login:'로그인', startFree:'무료로 시작', themeTitle:'다크 모드 전환',
@@ -1039,13 +1664,14 @@ ko:{
  lDictLabel:'받아쓰기', lDictHint:'들은 단어를 빈칸에 써 보세요.',
  rEyebrow:'읽기 · 초급 3 · 3분', rSubtitle:'밑줄 친 단어를 누르면 뜻을 볼 수 있어요.', rCheck:'내용 확인',
  rEmpty:'밑줄 친 단어를 눌러 보세요. 훈이가 뜻과 예문을 보여 줄게요.', grammarH:'이 글의 문법', g1:'목적 (~하려고 오다/가다)', g2:'이유 (~때문에)',
- wTitle:'쓰기 연습', wTab1:'글자 만들기', wTab2:'문장 쓰기', jamoPrompt:'자음 + 모음 + 받침으로 만들어 보세요:', nextSyl:'다음 글자',
+ wTitle:'쓰기 연습', wTab1:'글자 만들기', wTab2:'문장 쓰기', wTab3:'단어 만들기', jamoPrompt:'자음 + 모음 + 받침으로 만들어 보세요:', nextSyl:'다음 글자', resetSyllable:'다시 만들기',
  jamoNote:'한국어 글자는 블록이에요: 자음 + 모음 (+ 받침). ㅎ + ㅏ + ㄴ = 한.',
  sentPrompt:'지난 주말에 뭐 했어요? 세 문장으로 써 보세요.', sentHint:'써 볼 표현:', getFb:'첨삭 받기', fbFrom:'서연 튜터의 첨삭', pastTense:'과거형',
  fb1:'먹다, 공부하다, 만나다처럼 행동이 일어나는 장소에는 ‘에서’를 써요. ‘에’는 가는 곳이나 있는 곳에 써요.',
  fb2:'-아서/어서 앞에는 았/었을 붙이지 않아요. 시제는 뒤 문장이 나타내요. 맛있다 → 맛있어서',
  sEyebrow:'말하기 · 따라 말하기', sTitle:'원어민처럼 말해 보기', soundsLike:'실제 발음', native:'원어민', next:'다음', pronLabel:'발음 정확도', pronHint:'빨간 글자만 다시 연습해 보세요.', tipFrom:'하늘 튜터의 팁',
- recH1:'나의 학습 기록', weekH:'이번 주 학습 시간', skillH:'영역별 실력', skillTip:'쓰기가 가장 천천히 늘고 있어요. 이번 주는 문장 쓰기를 하루 한 번 추가해 볼까요?'
+ recH1:'나의 학습 기록', weekH:'이번 주 학습 시간', skillH:'영역별 실력', skillTip:'쓰기가 가장 천천히 늘고 있어요. 이번 주는 문장 쓰기를 하루 한 번 추가해 볼까요?',
+ onlineLabel:'대화 가능'
 }};
 
 function fmtTime(hm, L){ let [h,m]=hm.split(':').map(Number); const pm=h>=12; const h12=h%12||12; return L===1?(pm?'오후 ':'오전 ')+h12+':'+String(m).padStart(2,'0'):h12+':'+String(m).padStart(2,'0')+(pm?' PM':' AM'); }
@@ -1054,21 +1680,428 @@ function listDate(iso, hm, L){ if(iso===TODAY) return fmtTime(hm,L); if(iso==='2
 function nowHM(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 
 class Component extends DCLogic {
-  state = { page:null, lang:null, theme:null, tutorId:'jiwoo', msgs:JSON.parse(JSON.stringify(SEED)), draft:'', typing:false, w:1200, trAll:false, trOpen:{}, filter:'all', playing:false, prog:0.18, speed:1, showScript:false, lAns:{}, dict:'', wordKey:null, saved:{}, rAns:{}, wTab:'jamo', ti:0, L:null, V:null, T:null, wText:'지난 주말에 친구를 만났어요. 우리는 홍대에 떡볶이를 먹었어요. 정말 맛있었어서 또 가고 싶어요.', wChecked:false, sIdx:0, rec:'idle', recTab:'vocab', unread:{minho:1, seoyeon:1}, ri:0, mockIdx:0, mockOn:true };
+  state = {
+    page: null,
+    lang: null,
+    theme: null,
+    tutorId: 'jiwoo',
+    currentUser: null,
+    msgs: JSON.parse(JSON.stringify(SEED)),
+    draft: '',
+    typing: false,
+    w: 1200,
+    trAll: false,
+    trOpen: {},
+    filter: 'all',
+    playing: false,
+    prog: 0.18,
+    speed: 1,
+    showScript: false,
+    lAns: {},
+    dict: '',
+    wordKey: null,
+    saved: {},
+    rAns: {},
+    rTrAll: false,
+    wTab: 'jamo',
+    ti: 0,
+    L: null,
+    V: null,
+    T: null,
+    wText: '지난 주말에 친구를 만났어요. 우리는 홍대에 떡볶이를 먹었어요. 정말 맛있었어서 또 가고 싶어요.',
+    wChecked: false,
+    sIdx: 0,
+    rec: 'idle',
+    recTab: 'vocab',
+    unread: { minho: 1, seoyeon: 1 },
+    ri: 0,
+    mockIdx: 0,
+    mockOn: true,
+    jLevel: 1,
+    wi: 0,
+    si: 0,
+    showHandShadow: true,
+    showKbGuide: false,
+    kbGuideTab: 'win',
+    isKeyError: false,
+    isPhysicalShift: false,
+    speechStatus: 'idle',
+    speechKey: ''
+  };
   msgRef = React.createRef();
   componentDidMount(){
     this.onResize=()=>this.setState({w:window.innerWidth}); this.onResize(); window.addEventListener('resize',this.onResize);
-    let lang=null, theme=null; try{lang=localStorage.getItem('hn-lang'); theme=localStorage.getItem('hn-theme');}catch(e){}
-    this.setState({lang, theme}); this.applyTheme();
+    window.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener('keyup', this.handleKeyUp);
+    window.__hnVirtualKey = (k) => this.handleVirtualKeyName(k);
+    setTimeout(() => this.updateVirtualKeyboardSvg(), 60);
+    let lang=null, theme=null, savedTutor=null;
+    try{
+      lang=localStorage.getItem('hn-lang');
+      theme=localStorage.getItem('hn-theme');
+      savedTutor=localStorage.getItem('hn-tutor');
+    }catch(e){}
+    this.setState({
+      lang,
+      theme,
+      tutorId: (savedTutor && TUTORS.some(t=>t.id===savedTutor)) ? savedTutor : 'jiwoo'
+    });
+    this.applyTheme();
     this.mockIv=setInterval(()=>{
       this.setState({mockOn:false});
       this.mockTt=setTimeout(()=>this.setState({mockIdx:this.state.mockIdx+1, mockOn:true}),380);
     },4200);
+
+    // Firebase Auth & Firestore 가입자 이메일/튜터 연동
+    if (typeof firebase !== 'undefined') {
+      if (!firebase.apps.length) {
+        try {
+          firebase.initializeApp(FIREBASE_CONFIG);
+        } catch(err) {
+          console.warn('[Firebase] Init:', err);
+        }
+      }
+      try {
+        firebase.auth().onAuthStateChanged(async (user)=>{
+          if (user) {
+            const userObj = {
+              uid: user.uid,
+              email: user.email || '',
+              displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'Learner'),
+              photoURL: user.photoURL || ''
+            };
+            this.setState({ currentUser: userObj });
+
+            // Firestore users 컬렉션에 사용자 이메일 및 선택된 튜터 정보 저장/동기화
+            try {
+              const db = firebase.firestore();
+              const userRef = db.collection('users').doc(user.uid);
+              const snap = await userRef.get();
+              if (snap.exists) {
+                const uData = snap.data();
+                if (uData && uData.selectedTutorId && TUTORS.some(t=>t.id===uData.selectedTutorId)) {
+                  this.setState({ tutorId: uData.selectedTutorId });
+                }
+              }
+              await userRef.set({
+                uid: user.uid,
+                email: user.email || '',
+                displayName: user.displayName || '',
+                photoURL: user.photoURL || '',
+                selectedTutorId: this.state.tutorId,
+                lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+              }, { merge: true });
+            } catch(dbErr) {
+              console.warn('[Firestore] Sync Warning:', dbErr);
+            }
+          } else {
+            this.setState({ currentUser: null });
+          }
+        });
+      } catch(authErr) {
+        console.warn('[Firebase Auth] Listener Warning:', authErr);
+      }
+    }
   }
-  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); clearInterval(this.iv); clearTimeout(this.tt); clearInterval(this.mockIv); clearTimeout(this.mockTt); }
+  componentWillUnmount(){
+    window.removeEventListener('resize',this.onResize);
+    window.removeEventListener('keydown',this.handleKeyDown);
+    window.removeEventListener('keyup',this.handleKeyUp);
+    clearInterval(this.iv); clearTimeout(this.tt); clearInterval(this.mockIv); clearTimeout(this.mockTt); clearTimeout(this.autoNextTt);
+    this.stopTutorSpeech(false);
+  }
+  handleKeyDown = (e) => {
+    const tag = document.activeElement ? document.activeElement.tagName.toUpperCase() : '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    const page = this.state.page ?? this.props.startPage ?? 'intro';
+    if (page !== 'writing' || (this.state.wTab !== 'jamo' && this.state.wTab !== 'word')) return;
+
+    if (e.key === 'Shift') {
+      this.setState({ isPhysicalShift: true });
+      return;
+    }
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      this.backspaceJamo();
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      this.nextTarget();
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      this.resetTarget();
+      return;
+    }
+
+    const keyUpper = e.key.toUpperCase();
+    this.handleVirtualKeyName(keyUpper);
+  };
+  handleKeyUp = (e) => {
+    if (e.key === 'Shift') {
+      this.setState({ isPhysicalShift: false });
+    }
+  };
+  backspaceJamo = () => {
+    this.setState({ isKeyError: false });
+    if (this.state.T != null) {
+      this.setState({ T: null });
+    } else if (this.state.V != null) {
+      this.setState({ V: null });
+    } else if (this.state.L != null) {
+      this.setState({ L: null });
+    }
+  };
+  resetTarget = () => {
+    this.setState({ L: null, V: null, T: null, isKeyError: false });
+  };
+  // 현재 제시 글자: 글자 만들기는 TARGETS_BY_LEVEL, 단어 만들기는 현재 단어의 si번째 음절
+  getTarget = (st = this.state) => {
+    if (st.wTab === 'word') {
+      const list = WORDS_BY_LEVEL[st.jLevel] || WORDS_BY_LEVEL[1];
+      const wd = list[st.wi % list.length];
+      const si = Math.min(st.si, wd.w.length - 1);
+      const d = decompSyl(wd.w[si]);
+      return { ...d, ch: wd.w[si], en: wd.en, hint: jamoHint(d), word: wd.w, si };
+    }
+    const list = TARGETS_BY_LEVEL[st.jLevel] || TARGETS_BY_LEVEL[1];
+    return list[st.ti % list.length];
+  };
+  isComplete = (st = this.state) => {
+    const tg = this.getTarget(st);
+    return st.L === tg.L && st.V === tg.V && (st.T || 0) === tg.T;
+  };
+  // 축하 연출이 뜨는 순간인지 (글자 하나 완성 · 단어의 마지막 음절 완성). 단어 중간 음절은 아님
+  isCelebrating = (st = this.state) => {
+    if (!this.isComplete(st)) return false;
+    if (st.wTab !== 'word') return true;
+    const tg = this.getTarget(st);
+    return tg.si + 1 >= tg.word.length;
+  };
+  // 수동 이동(다음 버튼·Enter): 글자 모드는 다음 글자, 단어 모드는 다음 단어
+  nextTarget = () => {
+    clearTimeout(this.autoNextTt); this.autoNextTt = null;
+    this.setState(st => st.wTab === 'word'
+      ? { wi: st.wi + 1, si: 0, L: null, V: null, T: null, isKeyError: false }
+      : { ti: st.ti + 1, L: null, V: null, T: null, isKeyError: false });
+  };
+  // 완성 후 자동 이동: 단어 모드는 다음 음절, 마지막 음절이면 다음 단어
+  advance = () => {
+    const st = this.state;
+    if (st.wTab === 'word') {
+      const tg = this.getTarget(st);
+      if (tg.si + 1 < tg.word.length) {
+        clearTimeout(this.autoNextTt); this.autoNextTt = null;
+        this.setState({ si: tg.si + 1, L: null, V: null, T: null, isKeyError: false });
+        return;
+      }
+    }
+    this.nextTarget();
+  };
+  inputJamo = (ch) => {
+    const JT = [['none', 0], ['없음', 0], ['ㄱ', 1], ['ㄴ', 4], ['ㄹ', 8], ['ㅁ', 16], ['ㅇ', 21], ...JT_EXTRA];
+
+    if (this.state.L == null) {
+      const foundL = JL.find(j => j[0] === ch);
+      if (foundL) {
+        this.setState({ L: foundL[1], isKeyError: false });
+      }
+      return;
+    }
+    if (this.state.L != null && this.state.V == null) {
+      const foundV = JV.find(j => j[0] === ch);
+      if (foundV) {
+        this.setState({ V: foundV[1], isKeyError: false });
+      }
+      return;
+    }
+    if (this.state.L != null && this.state.V != null && this.state.T == null) {
+      if (ch === ' ' || ch === 'none' || ch === '없음') {
+        this.setState({ T: 0, isKeyError: false });
+        return;
+      }
+      const foundT = JT.find(j => j[0] === ch);
+      if (foundT) {
+        this.setState({ T: foundT[1], isKeyError: false });
+        return;
+      }
+    }
+    const foundL = JL.find(j => j[0] === ch);
+    if (foundL) {
+      this.setState({ L: foundL[1], V: null, T: null, isKeyError: false });
+    }
+  };
+  // 다음에 눌러야 할 한 타: { stage:'L'|'V'|'T', jamo, value, compound?, part? } — 완성됐으면 null
+  nextStroke = (st = this.state) => {
+    if (this.isComplete(st)) return null;
+    const tg = this.getTarget(st);
+    const chOf = (arr, v) => arr.find(j => j[1] === v)?.[0];
+    const idxOf = (arr, ch) => arr.find(j => j[0] === ch)?.[1];
+    const stepOf = (stage, arr, cur, want) => {
+      const full = chOf(arr, want), seq = JAMO_SEQ[full];
+      if (cur == null) return seq ? { stage, jamo: seq[0], value: idxOf(arr, seq[0]), compound: full, part: 1 } : { stage, jamo: full, value: want };
+      if (seq && cur === idxOf(arr, seq[0])) return { stage, jamo: seq[1], value: want, compound: full, part: 2 };
+      return null;
+    };
+    if (st.L == null) return { stage: 'L', jamo: chOf(JL, tg.L), value: tg.L };
+    if (st.V !== tg.V) { const r = stepOf('V', JV, st.V, tg.V); if (r) return r; }
+    if (tg.T > 0 && st.T !== tg.T) { const r = stepOf('T', JT_ALL, st.T, tg.T); if (r) return r; }
+    return null;
+  };
+  handleVirtualKeyName = (keyName) => {
+    const s = this.state;
+    const tg = this.getTarget(s);
+    const ok = this.isComplete(s);
+
+    if (keyName === 'Backspace' || keyName === '지우기') {
+      this.backspaceJamo();
+      return;
+    }
+    if (keyName === 'Enter') {
+      this.nextTarget();
+      return;
+    }
+    if (keyName === 'Space' || keyName === ' ') {
+      if (ok) this.advance();
+      return;
+    }
+    if (ok) {
+      // 완성 직후 누른 키는 버리지 않고 다음 음절의 첫 타로 바로 이어서 처리 (같은 키를 두 번 누르지 않도록)
+      this.advance();
+      setTimeout(() => this.handleVirtualKeyName(keyName), 0);
+      return;
+    }
+
+    const step = this.nextStroke(s);
+    const expectedKey = step ? JAMO_KEY_MAP[step.jamo]?.key : null;
+
+    if (keyName === expectedKey) {
+      // 겹받침·이중모음은 첫 타에서 앞 자모만 들어가고, 둘째 타에서 완성됨
+      this.setState({ [step.stage]: step.value, isKeyError: false });
+    } else {
+      // 오타 시 빨간색 강조 및 쉐이크 애니메이션
+      this.setState({ isKeyError: true });
+      setTimeout(() => {
+        if (this.state.isKeyError) this.setState({ isKeyError: false });
+      }, 500);
+    }
+  };
+  updateVirtualKeyboardSvg = () => {
+    const root = document.getElementById('virtual-keyboard-root');
+    if (!root) return;
+
+    const s = this.state;
+    const ok = this.isComplete(s);
+    const step = this.nextStroke(s);
+
+    const keyInfo = step ? JAMO_KEY_MAP[step.jamo] : null;
+    const activeKeyName = keyInfo ? keyInfo.key : null;
+    const activeFinger = keyInfo ? keyInfo.finger : null;
+    const isShiftNeeded = !!(keyInfo && keyInfo.shift);
+    const isShiftActive = isShiftNeeded || !!s.isPhysicalShift;
+    const isError = !!s.isKeyError;
+    const showHandShadow = s.showHandShadow ?? true;
+
+    const targetKey = activeKeyName ? KB_MAP[activeKeyName] : null;
+    const isLeft = ['LP','LR','LM','LI','LT'].includes(activeFinger);
+
+    const fingerId = activeFinger ? activeFinger[1] : null;
+    const tgtPt = targetKey ? [targetKey.cx, targetKey.cy] : null;
+    const leftHand = buildHandImage('left', isLeft ? fingerId : null, isLeft ? tgtPt : null, activeFinger && isLeft ? 0.34 : 0.1);
+    const rightHand = buildHandImage('right', !isLeft ? fingerId : null, !isLeft ? tgtPt : null, activeFinger && !isLeft ? 0.34 : 0.1);
+
+    let svgHtml = `
+    <svg viewBox="0 26 980 334" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-width:960px;display:block">
+      <defs>
+        <filter id="kbKeyShadow" x="-10%" y="-10%" width="120%" height="130%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.06)"/>
+        </filter>
+      </defs>
+
+      <!-- 키보드 베이스 플레이트 (첨부 이미지 비율 & 둥근 모서리) -->
+      <rect x="10" y="36" width="960" height="314" rx="16" fill="var(--card)" stroke="var(--line2)" stroke-width="1.5" />
+
+      <!-- 물리키 배치 (SVG group) -->
+      <g class="keys-layer">
+    `;
+
+    KB_SVG_ROWS.forEach(row => {
+      row.forEach(k => {
+        const isTarget = (!ok && k.key === activeKeyName);
+        const isShiftTarget = (!ok && isShiftNeeded && (k.key === 'Shift' || k.key === 'ShiftR'));
+
+        let fill = k.isSpecial ? 'var(--chip)' : 'var(--card)';
+        let stroke = 'var(--line2)';
+        let strokeWidth = '1';
+        let textKoColor = k.isSpecial ? 'var(--ink2)' : 'var(--ink)';
+        let textEnColor = 'var(--faint)';
+
+        if (isTarget) {
+          fill = isError ? '#E53935' : '#B25353';
+          stroke = isError ? '#B71C1C' : '#8E3636';
+          strokeWidth = '2';
+          textKoColor = '#FFFFFF';
+          textEnColor = 'rgba(255,255,255,0.85)';
+        } else if (isShiftTarget) {
+          fill = '#C05621';
+          stroke = '#9C4221';
+          strokeWidth = '2';
+          textKoColor = '#FFFFFF';
+          textEnColor = 'rgba(255,255,255,0.85)';
+        }
+
+        const displayKo = (isShiftActive && k.shift) ? k.shift : k.ko;
+        const displayEn = k.key.length === 1 ? k.key.toUpperCase() : '';
+
+        svgHtml += `
+        <g class="key-node ${isTarget ? (isError ? 'key-error' : 'key-target') : ''}"
+           onclick="window.__hnVirtualKey && window.__hnVirtualKey('${k.key}')" style="cursor:pointer">
+          <rect x="${k.x}" y="${k.y}" width="${k.w}" height="${k.h}" rx="7" ry="7"
+                fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"
+                filter="url(#kbKeyShadow)"/>
+
+          <!-- 한글 상단 표시 -->
+          <text x="${k.cx}" y="${k.isSpecial ? k.cy + 5 : k.y + 22}" text-anchor="middle"
+                font-family="'Pretendard', sans-serif" font-size="${k.isSpecial ? '12' : '15'}" font-weight="700"
+                fill="${textKoColor}">${displayKo}</text>
+
+          <!-- 영문 대문자 하단 표시 -->
+          ${!k.isSpecial ? `
+          <text x="${k.cx}" y="${k.y + 40}" text-anchor="middle"
+                font-family="'Pretendard', monospace" font-size="11" font-weight="600"
+                fill="${textEnColor}">${displayEn}</text>
+          ` : ''}
+        </g>
+        `;
+      });
+    });
+
+    svgHtml += `</g>`;
+
+    // 손 오버레이 (첨부 이미지 수준의 곡선 실루엣을 현재 목표 키에 정렬)
+    if (showHandShadow && !ok) {
+      svgHtml += `
+      <!-- 왼손 / 오른손 정밀 실루엣 -->
+      ${leftHand}
+      ${rightHand}
+      `;
+    }
+
+    svgHtml += `</svg>`;
+    root.innerHTML = svgHtml;
+  };
   componentDidUpdate(pp,ps){
     this.applyTheme();
-    const el=this.msgRef.current; if(el && (ps.msgs!==this.state.msgs||ps.page!==this.state.page||ps.tutorId!==this.state.tutorId||ps.typing!==this.state.typing)) el.scrollTop=el.scrollHeight;
+    this.updateVirtualKeyboardSvg();
+    // 축하 연출이 있을 때만 충분히 보여 주고, 단어 중간 음절은 곧바로 다음 음절로 넘어감
+    const onBuild = () => (this.state.page ?? this.props.startPage ?? 'intro') === 'writing' && (this.state.wTab === 'jamo' || this.state.wTab === 'word');
+    if (onBuild() && this.isComplete() && !this.autoNextTt) {
+      const wait = this.isCelebrating() ? 1800 : 240;
+      this.autoNextTt = setTimeout(() => { this.autoNextTt = null; if (onBuild() && this.isComplete()) this.advance(); }, wait);
+    }
+    const el=this.msgRef.current; if(el && (!ps || ps.msgs!==this.state.msgs||ps.page!==this.state.page||ps.tutorId!==this.state.tutorId||ps.typing!==this.state.typing)) el.scrollTop=el.scrollHeight;
   }
   themeNow(){ return this.state.theme ?? this.props.theme ?? 'light'; }
   langNow(){ return this.state.lang ?? this.props.language ?? 'en'; }
@@ -1076,20 +2109,243 @@ class Component extends DCLogic {
   setLang(l){ this.setState({lang:l}); try{localStorage.setItem('hn-lang',l);}catch(e){} }
   setTheme(t){ this.setState({theme:t}); try{localStorage.setItem('hn-theme',t);}catch(e){} }
   go(p){ this.setState({page:p}); window.scrollTo(0,0); }
-  openTutor(id){ const u={...this.state.unread}; delete u[id]; this.setState({page:'chat', tutorId:id, unread:u}); window.scrollTo(0,0); }
+  selectTutor = async (id) => {
+    if (!TUTORS.some(t=>t.id===id)) return;
+    const u = { ...this.state.unread };
+    delete u[id];
+    this.setState({ tutorId: id, unread: u, page: 'chat' });
+    try { localStorage.setItem('hn-tutor', id); } catch(e){}
+    if (this.state.currentUser) {
+      try {
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+          await firebase.firestore().collection('users').doc(this.state.currentUser.uid).set({
+            selectedTutorId: id,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+      } catch(err) {
+        console.warn('[Firestore] Tutor update error:', err);
+      }
+    }
+    window.scrollTo(0,0);
+  };
+  openTutor(id){ this.selectTutor(id); }
+  loginWithGoogle = async () => {
+    if (typeof firebase === 'undefined' || !firebase.auth) {
+      alert('Firebase 인증 모듈을 로드하는 중입니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      await firebase.auth().signInWithPopup(provider);
+    } catch(err) {
+      console.error('[Google Login Error]', err);
+      if (err.code === 'auth/popup-blocked') {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithRedirect(provider);
+      } else if (err.code !== 'auth/popup-closed-by-user') {
+        alert('Google 로그인 실패: ' + (err.message || err.code));
+      }
+    }
+  };
+  logoutFirebase = async () => {
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      try {
+        await firebase.auth().signOut();
+        this.setState({ currentUser: null });
+      } catch(err) {
+        console.error('[Logout Error]', err);
+      }
+    }
+  };
   sendText(text){
     text=(text||'').trim(); if(!text) return;
-    const id=this.state.tutorId;
-    const list=[...this.state.msgs[id], {from:'me', text, time:nowHM(), pending:true}];
-    this.setState({msgs:{...this.state.msgs,[id]:list}, draft:'', typing:true});
-    clearTimeout(this.tt);
-    this.tt=setTimeout(()=>{
-      const r=REPLIES[this.state.ri%REPLIES.length];
-      const cur=this.state.msgs[id].map(m=>({...m,pending:false}));
-      cur.push({from:'t', text:r.text, tr:r.tr, time:nowHM()});
-      this.setState({msgs:{...this.state.msgs,[id]:cur}, typing:false, ri:this.state.ri+1});
-    },1600);
+    const targetTutorId=this.state.tutorId;
+    const msgId='msg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    const userMsg={id:msgId, from:'me', text, time:nowHM(), pending:true};
+
+    this.setState(prevState=>({
+      msgs:{
+        ...prevState.msgs,
+        [targetTutorId]:[...(prevState.msgs[targetTutorId]||[]), userMsg]
+      },
+      draft:'',
+      typing:prevState.tutorId===targetTutorId?true:prevState.typing
+    }));
+
+    // Development Mock 모드 (?mock=true 또는 localStorage.getItem('hn_mock') === 'true')
+    const isMock = typeof window!=='undefined' && (
+      new URLSearchParams(window.location.search).get('mock')==='true' ||
+      (()=>{ try { return localStorage.getItem('hn_mock')==='true'; } catch(e){ return false; } })()
+    );
+
+    if (isMock) {
+      clearTimeout(this.tt);
+      this.tt = setTimeout(()=>{
+        const r=REPLIES[this.state.ri%REPLIES.length];
+        this.setState(prevState=>{
+          const list=(prevState.msgs[targetTutorId]||[]).map(m=>m.id===msgId?{...m,pending:false}:m);
+          list.push({from:'t', text:r.text, tr:r.tr, time:nowHM()});
+          const stillPending=list.some(m=>m.pending);
+          return {
+            msgs:{...prevState.msgs, [targetTutorId]:list},
+            typing:prevState.tutorId===targetTutorId?stillPending:prevState.typing,
+            ri:prevState.ri+1
+          };
+        });
+      },1600);
+      return;
+    }
+
+    // 실제 API 호출 (/api/chat)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=>controller.abort(), 30000); // 30초 Timeout
+
+    // 이전 대화 히스토리 (최근 8개)
+    const rawHistory = (this.state.msgs[targetTutorId]||[]).filter(m=>!m.pending && m.text);
+    const history = rawHistory.slice(-8).map(m=>({
+      role: m.from==='me'?'user':'model',
+      content: m.text
+    }));
+
+    fetch('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tutorId:targetTutorId, message:text, history}),
+      signal:controller.signal
+    })
+      .then(async res=>{
+        if (!res.ok) {
+          throw new Error('HTTP_'+res.status);
+        }
+        const data = await res.json();
+        if (!data || typeof data.reply!=='string' || data.reply.trim().length===0) {
+          throw new Error('INVALID_REPLY');
+        }
+        return data;
+      })
+      .then(data=>{
+        this.setState(prevState=>{
+          const prevList = prevState.msgs[targetTutorId]||[];
+          const updated = prevList.map(m=>m.id===msgId?{...m,pending:false}:m);
+          updated.push({
+            from:'t',
+            text:data.reply.trim(),
+            tr:typeof data.translation==='string'?data.translation:'',
+            time:nowHM()
+          });
+          const stillPending = updated.some(m=>m.pending);
+          return {
+            msgs:{...prevState.msgs, [targetTutorId]:updated},
+            typing:prevState.tutorId===targetTutorId?stillPending:prevState.typing
+          };
+        });
+      })
+      .catch(err=>{
+        console.error('[Chat API Error]', err);
+        this.setState(prevState=>{
+          const prevList = prevState.msgs[targetTutorId]||[];
+          const updated = prevList.map(m=>m.id===msgId?{...m,pending:false}:m);
+          updated.push({
+            from:'t',
+            text:'지금 답변을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+            time:nowHM()
+          });
+          const stillPending = updated.some(m=>m.pending);
+          return {
+            msgs:{...prevState.msgs, [targetTutorId]:updated},
+            typing:prevState.tutorId===targetTutorId?stillPending:prevState.typing
+          };
+        });
+      })
+      .finally(()=>{
+        clearTimeout(timeoutId);
+      });
   }
+  stopTutorSpeech = (updateState = true) => {
+    if (this.ttsRequest) {
+      this.ttsRequest.abort();
+      this.ttsRequest = null;
+    }
+    if (this.ttsAudio) {
+      this.ttsAudio.pause();
+      this.ttsAudio.removeAttribute('src');
+      this.ttsAudio.load();
+      this.ttsAudio = null;
+    }
+    if (this.ttsObjectUrl) {
+      URL.revokeObjectURL(this.ttsObjectUrl);
+      this.ttsObjectUrl = null;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    if (updateState) this.setState({ speechStatus:'idle', speechKey:'' });
+  };
+  speakWithDeviceVoice = (text, key) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') {
+      this.setState({ speechStatus:'idle', speechKey:'' });
+      return;
+    }
+
+    const tutorOrder = { jiwoo:0, minho:1, seoyeon:2, haneul:3 };
+    const tutorStyle = {
+      jiwoo:{rate:.86,pitch:1.06}, minho:{rate:.96,pitch:.88},
+      seoyeon:{rate:.9,pitch:1}, haneul:{rate:.78,pitch:.92}
+    };
+    const utterance = new SpeechSynthesisUtterance(text);
+    const koreanVoices = window.speechSynthesis.getVoices().filter(v=>String(v.lang||'').toLowerCase().startsWith('ko'));
+    if (koreanVoices.length) utterance.voice = koreanVoices[(tutorOrder[this.state.tutorId] || 0) % koreanVoices.length];
+    utterance.lang = 'ko-KR';
+    utterance.rate = tutorStyle[this.state.tutorId]?.rate || .9;
+    utterance.pitch = tutorStyle[this.state.tutorId]?.pitch || 1;
+    utterance.onend = () => { if (this.state.speechKey === key) this.setState({speechStatus:'idle',speechKey:''}); };
+    utterance.onerror = () => { if (this.state.speechKey === key) this.setState({speechStatus:'idle',speechKey:''}); };
+    this.setState({ speechStatus:'playing', speechKey:key });
+    window.speechSynthesis.speak(utterance);
+  };
+  playTutorSpeech = async (text, key) => {
+    const speechText = String(text || '').trim();
+    if (!speechText) return;
+    if (this.state.speechKey === key && this.state.speechStatus !== 'idle') {
+      this.stopTutorSpeech();
+      return;
+    }
+
+    this.stopTutorSpeech(false);
+    const controller = new AbortController();
+    this.ttsRequest = controller;
+    this.setState({ speechStatus:'loading', speechKey:key });
+
+    try {
+      const response = await fetch('/api/tts', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text:speechText,tutorId:this.state.tutorId}),
+        signal:controller.signal
+      });
+      if (!response.ok) throw new Error('TTS_HTTP_'+response.status);
+      const audioBlob = await response.blob();
+      if (!audioBlob.size) throw new Error('TTS_EMPTY_AUDIO');
+
+      const objectUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(objectUrl);
+      this.ttsRequest = null;
+      this.ttsObjectUrl = objectUrl;
+      this.ttsAudio = audio;
+      audio.onended = () => { if (this.state.speechKey === key) this.stopTutorSpeech(); };
+      audio.onerror = () => { if (this.state.speechKey === key) this.stopTutorSpeech(); };
+      await audio.play();
+      this.setState({ speechStatus:'playing', speechKey:key });
+    } catch(err) {
+      if (controller.signal.aborted) return;
+      console.warn('[Tutor TTS] Cloud voice unavailable; using device Korean voice.', err.message);
+      this.ttsRequest = null;
+      this.stopTutorSpeech(false);
+      this.speakWithDeviceVoice(speechText, key);
+    }
+  };
   togglePlay(){
     if(this.state.playing){ clearInterval(this.iv); this.setState({playing:false}); return; }
     if(this.state.prog>=1) this.setState({prog:0});
@@ -1103,8 +2359,33 @@ class Component extends DCLogic {
     const page=s.page ?? P.startPage ?? 'intro';
     const wide=s.w>=860;
     const showRoman=P.showRomanization ?? true;
-    const tz=tu=>({...tu, name:L?tu.ko:tu.en, alt:L?tu.en:tu.ko, role:tu.role[L], pace:tu.pace[L], quote:tu.quote[L], tagLabels:tu.tags.map(k=>TAGS[k][L])});
-    const tutor=tz(TUTORS.find(x=>x.id===s.tutorId));
+    const tz=tu=>({...tu, name:L?tu.ko:tu.en, alt:L?tu.en:tu.ko, role:tu.role[L], pace:tu.pace[L], quote:tu.quote[L],
+      genderLabel: L ? tu.genderKo : (tu.gender==='female'?'Female':'Male'),
+      genderSymbol: tu.gender==='female'?'♀':'♂',
+      genderBg: tu.gender==='female'?'#E06B82':'#4B7BEC',
+      isSelected: tu.id===s.tutorId,
+      tagLabels:tu.tags.map(k=>TAGS[k][L])
+    });
+    const tutor=tz(TUTORS.find(x=>x.id===s.tutorId)||TUTORS[0]);
+    const dynamicT = {
+      ...t,
+      fbFrom: L ? `${tutor.name} 튜터의 첨삭` : `Feedback from ${tutor.name}`,
+      tipFrom: L ? `${tutor.name} 튜터의 팁` : `Tip from ${tutor.name}`,
+      rEmpty: L ? `밑줄 친 단어를 눌러 보세요. ${tutor.name} 튜터가 뜻과 예문을 보여 줄게요.` : `Tap any underlined word — ${tutor.name} will show its meaning and an example here.`,
+      continueChat: L ? `${tutor.name} 튜터와 이어서 대화하기` : `Continue chat with ${tutor.name}`,
+      startChat: L ? '전담 튜터로 선택' : 'Select as My Tutor'
+    };
+    const isLoggedIn = !!s.currentUser;
+    const isNotLoggedIn = !s.currentUser;
+    const userName = s.currentUser ? (s.currentUser.displayName || s.currentUser.email.split('@')[0]) : (L ? '게스트' : 'Guest');
+    const userEmail = s.currentUser ? s.currentUser.email : (L ? 'Google 로그인으로 동기화' : 'Sign in to sync');
+    const userInitial = s.currentUser ? (s.currentUser.displayName || s.currentUser.email || 'U')[0].toUpperCase() : 'G';
+    const hasUserPhoto = !!(s.currentUser && s.currentUser.photoURL);
+    const noUserPhoto = !hasUserPhoto;
+    const userPhoto = s.currentUser ? s.currentUser.photoURL : '';
+    const tutorCardLabel = L ? '내 전담 튜터' : 'MY TUTOR';
+    const changeTutorLabel = L ? '튜터 변경' : 'Change';
+    const googleLoginLabel = L ? 'Google 계정으로 로그인' : 'Sign in with Google';
     const go=p=>()=>this.go(p);
     const goChat = go('chat');
     const goWriting = go('writing');
@@ -1134,7 +2415,7 @@ class Component extends DCLogic {
         toggleTr:()=>this.setState({trOpen:{...s.trOpen,[s.tutorId+i]:!s.trOpen[s.tutorId+i]}})};
     });
     const lastDate=l=>{let d=TODAY;for(const m of l) if(m.date) d=m.date; return d;};
-    const chatList=TUTORS.map(tu=>{const l=s.msgs[tu.id], last=l[l.length-1];return {...tz(tu), open:()=>this.openTutor(tu.id), last:last.text, time:listDate(lastDate(l),last.time,L), unread:s.unread[tu.id]||0, hasUnread:!!s.unread[tu.id], bg:tu.id===s.tutorId?'var(--chip)':'var(--card)'};});
+    const chatList=TUTORS.map(tu=>{const l=s.msgs[tu.id], last=l[l.length-1];return {...tz(tu), open:()=>this.selectTutor(tu.id), last:last.text, time:listDate(lastDate(l),last.time,L), unread:s.unread[tu.id]||0, hasUnread:!!s.unread[tu.id], bg:tu.id===s.tutorId?'var(--chip)':'var(--card)'};});
     const mk0=MOCKS[s.mockIdx%MOCKS.length];
     const mock={...mk0, role:mk0.role[L], rule:mk0.rule[L]};
     const jl=s.msgs.jiwoo;
@@ -1142,10 +2423,25 @@ class Component extends DCLogic {
 
     const filterOpts=[['all',L?'전체':'All'],...['daily','business','topik','pron','beginner'].map(k=>[k,TAGS[k][L]])];
     const filters=filterOpts.map(([k,l])=>{const a=s.filter===k;return {label:l,go:()=>this.setState({filter:k}),bg:a?'var(--solid)':'var(--card)',fg:a?'var(--on-solid)':'var(--ink2)',bd:a?'var(--solid)':'var(--line)'};});
-    const tutorList=TUTORS.filter(tu=>s.filter==='all'||tu.tags.includes(s.filter)).map(tu=>{const z=tz(tu);return {...z,open:()=>this.openTutor(tu.id),status:(tu.online?(L?'지금 접속 중 · ':'Online now · '):(L?'몇 시간 내 답장 · ':'Replies within hours · '))+z.pace};});
+    const tutorList=TUTORS.filter(tu=>s.filter==='all'||tu.tags.includes(s.filter)).map(tu=>{
+      const z=tz(tu);
+      return {
+        ...z,
+        open:()=>this.selectTutor(tu.id),
+        status:(tu.online?(L?'지금 접속 중 · ':'Online now · '):(L?'몇 시간 내 답장 · ':'Replies within hours · '))+z.pace,
+        btnLabel:tu.id===s.tutorId?(L?'현재 전담 튜터 ✓':'Selected ✓'):(L?'전담 튜터로 선택':'Select as Tutor'),
+        btnBg:tu.id===s.tutorId?'var(--solid)':'var(--accent)',
+        cardBd:tu.id===s.tutorId?'2px solid var(--accent)':'1px solid var(--line)'
+      };
+    });
 
-    const planDef=[['chat','대',['Reply to Jiwoo','지우에게 답장하기'],['Keep the Han River chat going','한강 이야기 이어 가기'],'5',false],['listening','듣',['Ordering at a café','카페에서 주문하기'],['Listening · Beginner 2','듣기 · 초급 2'],'3',true],['reading','읽',['Cherry blossom season','벚꽃 구경'],['Reading · 7 new words','읽기 · 새 단어 7개'],'4',false],['speaking','말',['Shadow 3 sentences','세 문장 따라 말하기'],['Speaking · linking sounds','말하기 · 연음'],'3',false]];
-    const plan=planDef.map(([k,g,ti,sub,min,done])=>({glyph:g,title:ti[L],sub:sub[L],min:min+(L?'분':' min'),go:k==='chat'?()=>this.openTutor('jiwoo'):go(k),check:done?'✓':'',ring:done?'var(--accent)':'var(--line3)',fill:done?'var(--accent)':'transparent',tc:done?'var(--faint)':'var(--ink)',td:done?'line-through':'none'}));
+    const planDef=[
+      ['chat','대',[tutor.en?`Reply to ${tutor.en}`:'Reply to Tutor',`${tutor.name}에게 답장하기`],['Keep your conversation going','대화 이어 가기'],'5',false],
+      ['listening','듣',['Ordering at a café','카페에서 주문하기'],['Listening · Beginner 2','듣기 · 초급 2'],'3',true],
+      ['reading','읽',['Cherry blossom season','벚꽃 구경'],['Reading · 7 new words','읽기 · 새 단어 7개'],'4',false],
+      ['speaking','말',['Shadow 3 sentences','세 문장 따라 말하기'],['Speaking · linking sounds','말하기 · 연음'],'3',false]
+    ];
+    const plan=planDef.map(([k,g,ti,sub,min,done])=>({glyph:g,title:ti[L],sub:sub[L],min:min+(L?'분':' min'),go:k==='chat'?()=>this.selectTutor(s.tutorId):go(k),check:done?'✓':'',ring:done?'var(--accent)':'var(--line3)',fill:done?'var(--accent)':'transparent',tc:done?'var(--faint)':'var(--ink)',td:done?'line-through':'none'}));
     const week=DAYS.map((d,i)=>({d:L?d[1]:d[0][0],bg:i<6?'var(--accent)':'transparent',bd:i<6?'var(--accent)':'var(--line3)'}));
 
     const bars=Array.from({length:48},(_,i)=>{const h=18+Math.abs(Math.sin(i*1.7)*50+Math.sin(i*.45)*28);return {h:Math.min(100,h)+'%',c:i/48<s.prog?'#F2C94C':'#4A4D46'};});
@@ -1154,20 +2450,135 @@ class Component extends DCLogic {
       return {text:o,pick:()=>this.setState({lAns:{...s.lAns,[qi]:oi}}),bd:answered&&right?'var(--accent-ink)':picked?'var(--hot)':'var(--line)',bg:answered&&right?'var(--accent-soft)':picked?'var(--hot-soft)':'var(--card)',mark:answered&&right?(L?'정답':'Correct'):picked?(L?'다시 해 봐요':'Try again'):'',mc:right?'var(--accent-ink)':'var(--hot)'};})}));
     const dictOk=s.dict.trim()==='포장해';
 
-    const paras=PARAS.map(p=>({segs:p.map(seg=>{ if(typeof seg==='string') return {t:seg,bb:'none',bg:'transparent',cur:'auto',click:null};
+    const paras=PARAS.map((p,pi)=>({en:PARAS_EN[pi]||'', showTr:!!s.rTrAll, segs:p.map(seg=>{ if(typeof seg==='string') return {t:seg,bb:'none',bg:'transparent',cur:'auto',click:null};
       const k=seg[0], a=s.wordKey===k; return {t:k,bb:'2px solid '+(s.saved[k]?'var(--accent-ink)':'var(--gold)'),bg:a?'var(--hi)':'transparent',cur:'pointer',click:()=>this.setState({wordKey:k})};})}));
     const rQs=RQ.map((q,qi)=>({no:qi+1,q:q.q,en:q.en,opts:q.opts.map((o,oi)=>{const picked=s.rAns[qi]===oi,right=oi===q.a;return {text:o,pick:()=>this.setState({rAns:{...s.rAns,[qi]:oi}}),bd:picked?(right?'var(--accent-ink)':'var(--hot)'):'var(--line)',bg:picked?(right?'var(--accent-soft)':'var(--hot-soft)'):'var(--card)'};})}));
     const gw=GLOSS[s.wordKey];
 
-    const tg=TARGETS[s.ti%TARGETS.length];
-    let composed='?';
-    if(s.L!=null&&s.V==null) composed=JL.find(j=>j[1]===s.L)[0];
-    if(s.L!=null&&s.V!=null) composed=String.fromCharCode(0xAC00+(s.L*21+s.V)*28+(s.T||0));
-    const ok=s.L===tg.L&&s.V===tg.V&&(s.T||0)===tg.T;
-    const JT=[[L?'없음':'none',0],['ㄱ',1],['ㄴ',4],['ㄹ',8],['ㅁ',16],['ㅇ',21]];
-    const row=(label,arr,key)=>({label,keys:arr.map(([ch,v])=>{const a=s[key]===v;return {ch,fs:ch.length>1?'13px':'20px',pick:()=>this.setState({[key]:v}),bg:a?'var(--accent)':'var(--card)',fg:a?'#fff':'var(--ink)',bd:a?'var(--accent)':'var(--line)'};})});
+    const isWordMode = s.wTab === 'word';
+    const curLevelTargets = TARGETS_BY_LEVEL[s.jLevel] || TARGETS_BY_LEVEL[1];
+    const curLevelWords = WORDS_BY_LEVEL[s.jLevel] || WORDS_BY_LEVEL[1];
+    const levelName = s.jLevel === 2 ? (L ? '심화' : 'Advanced') : (L ? '기초' : 'Basic');
+    const tg = { ...this.getTarget(s), level: levelName };
+    const targetIdxLabel = isWordMode
+      ? (s.wi % curLevelWords.length + 1) + ' / ' + curLevelWords.length
+      : (s.ti % curLevelTargets.length + 1) + ' / ' + curLevelTargets.length;
+    const targetPromptText = isWordMode
+      ? (L ? '단어를 한 글자씩 완성해 보세요' : 'Build the word one syllable at a time')
+      : s.L ? (L ? '자음과 모음을 골라 목표 글자를 완성하세요' : 'Select letters to build the target syllable') : (L ? '제시된 목표 글자를 완성해 보세요!' : 'Combine consonants and vowels to make the target letter');
+    const JT=[[L?'없음':'none',0],['ㄱ',1],['ㄴ',4],['ㄹ',8],['ㅁ',16],['ㅇ',21],...JT_EXTRA];
+    const upTo=arr=>arr.filter(j=>(j[2]||0)<=s.jLevel);
+
+    let composed = '?';
+    if(s.L != null && s.V == null) {
+      composed = JL.find(j => j[1] === s.L)?.[0] || '?';
+    }
+    if(s.L != null && s.V != null) {
+      composed = String.fromCharCode(0xAC00 + (s.L * 21 + s.V) * 28 + (s.T || 0));
+    }
+
+    const ok = s.L === tg.L && s.V === tg.V && (s.T || 0) === tg.T;
+    const wordComplete = isWordMode && ok && tg.si === tg.word.length - 1;
+    const showJeongCelebration = ok && (!isWordMode || wordComplete);
+    const wordSyls = isWordMode ? [...tg.word].map((c, i) => {
+      const completed = i < tg.si || (ok && i === tg.si);
+      const current = i === tg.si && !ok;
+      return { ch:c, c:completed?'var(--accent-ink)':current?'var(--hot)':'var(--faint)', bd:current?'var(--hot)':completed?'var(--accent-ink)':'transparent' };
+    }) : [];
+    const poseSeed = isWordMode ? s.wi + s.si : s.ti;
+    const poseData = JEONG_POSES[poseSeed % JEONG_POSES.length];
+    const jeongPose = {...poseData, alt:poseData.alt[L]};
+    const targetSpeechText = isWordMode ? tg.word : tg.ch;
+    const targetSpeechKey = `writing-target:${s.tutorId}:${targetSpeechText}`;
+    const sentenceSpeechText = s.wText.trim();
+    const sentenceSpeechKey = `writing-sentence:${s.tutorId}:${sentenceSpeechText}`;
+    const speechButton = key => {
+      const active = s.speechKey === key && s.speechStatus !== 'idle';
+      const loading = active && s.speechStatus === 'loading';
+      return {
+        bg:active?'var(--accent)':'var(--card)',
+        bd:active?'var(--accent)':'var(--line)',
+        fg:active?'#fff':'var(--accent-ink)',
+        label:loading?(L?'불러오는 중…':'Loading…'):active?(L?'정지':'Stop'):(L?`${tutor.ko} 튜터`:`${tutor.en.split(' ')[0]} tutor`)
+      };
+    };
+    const targetSpeechButton = speechButton(targetSpeechKey);
+    const sentenceSpeechButton = speechButton(sentenceSpeechKey);
+
+    const targetJamoL = JL.find(j => j[1] === tg.L)?.[0] || '';
+    const targetJamoV = JV.find(j => j[1] === tg.V)?.[0] || '';
+    const targetJamoT = tg.T > 0 ? (JT.find(j => j[1] === tg.T)?.[0] || '') : '';
+
+    const step = this.nextStroke(s);
+    const neededJamo = step ? step.jamo : '';
+    // 이중모음·겹받침은 두 번 눌러야 함을 함께 안내 (예: ㄺ = ㄹ + ㄱ · 1/2)
+    const seqNote = step && step.compound ? ` (${step.compound} = ${JAMO_SEQ[step.compound].join(' + ')} · ${step.part}/2)` : '';
+    let activeStepGuide = '';
+    if (ok) {
+      activeStepGuide = L ? `🎉 완벽해요! [${tg.ch}] 글자가 완성되었습니다` : `🎉 Perfect! [${tg.ch}] is complete`;
+    } else if (step && step.stage === 'L') {
+      activeStepGuide = L ? `1단계 [초성] ➔ '${neededJamo}' 키를 누르세요` : `Step 1 [Initial] ➔ Press '${neededJamo}'`;
+    } else if (step && step.stage === 'V') {
+      activeStepGuide = L ? `2단계 [중성] ➔ '${neededJamo}' 키를 누르세요${seqNote}` : `Step 2 [Vowel] ➔ Press '${neededJamo}'${seqNote}`;
+    } else if (step && step.stage === 'T') {
+      activeStepGuide = L ? `3단계 [종성] ➔ '${neededJamo}' 키를 누르세요${seqNote}` : `Step 3 [Final] ➔ Press '${neededJamo}'${seqNote}`;
+    } else {
+      activeStepGuide = L ? '목표 글자를 자모로 조합해 보세요' : 'Assemble the target syllable block';
+    }
+
+    const keyInfo = (!ok && neededJamo) ? JAMO_KEY_MAP[neededJamo] : null;
+    const activeKey = keyInfo ? keyInfo.key : null;
+    const activeFinger = keyInfo ? keyInfo.finger : null;
+    const activeFingerLabel = ok ? (L ? '완성되었습니다! ➔ 다음 글자' : 'Complete! ➔ Next letter') : (keyInfo ? (L ? `${keyInfo.ko} (${keyInfo.key} 키)` : `${keyInfo.en} (${keyInfo.key} key)`) : (L ? '자유 입력' : 'Free input'));
+
+    const fingers = ['LP','LR','LM','LI','LT','RT','RI','RM','RR','RP'];
+    const fingerStyles = {};
+    fingers.forEach(fId => {
+      const isAct = (activeFinger === fId);
+      fingerStyles['f' + fId + 'Bg'] = isAct ? 'var(--hot)' : 'var(--line3)';
+      fingerStyles['f' + fId + 'Fg'] = isAct ? 'var(--hot)' : 'var(--faint)';
+      fingerStyles['f' + fId + 'Glow'] = isAct ? '0 0 0 6px rgba(200,80,42,0.38)' : 'none';
+    });
+
+    const isLeftHand = ['LP','LR','LM','LI','LT'].includes(activeFinger);
+    const isRightHand = ['RP','RR','RM','RI','RT'].includes(activeFinger);
+    const showHandShadow = s.showHandShadow ?? true;
+    const showLeftShadow = showHandShadow && (isLeftHand || (!isRightHand && showHandShadow));
+    const showRightShadow = showHandShadow && isRightHand;
+
+    const showKbGuide = !!s.showKbGuide;
+    const kbGuideTab = s.kbGuideTab || 'win';
+    const isWinTab = kbGuideTab === 'win';
+    const isMacTab = kbGuideTab === 'mac';
+
+    const keyboardRows = [];
+
+    // 기존 Expanded(1)를 '기초', Advanced(2)를 '심화'로 표시 — 예전 Basic(0) 단계는 제거
+    const jLevels = [[1, L ? '기초' : 'Basic'], [2, L ? '심화' : 'Advanced']].map(([n, label]) => ({
+      label,
+      bg: s.jLevel === n ? 'var(--accent)' : 'transparent',
+      fg: s.jLevel === n ? '#ffffff' : 'var(--ink2)',
+      pick: () => this.setState({ jLevel: n, ti: 0, wi: 0, si: 0, L: null, V: null, T: null })
+    }));
+    const wTabGo = tab => () => this.setState({ wTab: tab, L: null, V: null, T: null, isKeyError: false });
+
+    const row = (label, arr, key) => ({
+      label,
+      keys: arr.map(([ch, v]) => {
+        const a = s[key] === v;
+        return {
+          ch,
+          fs: ch.length > 1 ? '13px' : '20px',
+          pick: () => this.setState({ [key]: v }),
+          bg: a ? 'var(--accent)' : 'var(--card)',
+          fg: a ? '#fff' : 'var(--ink)',
+          bd: a ? 'var(--accent)' : 'var(--line)'
+        };
+      })
+    });
 
     const sent=SENTS[s.sIdx%SENTS.length];
+    const nativeSpeechKey=`speaking-native:${s.tutorId}:${sent.text}`;
     const recDone=s.rec==='done';
     const sylls=[...sent.text].map((ch,i)=>{const w=recDone&&sent.weak.includes(i);return {ch:ch===' '?'\u00A0':ch,c:w?'var(--hot)':'var(--ink)',u:w?'var(--hot)':'transparent'};});
 
@@ -1190,7 +2601,13 @@ class Component extends DCLogic {
       :[{n:1,t:'A 5-minute level check',p:'A few listening questions and a short self-introduction. Your first week is planned from the result.'},{n:2,t:'Pick a tutor who fits',p:'Everyday talk, business Korean, TOPIK prep or pronunciation — each tutor has their own pace and style.'},{n:3,t:'Fifteen minutes a day',p:'One chat, two short drills. New words and corrected sentences resurface right when you’re about to forget them.'}];
 
     return {
-      t, isMkt:page==='intro'||page==='about', isIntro:page==='intro', isAbout:page==='about', isApp:page!=='intro'&&page!=='about', wide, narrow:!wide, showRoman,
+      t: dynamicT,
+      isLoggedIn, isNotLoggedIn, userName, userEmail, userInitial, hasUserPhoto, noUserPhoto, userPhoto,
+      tutorCardLabel, changeTutorLabel, googleLoginLabel,
+      loginWithGoogle: () => this.loginWithGoogle(),
+      logoutFirebase: () => this.logoutFirebase(),
+      selectTutor: (id) => this.selectTutor(id),
+      isMkt:page==='intro'||page==='about', isIntro:page==='intro', isAbout:page==='about', isApp:page!=='intro'&&page!=='about', wide, narrow:!wide, showRoman,
       isDark:dark, isLight:!dark, toggleTheme:()=>this.setTheme(dark?'light':'dark'), themeShort:dark?(L?'라이트':'Light'):(L?'다크':'Dark'),
       setEn:()=>this.setLang('en'), setKo:()=>this.setLang('ko'), toggleLang:()=>this.setLang(L?'en':'ko'), langShort:L?'EN':'한국어',
       enBg:L?'transparent':'var(--card)', enFg:L?'var(--faint)':'var(--ink)', koBg:L?'var(--card)':'transparent', koFg:L?'var(--ink)':'var(--faint)',
@@ -1212,13 +2629,51 @@ class Component extends DCLogic {
       showScript:s.showScript, scriptLabel:s.showScript?(L?'대본 숨기기':'Hide script'):(L?'대본 보기':'Show script'), toggleScript:()=>this.setState({showScript:!s.showScript}), script:SCRIPT.map(l=>({...l,who:l.who[L]})), lQs,
       dict:s.dict, onDict:e=>this.setState({dict:e.target.value}), dictBd:dictOk?'var(--accent-ink)':s.dict?'var(--hot)':'var(--line3)', dictColor:dictOk?'var(--accent-ink)':'var(--faint)',
       dictMsg:dictOk?(L?'정답! 포장하다는 “가져가게 싸다”라는 뜻이에요.':'Correct — 포장하다 means “to pack to go.”'):s.dict?(L?'아쉬워요. 0:40부터 다시 들어 보세요.':'Not quite. Replay from 0:40.'):(L?'힌트: “싸서 가져가다”라는 뜻이에요.':'Hint: it means “to pack up / take out.”'),
-      paras, rQs, hasWord:!!s.wordKey, noWord:!s.wordKey, word:gw?{...gw,pos:gw.pos[L]}:{}, saveLabel:s.saved[s.wordKey]?(L?'단어장에 저장됨 ✓':'Saved to word bank ✓'):(L?'+ 단어장에 저장':'+ Save to word bank'), saveWord:()=>this.setState({saved:{...s.saved,[s.wordKey]:!s.saved[s.wordKey]}}),
-      wJamo:s.wTab==='jamo', wSent:s.wTab==='sent', wTabJamo:()=>this.setState({wTab:'jamo'}), wTabSent:()=>this.setState({wTab:'sent'}), wJamoBg:s.wTab==='jamo'?'var(--card)':'transparent', wSentBg:s.wTab==='sent'?'var(--card)':'transparent',
-      target:tg, composed, jamoOk:ok, blockBd:ok?'var(--accent-ink)':'var(--line)', jamoMsg:ok?(L?'완벽해요! '+tg.ch+' 완성!':'Perfect! '+tg.ch+' is built.'):(s.L==null?(L?'첫 자음부터 골라 보세요':'Start with the first consonant'):(L?'계속해 보세요…':'Keep going…')), jamoMsgC:ok?'var(--accent-ink)':'var(--faint)',
-      jamoRows:[row(L?'1 · 첫 자음':'1 · First consonant',JL,'L'),row(L?'2 · 모음':'2 · Vowel',JV,'V'),row(L?'3 · 받침':'3 · Final consonant (batchim)',JT,'T')],
-      nextTarget:()=>this.setState({ti:s.ti+1,L:null,V:null,T:null}),
+      paras, rTrLabel:s.rTrAll?(L?'영어 번역 숨기기':'Hide English'):(L?'영어 번역 보기':'Show English'), rTrBtnBg:s.rTrAll?'var(--accent-soft)':'var(--card)', rTrBtnFg:s.rTrAll?'var(--accent-ink)':'var(--ink)', toggleReadingTr:()=>this.setState(st=>({rTrAll:!st.rTrAll})),
+      rQs, hasWord:!!s.wordKey, noWord:!s.wordKey, word:gw?{...gw,pos:gw.pos[L]}:{}, saveLabel:s.saved[s.wordKey]?(L?'단어장에 저장됨 ✓':'Saved to word bank ✓'):(L?'+ 단어장에 저장':'+ Save to word bank'), saveWord:()=>this.setState({saved:{...s.saved,[s.wordKey]:!s.saved[s.wordKey]}}),
+      // --- Reading 페이지 음성 기능 ---
+      speakReadingFull:(()=>{ const fullText=PARAS.map(p=>p.map(seg=>typeof seg==='string'?seg:seg[0]).join('')).join(' '); return ()=>this.playTutorSpeech(fullText,'reading-full'); })(),
+      readingFullSpeechTitle:L?`${tutor.ko} 튜터 목소리로 전체 본문 듣기`:`Hear full passage in ${tutor.en}'s voice`,
+      readingFullSpeechLabel:(()=>{ const k='reading-full'; if(s.speechKey===k&&s.speechStatus==='loading') return L?'로딩…':'Loading…'; if(s.speechKey===k&&s.speechStatus==='playing') return L?'중지':'Stop'; return L?'전체 듣기':'Listen'; })(),
+      readingFullSpeechBg:(()=>{ const k='reading-full'; return s.speechKey===k&&s.speechStatus!=='idle'?'var(--accent)':'var(--card)'; })(),
+      readingFullSpeechBd:(()=>{ const k='reading-full'; return s.speechKey===k&&s.speechStatus!=='idle'?'var(--accent)':'var(--line)'; })(),
+      readingFullSpeechFg:(()=>{ const k='reading-full'; return s.speechKey===k&&s.speechStatus!=='idle'?'#fff':'var(--accent-ink)'; })(),
+      speakReadingWord:(()=>{ const wBase=gw?gw.base:''; return ()=>{ if(wBase) this.playTutorSpeech(wBase,'reading-word-'+s.wordKey); }; })(),
+      readingWordSpeechTitle:L?`${tutor.ko} 튜터 목소리로 단어 듣기`:`Hear word in ${tutor.en}'s voice`,
+      readingWordSpeechBg:(()=>{ const k='reading-word-'+s.wordKey; return s.speechKey===k&&s.speechStatus!=='idle'?'rgba(245,242,235,0.3)':'transparent'; })(),
+      readingWordSpeechBd:(()=>{ const k='reading-word-'+s.wordKey; return s.speechKey===k&&s.speechStatus!=='idle'?'rgba(245,242,235,0.5)':'rgba(245,242,235,0.3)'; })(),
+      readingWordSpeechFg:'#F5F2EB',
+      speakReadingExample:(()=>{ const exText=gw?gw.ex.split('—')[0].trim():''; return ()=>{ if(exText) this.playTutorSpeech(exText,'reading-ex-'+s.wordKey); }; })(),
+      readingExSpeechTitle:L?`${tutor.ko} 튜터 목소리로 예문 듣기`:`Hear example in ${tutor.en}'s voice`,
+      readingExSpeechLabel:(()=>{ const k='reading-ex-'+s.wordKey; if(s.speechKey===k&&s.speechStatus==='loading') return L?'…':'…'; if(s.speechKey===k&&s.speechStatus==='playing') return L?'중지':'Stop'; return L?'예문':'Example'; })(),
+      readingExSpeechBg:(()=>{ const k='reading-ex-'+s.wordKey; return s.speechKey===k&&s.speechStatus!=='idle'?'rgba(245,242,235,0.3)':'transparent'; })(),
+      readingExSpeechBd:(()=>{ const k='reading-ex-'+s.wordKey; return s.speechKey===k&&s.speechStatus!=='idle'?'rgba(245,242,235,0.5)':'rgba(245,242,235,0.3)'; })(),
+      readingExSpeechFg:'#F5F2EB',
+      wBuild:s.wTab==='jamo'||s.wTab==='word', wSent:s.wTab==='sent', wTabJamo:wTabGo('jamo'), wTabWord:wTabGo('word'), wTabSent:wTabGo('sent'),
+      wJamoBg:s.wTab==='jamo'?'var(--card)':'transparent', wWordBg:s.wTab==='word'?'var(--card)':'transparent', wSentBg:s.wTab==='sent'?'var(--card)':'transparent',
+      isWordMode, wordSyls, nextLabel:isWordMode?(L?'다음 단어':'Next word'):dynamicT.nextSyl, showKbArea:!showKbGuide,
+      target:tg, targetIdxLabel, targetPromptText, composed, jamoOk:ok, blockBd:ok?'var(--accent-ink)':'var(--line)',
+      jeongPose, showJeongCelebration,
+      speakTarget:()=>this.playTutorSpeech(targetSpeechText,targetSpeechKey),
+      targetSpeechTitle:L?`${tutor.ko} 튜터 목소리로 ${isWordMode?'단어':'음절'} 듣기`:`Hear this ${isWordMode?'word':'syllable'} in ${tutor.en}'s voice`,
+      targetSpeechLabel:targetSpeechButton.label,targetSpeechBg:targetSpeechButton.bg,targetSpeechBd:targetSpeechButton.bd,targetSpeechFg:targetSpeechButton.fg,
+      jamoMsg:ok?(L?'완벽해요! '+tg.ch+' 완성! 🎉':'Perfect! '+tg.ch+' is built! 🎉'):(s.L==null?(L?'첫 자음부터 골라 보세요':'Start with the first consonant'):(s.V==null?(L?'가운데 모음을 골라 보세요':'Pick the middle vowel'):(tg.T>0&&s.T==null?(L?'마지막 받침을 골라 보세요':'Add the final batchim'):(L?'계속해 보세요…':'Keep going…')))),
+      jamoMsgC:ok?'var(--accent-ink)':(s.L!=null?'var(--ink)':'var(--faint)'),
+      jamoRows:[row(L?'1 · 첫 자음':'1 · First consonant',upTo(JL),'L'),row(L?'2 · 모음':'2 · Vowel',upTo(JV),'V'),row(L?'3 · 받침':'3 · Final consonant (batchim)',upTo(JT),'T')], jLevels,
+      resetTarget:()=>this.resetTarget(), nextTarget:()=>this.nextTarget(),
+      activeStepGuide, activeFingerLabel, keyboardRows, ...fingerStyles,
+      showHandShadow, showLeftShadow, showRightShadow, toggleHandShadow:()=>this.setState(st=>({showHandShadow:!st.showHandShadow})),
+      showKbGuide, toggleKbGuide:()=>this.setState(st=>({showKbGuide:!st.showKbGuide})),
+      isWinTab, isMacTab, winTabBg:isWinTab?'var(--accent)':'transparent', winTabFg:isWinTab?'#ffffff':'var(--ink2)',
+      macTabBg:isMacTab?'var(--accent)':'transparent', macTabFg:isMacTab?'#ffffff':'var(--ink2)',
+      setKbGuideWin:()=>this.setState({kbGuideTab:'win'}), setKbGuideMac:()=>this.setState({kbGuideTab:'mac'}),
       wText:s.wText, onWText:e=>this.setState({wText:e.target.value,wChecked:false}), wCountLabel:s.wText.replace(/\s/g,'').length+(L?'자':' characters'), checkW:()=>this.setState({wChecked:true}), wChecked:s.wChecked,
+      speakSentence:()=>this.playTutorSpeech(sentenceSpeechText,sentenceSpeechKey),
+      sentenceSpeechTitle:L?`${tutor.ko} 튜터 목소리로 작성한 문장 듣기`:`Hear your sentences in ${tutor.en}'s voice`,
+      sentenceSpeechLabel:sentenceSpeechButton.label,sentenceSpeechBg:sentenceSpeechButton.bg,sentenceSpeechBd:sentenceSpeechButton.bd,sentenceSpeechFg:sentenceSpeechButton.fg,
       sent, sentTip:sent.tip[L], sylls, sIdxLabel:(s.sIdx%SENTS.length+1)+' / '+SENTS.length, recDone,
+      speakNative:()=>this.playTutorSpeech(sent.text,nativeSpeechKey),
+      nativeSpeechTitle:L?`${tutor.ko} 튜터 목소리로 예문 듣기`:`Hear the example in ${tutor.en}'s voice`,
       recLabel:s.rec==='rec'?(L?'멈춤':'Stop'):recDone?(L?'다시':'Retry'):(L?'녹음':'Record'), recBg:s.rec==='rec'?'var(--hot)':'var(--solid)', recFg:s.rec==='rec'?'#fff':'var(--on-solid)', recAnim:s.rec==='rec'?'pulse 1.2s infinite':'none',
       recHint:s.rec==='rec'?(L?'듣고 있어요… 문장을 소리 내어 읽어 주세요':'Listening… read the sentence aloud'):recDone?(L?'눌러서 다시 해 보세요':'Tap to try again'):(L?'누르고 문장을 소리 내어 읽어 보세요':'Tap and read the sentence aloud'),
       toggleRec:()=>this.setState({rec:s.rec==='rec'?'done':'rec'}), nextSent:()=>this.setState({sIdx:s.sIdx+1,rec:'idle'}),
