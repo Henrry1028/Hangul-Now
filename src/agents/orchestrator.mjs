@@ -11,7 +11,7 @@ import { compactConversationContext, formatCompactedPrompt } from './context-com
 const GEMINI_ENDPOINT = (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
 /** 에이전트 분석·합성 전용 모델. 대화·전사 경로(lite)와 의도적으로 분리한다. */
-const AGENT_MODEL = 'gemini-3.7-flash';
+const AGENT_MODEL = process.env.GEMINI_PREMIUM_MODEL || 'gemini-3.8-flash';
 
 // 이 모듈은 서버 핸들러를 거치지 않고 Gemini를 직접 부른다. 코칭 한 번에
 // 서브 에이전트 3콜이 나가므로 앱에서 가장 비싼 경로인데, 서버 쪽 계측기는

@@ -26,13 +26,24 @@ const TUTOR_PERSONAS = {
 - 비즈니스 상황(이메일, 미팅, 보고, 존댓말)에 알맞은 정중하고 격식 있는 한국어로 응답하세요.
 - 비즈니스 매너와 적절한 높임말 표현을 자연스럽게 유도해 주세요.`
   },
-  sujin: {
-    name: "수진 (Sujin)",
-    role: "TOPIK & 심화 한국어 튜터",
-    systemInstruction: `당신은 한국어 능력 시험(TOPIK) 및 고급 어휘/문법을 가르치는 전문 강사 '수진'입니다.
-- 다양한 어휘와 문형을 학습자가 활용할 수 있도록 지도하고 격려해 주세요.`
+  seoyeon: {
+    name: "서연 (Seoyeon)",
+    role: "TOPIK & 정밀 문법 첨삭 튜터",
+    systemInstruction: `당신은 한국어 능력 시험(TOPIK) 및 정밀 문법/작문 첨삭을 담당하는 전문 강사 '서연'입니다.
+- 학습자의 문장 구조와 조사를 꼼꼼하게 살피고, 왜 틀렸는지 명확하고 체계적으로 설명해 주세요.
+- 격려하면서도 정확한 문법 규범을 배울 수 있도록 지도해 주세요.`
+  },
+  haneul: {
+    name: "하늘 (Haneul)",
+    role: "발음 & 억양 코칭 튜터",
+    systemInstruction: `당신은 외국인의 한국어 발음과 억양을 전문적으로 교정하는 보컬/스피킹 코치 '하늘'입니다.
+- 연음 법칙, 받침 소리, 문장 끝 억양 팁을 친절하고 직관적으로 설명해 주세요.
+- 원어민들이 실제로 소리 내는 자연스러운 구어체 발음을 강조해 주세요.`
   }
 };
+
+// 분석·첨삭·평가에 쓰는 모델 (환경변수로 덮어쓸 수 있음)
+const ANALYSIS_MODEL = process.env.GEMINI_ANALYSIS_MODEL || "gemini-3.8-flash";
 
 /**
  * 1. AI 튜터 실시간 대화 응답 생성
@@ -52,7 +63,7 @@ export async function generateTutorChat({ tutorId = "jiwoo", message, history = 
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.8-flash",
       systemInstruction: persona.systemInstruction
     });
 
@@ -105,7 +116,7 @@ export async function analyzeSentenceCorrection(sentence) {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: ANALYSIS_MODEL,
       generationConfig: {
         responseMimeType: "application/json"
       }
@@ -167,7 +178,7 @@ export async function reviewWriting({ topic, content }) {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: ANALYSIS_MODEL,
       generationConfig: { responseMimeType: "application/json" }
     });
 
@@ -218,7 +229,7 @@ export async function evaluatePronunciation({ targetSentence, romanization, user
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: ANALYSIS_MODEL,
       generationConfig: { responseMimeType: "application/json" }
     });
 

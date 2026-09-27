@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Virtual Keyboard SVG Test</title>
+<style>
+  body {
+    margin: 0;
+    padding: 30px;
+    background: #F5F2EB;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .kb-container {
+    width: 100%;
+    max-width: 980px;
+    background: #FFFFFF;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .key-rect {
+    transition: fill 0.15s ease, stroke 0.15s ease, filter 0.15s ease;
+    cursor: pointer;
+  }
+  .key-rect:hover {
+    filter: brightness(0.96);
+  }
+  .key-target {
+    fill: #B25353 !important;
+    stroke: #8E3636 !important;
+    filter: drop-shadow(0 4px 12px rgba(178, 83, 83, 0.45));
+  }
+  .key-error {
+    fill: #E53935 !important;
+    stroke: #B71C1C !important;
+    animation: keyShake 0.25s ease-in-out;
+  }
+  @keyframes keyShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .hand-layer {
+    transition: transform 150ms ease-out;
+    pointer-events: none;
+  }
+  .finger-active {
+    fill: rgba(178, 83, 83, 0.75) !important;
+    stroke: #8E3636 !important;
+    stroke-width: 2 !important;
+  }
+  .finger-tip-ring {
+    animation: pulseRing 1.2s infinite ease-in-out;
+  }
+  @keyframes pulseRing {
+    0% { r: 12; opacity: 0.9; }
+    50% { r: 18; opacity: 0.4; }
+    100% { r: 12; opacity: 0.9; }
+  }
+</style>
+</head>
+<body>
+  <h2>Virtual Keyboard & Hand Overlay Prototype</h2>
+  <div class="kb-container" id="kbWrap"></div>
+
+<script>
+const KB_DATA = [
+  // Row 0
+  [
+    {id:'Backquote', key:'`', ko:'`', shift:'~', w:56, finger:'LP'},
+    {id:'Digit1', key:'1', ko:'1', shift:'!', w:56, finger:'LP'},
+    {id:'Digit2', key:'2', ko:'2', shift:'@', w:56, finger:'LR'},
+    {id:'Digit3', key:'3', ko:'3', shift:'#', w:56, finger:'LM'},
+    {id:'Digit4', key:'4', ko:'4', shift:'$', w:56, finger:'LI'},
+    {id:'Digit5', key:'5', ko:'5', shift:'%', w:56, finger:'LI'},
+    {id:'Digit6', key:'6', ko:'6', shift:'^', w:56, finger:'RI'},
+    {id:'Digit7', key:'7', ko:'7', shift:'&', w:56, finger:'RI'},
+    {id:'Digit8', key:'8', ko:'8', shift:'*', w:56, finger:'RM'},
+    {id:'Digit9', key:'9', ko:'9', shift:'(', w:56, finger:'RR'},
+    {id:'Digit0', key:'0', ko:'0', shift:')', w:56, finger:'RP'},
+    {id:'Minus', key:'-', ko:'-', shift:'_', w:56, finger:'RP'},
+    {id:'Equal', key:'=', ko:'=', shift:'+', w:56, finger:'RP'},
+    {id:'Backspace', key:'Backspace', ko:'Backspace', shift:'', w:114, finger:'RP', isSpecial:true}
+  ],
+  // Row 1
+  [
+    {id:'Tab', key:'Tab', ko:'Tab', shift:'', w:84, finger:'LP', isSpecial:true},
+    {id:'KeyQ', key:'Q', ko:'ㅂ', shift:'ㅃ', w:56, finger:'LP'},
+    {id:'KeyW', key:'W', ko:'ㅈ', shift:'ㅉ', w:56, finger:'LR'},
+    {id:'KeyE', key:'E', ko:'ㄷ', shift:'ㄸ', w:56, finger:'LM'},
+    {id:'KeyR', key:'R', ko:'ㄱ', shift:'ㄲ', w:56, finger:'LI'},
+    {id:'KeyT', key:'T', ko:'ㅅ', shift:'ㅆ', w:56, finger:'LI'},
+    {id:'KeyY', key:'Y', ko:'ㅛ', shift:'', w:56, finger:'RI'},
+    {id:'KeyU', key:'U', ko:'ㅕ', shift:'', w:56, finger:'RI'},
+    {id:'KeyI', key:'I', ko:'ㅑ', shift:'', w:56, finger:'RM'},
+    {id:'KeyO', key:'O', ko:'ㅐ', shift:'ㅒ', w:56, finger:'RR'},
+    {id:'KeyP', key:'P', ko:'ㅔ', shift:'ㅖ', w:56, finger:'RP'},
+    {id:'BracketLeft', key:'[', ko:'[', shift:'{', w:56, finger:'RP'},
+    {id:'BracketRight', key:']', ko:']', shift:'}', w:56, finger:'RP'},
+    {id:'Backslash', key:'\\', ko:'\\', shift:'|', w:86, finger:'RP', isSpecial:true}
+  ],
+  // Row 2
+  [
+    {id:'CapsLock', key:'Caps', ko:'Caps Lock', shift:'', w:100, finger:'LP', isSpecial:true},
+    {id:'KeyA', key:'A', ko:'ㅁ', shift:'', w:56, finger:'LP'},
+    {id:'KeyS', key:'S', ko:'ㄴ', shift:'', w:56, finger:'LR'},
+    {id:'KeyD', key:'D', ko:'ㅇ', shift:'', w:56, finger:'LM'},
+    {id:'KeyF', key:'F', ko:'ㄹ', shift:'', w:56, finger:'LI'},
+    {id:'KeyG', key:'G', ko:'ㅎ', shift:'', w:56, finger:'LI'},
+    {id:'KeyH', key:'H', ko:'ㅗ', shift:'', w:56, finger:'RI'},
+    {id:'KeyJ', key:'J', ko:'ㅓ', shift:'', w:56, finger:'RI'},
+    {id:'KeyK', key:'K', ko:'ㅏ', shift:'', w:56, finger:'RM'},
+    {id:'KeyL', key:'L', ko:'ㅣ', shift:'', w:56, finger:'RR'},
+    {id:'Semicolon', key:';', ko:';', shift:':', w:56, finger:'RP'},
+    {id:'Quote', key:'\'', ko:'\'', shift:'\"', w:56, finger:'RP'},
+    {id:'Enter', key:'Enter', ko:'Enter', shift:'', w:132, finger:'RP', isSpecial:true}
+  ],
+  // Row 3
+  [
+    {id:'ShiftLeft', key:'Shift', ko:'Shift', shift:'', w:140, finger:'LP', isSpecial:true},
+    {id:'KeyZ', key:'Z', ko:'ㅋ', shift:'', w:56, finger:'LP'},
+    {id:'KeyX', key:'X', ko:'ㅌ', shift:'', w:56, finger:'LR'},
+    {id:'KeyC', key:'C', ko:'ㅊ', shift:'', w:56, finger:'LM'},
+    {id:'KeyV', key:'V', ko:'ㅍ', shift:'', w:56, finger:'LI'},
+    {id:'KeyB', key:'B', ko:'ㅠ', shift:'', w:56, finger:'LI'},
+    {id:'KeyN', key:'N', ko:'ㅜ', shift:'', w:56, finger:'RI'},
+    {id:'KeyM', key:'M', ko:'ㅡ', shift:'', w:56, finger:'RI'},
+    {id:'Comma', key:',', ko:',', shift:'<', w:56, finger:'RM'},
+    {id:'Period', key:'.', ko:'.', shift:'>', w:56, finger:'RR'},
+    {id:'Slash', key:'/', ko:'/', shift:'?', w:56, finger:'RP'},
+    {id:'ShiftRight', key:'ShiftR', ko:'Shift', shift:'', w:154, finger:'RP', isSpecial:true}
+  ],
+  // Row 4
+  [
+    {id:'ControlLeft', key:'Ctrl', ko:'Ctrl', shift:'', w:80, finger:'LP', isSpecial:true},
+    {id:'AltLeft', key:'Alt', ko:'Alt', shift:'', w:80, finger:'LT', isSpecial:true},
+    {id:'Space', key:'Space', ko:'Space', shift:'', w:556, finger:'RT', isSpecial:true},
+    {id:'AltRight', key:'AltR', ko:'Alt', shift:'', w:80, finger:'RT', isSpecial:true},
+    {id:'ControlRight', key:'CtrlR', ko:'Ctrl', shift:'', w:100, finger:'RP', isSpecial:true}
+  ]
+];
+
+const gap = 6;
+const startX = 30;
+const startY = 56;
+const rowH = 50;
+const rowGap = 7;
+
+const keyMap = {};
+
+KB_DATA.forEach((r, rIdx) => {
+  let curX = startX;
+  const y = startY + rIdx * (rowH + rowGap);
+  r.forEach(k => {
+    k.x = curX;
+    k.y = y;
+    k.h = rowH;
+    k.cx = curX + k.w / 2;
+    k.cy = y + rowH / 2;
+    keyMap[k.key] = k;
+    curX += k.w + gap;
+  });
+});
+
+// 손가락별 홈 포지션 키 정의
+const HOME_KEYS = {
+  LP: keyMap['A'],
+  LR: keyMap['S'],
+  LM: keyMap['D'],
+  LI: keyMap['F'],
+  LT: { cx: 400, cy: startY + 4 * (rowH + rowGap) + rowH / 2 },
+  RT: { cx: 580, cy: startY + 4 * (rowH + rowGap) + rowH / 2 },
+  RI: keyMap['J'],
+  RM: keyMap['K'],
+  RR: keyMap['L'],
+  RP: keyMap[';']
+};
+
+let activeKeyName = 'Z';
+let isShift = false;
+let isError = false;
+
+function renderSVG() {
+  const targetKey = keyMap[activeKeyName] || keyMap['Z'];
+  const activeFinger = targetKey ? targetKey.finger : 'LP';
+  const isLeft = ['LP','LR','LM','LI','LT'].includes(activeFinger);
+
+  // 손 이동 델타 (홈 포지션 기준)
+  const homePos = HOME_KEYS[activeFinger];
+  const dx = targetKey ? (targetKey.cx - homePos.cx) : 0;
+  const dy = targetKey ? (targetKey.cy - homePos.cy) : 0;
+
+  let svgHtml = `
+  <svg viewBox="0 0 980 360" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="keyShadow" x="-10%" y="-10%" width="120%" height="130%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.06)"/>
+      </filter>
+      <linearGradient id="handGradLeft" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#4A5568" stop-opacity="0.45" />
+        <stop offset="100%" stop-color="#2D3748" stop-opacity="0.65" />
+      </linearGradient>
+      <linearGradient id="handGradRight" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#4A5568" stop-opacity="0.45" />
+        <stop offset="100%" stop-color="#2D3748" stop-opacity="0.65" />
+      </linearGradient>
+    </defs>
+
+    <!-- 배경 베이스 플레이트 -->
+    <rect x="10" y="10" width="960" height="340" rx="16" fill="#F8F9FA" stroke="#E2E8F0" stroke-width="1.5" />
+    
+    <!-- 상단 툴바 라인 -->
+    <text x="32" y="36" font-size="13" font-weight="700" fill="#718096">도전단계 &lt; 100 <tspan fill="#C8502A">200</tspan> 400 600 800 1000 &gt;</text>
+    <line x1="30" y1="46" x2="950" y2="46" stroke="#EDF2F7" stroke-width="1.5" />
+
+    <!-- 키보드 물리키 렌더링 -->
+    <g class="keys-layer">
+  `;
+
+  KB_DATA.forEach(row => {
+    row.forEach(k => {
+      const isTarget = (k.key === activeKeyName);
+      const isShiftTarget = (isShift && (k.key === 'Shift' || k.key === 'ShiftR'));
+      const fill = isTarget ? (isError ? '#E53935' : '#B25353') : (isShiftTarget ? '#C05621' : (k.isSpecial ? '#EDF2F7' : '#FFFFFF'));
+      const stroke = isTarget ? (isError ? '#B71C1C' : '#8E3636') : '#CBD5E0';
+      const textKoColor = isTarget || isShiftTarget ? '#FFFFFF' : '#2D3748';
+      const textEnColor = isTarget || isShiftTarget ? 'rgba(255,255,255,0.85)' : '#A0AEC0';
+      
+      const displayKo = (isShift && k.shift) ? k.shift : k.ko;
+      const displayEn = k.key.length === 1 ? k.key.toLowerCase() : '';
+
+      svgHtml += `
+      <g class="key-group" onclick="onKeyClick('${k.key}')" style="cursor:pointer">
+        <rect class="key-rect ${isTarget ? (isError ? 'key-error' : 'key-target') : ''}" 
+              x="${k.x}" y="${k.y}" width="${k.w}" height="${k.h}" rx="7" ry="7"
+              fill="${fill}" stroke="${stroke}" stroke-width="${isTarget ? '2' : '1'}"
+              filter="url(#keyShadow)"/>
+        
+        <!-- 한글 상단 표시 -->
+        <text x="${k.cx}" y="${k.isSpecial ? k.cy + 5 : k.y + 22}" text-anchor="middle"
+              font-family="'Pretendard', sans-serif" font-size="${k.isSpecial ? '12' : '15'}" font-weight="700"
+              fill="${textKoColor}">${displayKo}</text>
+
+        <!-- 영문 소문자 하단 표시 -->
+        ${!k.isSpecial ? `
+        <text x="${k.cx}" y="${k.y + 40}" text-anchor="middle"
+              font-family="'Pretendard', monospace" font-size="11" font-weight="600"
+              fill="${textEnColor}">${displayEn}</text>
+        ` : ''}
+      </g>
+      `;
+    });
+  });
+
+  svgHtml += `</g>`; // keys-layer 닫기
+
+  // 정교한 손 오버레이 (Hand Overlay)
+  // 왼손: 기본 손목 중심 (250, 420), 기본 손가락 5개: LP(A: 154, 189), LR(S: 216, 189), LM(D: 278, 189), LI(F: 340, 189), LT(Space: 400, 303)
+  // 오른손: 기본 손목 중심 (730, 420), 기본 손가락 5개: RT(Space: 580, 303), RI(J: 608, 189), RM(K: 670, 189), RR(L: 732, 189), RP(;: 794, 189)
+  
+  const leftTranslate = isLeft ? `transform="translate(${dx}, ${dy})"` : '';
+  const rightTranslate = !isLeft ? `transform="translate(${dx}, ${dy})"` : '';
+
+  // 레퍼런스 이미지(한컴 타자)와 100% 일치하는 55도 대각 5손가락 실루엣
+  // 손가락 5개가 완벽히 분리되어 길쭉하게 뻗은 고급스러운 반투명 벡터 일러스트
+  svgHtml += `
+    <!-- 왼손 오버레이 (Home: ASDF + Space) -->
+    <g class="hand-layer" ${leftTranslate} style="transition: transform 150ms ease-out; opacity: ${isLeft ? '0.85' : '0.35'};">
+      <!-- 손바닥 (Palm & Wrist) -->
+      <path d="M 80 360 
+               C 100 300, 120 260, 160 250 
+               C 210 240, 270 260, 310 280 
+               C 330 310, 340 335, 350 360 
+               Z" 
+            fill="url(#handGradLeft)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 엄지손가락 (LT: Thumb -> Space 좌측) -->
+      <path d="M 280 270 
+               C 310 270, 350 280, 375 295 
+               C 390 304, 385 316, 370 315 
+               C 340 312, 305 295, 275 285 
+               Z" 
+            class="${activeFinger === 'LT' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 검지손가락 (LI: Index -> F/ㄹ) -->
+      <path d="M 260 255 
+               C 285 220, 320 185, 340 160 
+               C 350 148, 364 156, 356 170 
+               C 336 200, 305 235, 285 265 
+               Z" 
+            class="${activeFinger === 'LI' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 중지손가락 (LM: Middle -> D/ㅇ) -->
+      <path d="M 215 250 
+               C 235 210, 265 175, 282 150 
+               C 292 138, 306 146, 298 160 
+               C 280 190, 252 230, 238 258 
+               Z" 
+            class="${activeFinger === 'LM' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 약지손가락 (LR: Ring -> S/ㄴ) -->
+      <path d="M 170 252 
+               C 185 215, 210 180, 224 158 
+               C 234 146, 248 154, 240 168 
+               C 224 195, 202 235, 192 260 
+               Z" 
+            class="${activeFinger === 'LR' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 새끼손가락 (LP: Pinky -> A/ㅁ 또는 Z/ㅋ) -->
+      <path d="M 130 265 
+               C 140 235, 155 205, 166 182 
+               C 174 172, 186 180, 180 192 
+               C 168 218, 155 248, 148 275 
+               Z" 
+            class="${activeFinger === 'LP' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 활성 손가락 인디케이터 (Focus Ring & Glow) -->
+      ${isLeft && targetKey ? `
+        <circle cx="${targetKey.cx}" cy="${targetKey.cy}" r="18" fill="none" stroke="${isError ? '#E53935' : '#B25353'}" stroke-width="2.5" class="finger-tip-ring" />
+        <circle cx="${targetKey.cx}" cy="${targetKey.cy}" r="5" fill="${isError ? '#E53935' : '#B25353'}" />
+      ` : ''}
+    </g>
+
+    <!-- 오른손 오버레이 (Home: JKL; + Space) -->
+    <g class="hand-layer" ${rightTranslate} style="transition: transform 150ms ease-out; opacity: ${!isLeft ? '0.85' : '0.35'};">
+      <!-- 손바닥 (Palm & Wrist) -->
+      <path d="M 900 360 
+               C 880 300, 860 260, 820 250 
+               C 770 240, 710 260, 670 280 
+               C 650 310, 640 335, 630 360 
+               Z" 
+            fill="url(#handGradRight)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 엄지손가락 (RT: Thumb -> Space 우측) -->
+      <path d="M 700 270 
+               C 670 270, 630 280, 605 295 
+               C 590 304, 595 316, 610 315 
+               C 640 312, 675 295, 705 285 
+               Z" 
+            class="${activeFinger === 'RT' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 검지손가락 (RI: Index -> J/ㅓ) -->
+      <path d="M 720 255 
+               C 695 220, 660 185, 640 160 
+               C 630 148, 616 156, 624 170 
+               C 644 200, 675 235, 695 265 
+               Z" 
+            class="${activeFinger === 'RI' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 중지손가락 (RM: Middle -> K/ㅏ) -->
+      <path d="M 765 250 
+               C 745 210, 715 175, 698 150 
+               C 688 138, 674 146, 682 160 
+               C 700 190, 728 230, 742 258 
+               Z" 
+            class="${activeFinger === 'RM' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 약지손가락 (RR: Ring -> L/ㅣ) -->
+      <path d="M 810 252 
+               C 795 215, 770 180, 756 158 
+               C 746 146, 732 154, 740 168 
+               C 756 195, 778 235, 788 260 
+               Z" 
+            class="${activeFinger === 'RR' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 새끼손가락 (RP: Pinky -> ;/:) -->
+      <path d="M 850 265 
+               C 840 235, 825 205, 814 182 
+               C 806 172, 794 180, 800 192 
+               C 812 218, 825 248, 832 275 
+               Z" 
+            class="${activeFinger === 'RP' ? 'finger-active' : ''}"
+            fill="rgba(55, 65, 81, 0.48)" stroke="#374151" stroke-width="1.2" />
+
+      <!-- 활성 손가락 인디케이터 (Focus Ring & Glow) -->
+      ${!isLeft && targetKey ? `
+        <circle cx="${targetKey.cx}" cy="${targetKey.cy}" r="18" fill="none" stroke="${isError ? '#E53935' : '#B25353'}" stroke-width="2.5" class="finger-tip-ring" />
+        <circle cx="${targetKey.cx}" cy="${targetKey.cy}" r="5" fill="${isError ? '#E53935' : '#B25353'}" />
+      ` : ''}
+    </g>
+
+  </svg>
+  `;
+
+  document.getElementById('kbWrap').innerHTML = svgHtml;
+}
+
+function onKeyClick(k) {
+  if (k === activeKeyName) {
+    isError = false;
+    // 다음 키로 전환 테스트
+    const keys = ['G', 'K', 'S', 'R', 'T', 'D', 'Z', 'J', 'N', 'M'];
+    const nextIdx = (keys.indexOf(activeKeyName) + 1) % keys.length;
+    activeKeyName = keys[nextIdx];
+  } else {
+    isError = true;
+    setTimeout(() => { isError = false; renderSVG(); }, 400);
+  }
+  renderSVG();
+}
+
+window.addEventListener('keydown', (e) => {
+  const k = e.key.toUpperCase();
+  if (k === 'SHIFT') {
+    isShift = true;
+    renderSVG();
+    return;
+  }
+  onKeyClick(k);
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.key.toUpperCase() === 'SHIFT') {
+    isShift = false;
+    renderSVG();
+  }
+});
+
+renderSVG();
+</script>
+</body>
+</html>
