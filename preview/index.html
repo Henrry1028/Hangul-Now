@@ -309,6 +309,81 @@ button,textarea,input{font-family:inherit;color:inherit}
     </nav>
   </header>
 
+  <!-- 가입 직후 온보딩: 1단계 닉네임·국적·성별 → 2단계 관심사 -->
+  <sc-if value="{{ obOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:3000;background:rgba(20,22,21,.55);display:grid;place-items:center;padding:16px;overflow-y:auto">
+      <div style="width:min(100%,560px);background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:clamp(22px,4vw,34px);display:flex;flex-direction:column;gap:20px;box-shadow:0 30px 80px -20px rgba(0,0,0,.45);max-height:calc(100vh - 32px);overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:var(--hot)">{{ obStepLabel }}</span>
+          <sc-if value="{{ obCanClose }}" hint-placeholder-val="{{ false }}">
+            <button sc-camel-on-click="{{ obClose }}" aria-label="Close" style="border:0;background:none;color:var(--faint);font-size:20px;cursor:pointer;line-height:1">✕</button>
+          </sc-if>
+        </div>
+
+        <!-- 1단계: 닉네임 · 국적 · 성별 -->
+        <sc-if value="{{ obStep1 }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <h2 style="margin:0;font:500 clamp(24px,3vw,30px)/1.25 'Newsreader','Gowun Batang',serif">{{ t.obTitle1 }}</h2>
+            <span style="font-size:14px;line-height:1.6;color:var(--sub)">{{ t.obSub1 }}</span>
+          </div>
+          <label style="display:flex;flex-direction:column;gap:8px">
+            <span style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:700">{{ t.obNickLabel }}<span style="font:500 11.5px 'IBM Plex Mono',monospace;color:var(--faint)">{{ obNickCount }}</span></span>
+            <input value="{{ obNickname }}" sc-camel-on-change="{{ onObNickname }}" placeholder="{{ t.obNickPh }}" maxlength="20" style="border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;background:var(--card);color:var(--ink);outline:none">
+            <span style="font-size:12px;color:var(--faint)">{{ t.obNickHint }}</span>
+          </label>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:13.5px;font-weight:700">{{ t.obNatLabel }}</span>
+            {{ obNationalitySelect }}
+            <span style="font-size:12px;color:var(--faint)">{{ t.obNatHint }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:13.5px;font-weight:700">{{ t.obGenderLabel }}</span>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px">
+              <sc-for list="{{ obGenders }}" as="g" hint-placeholder-count="4">
+                <button sc-camel-on-click="{{ g.pick }}" style="border:1.5px solid {{ g.bd }};background:{{ g.bg }};color:{{ g.fg }};border-radius:12px;padding:11px 6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.25">{{ g.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ obHasError }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:13px;color:var(--hot);font-weight:600">{{ obError }}</span>
+          </sc-if>
+          <button sc-camel-on-click="{{ obNext }}" style="border:0;background:var(--accent);color:#fff;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer">{{ t.obNext }} →</button>
+        </sc-if>
+
+        <!-- 2단계: 관심사 (튜터 수업 주제에 우선 반영) -->
+        <sc-if value="{{ obStep2 }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <h2 style="margin:0;font:500 clamp(24px,3vw,30px)/1.25 'Newsreader','Gowun Batang',serif">{{ t.obTitle2 }}</h2>
+            <span style="font-size:14px;line-height:1.6;color:var(--sub)">{{ t.obSub2 }}</span>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <span style="font:600 12px 'IBM Plex Mono',monospace;color:var(--accent-ink)">{{ obInterestCount }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px">
+            <sc-for list="{{ obInterests }}" as="x" hint-placeholder-count="6">
+              <button sc-camel-on-click="{{ x.pick }}" style="position:relative;border:1.5px solid {{ x.bd }};background:{{ x.bg }};color:var(--ink);border-radius:14px;padding:12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:20px;line-height:1">{{ x.icon }}</span>
+                <span style="font-size:14px;font-weight:{{ x.fw }}">{{ x.label }}</span>
+                <span style="font-size:11.5px;color:var(--faint)">{{ x.sub }}</span>
+                <sc-if value="{{ x.on }}" hint-placeholder-val="{{ false }}">
+                  <span style="position:absolute;top:8px;right:9px;min-width:20px;height:20px;border-radius:10px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center">{{ x.rank }}</span>
+                </sc-if>
+              </button>
+            </sc-for>
+          </div>
+          <span style="font-size:12.5px;line-height:1.55;color:var(--faint)">{{ t.obInterestHint }}</span>
+          <sc-if value="{{ obHasError }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:13px;color:var(--hot);font-weight:600">{{ obError }}</span>
+          </sc-if>
+          <div style="display:flex;gap:10px">
+            <button sc-camel-on-click="{{ obBack }}" style="border:1px solid var(--line3);background:var(--card);color:var(--ink);border-radius:12px;padding:14px 18px;font-size:14.5px;font-weight:600;cursor:pointer">← {{ t.obBack }}</button>
+            <button sc-camel-on-click="{{ obSave }}" style="flex:1;border:0;background:var(--accent);color:#fff;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer">{{ obSaveLabel }}</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
 <div style="display:flex;flex:1;background:var(--bg);min-height:calc(100vh - 69px);position:relative">
   <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
     
@@ -388,6 +463,14 @@ button,textarea,input{font-family:inherit;color:inherit}
               </div>
             </div>
             <button sc-camel-on-click="{{ logoutFirebase }}" title="로그아웃" style="border:0;background:none;color:var(--faint);font-size:13px;cursor:pointer;padding:2px 4px;flex:none">✕</button>
+          <!-- 온보딩에서 고른 관심사 · 다시 수정 -->
+          <sc-if value="{{ hasProfile }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:10px;background:var(--chip)">
+              <span style="font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--faint)">{{ t.profileInterestsH }}</span>
+              <span style="font-size:11.5px;line-height:1.5;color:var(--ink2)">{{ profileInterestLabels }}</span>
+            </div>
+          </sc-if>
+          <button sc-camel-on-click="{{ openOnboarding }}" style="border:0;background:none;color:var(--accent-ink);font-size:11.5px;font-weight:600;cursor:pointer;padding:2px 8px;text-align:left">✎ {{ t.profileEdit }}</button>
           </div>
         </sc-if>
         <sc-if value="{{ isNotLoggedIn }}" hint-placeholder-val="{{ true }}">
@@ -1446,6 +1529,9 @@ button,textarea,input{font-family:inherit;color:inherit}
             <span style="font-size:12px;color:var(--faint)">{{ cvTutorSub }}</span>
           </div>
         </div>
+          <sc-if value="{{ cvIsTutorMode }}" hint-placeholder-val="{{ true }}">
+            <span style="font:600 13px 'IBM Plex Mono',monospace;color:{{ cvTimerColor }};background:var(--seg);border-radius:999px;padding:8px 12px;min-width:72px;text-align:center">{{ cvTimeLabel }}</span>
+          </sc-if>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <sc-if value="{{ cvLive }}" hint-placeholder-val="{{ false }}">
             <div style="width:74px;height:8px;border-radius:999px;background:var(--seg);overflow:hidden"><div style="height:100%;width:{{ cvMeterW }};background:var(--accent);border-radius:999px;transition:width .1s"></div></div>
@@ -1544,6 +1630,34 @@ button,textarea,input{font-family:inherit;color:inherit}
               </sc-for>
             </div>
           </sc-if>
+          <!-- 튜터 수업 타이머 + 종료 후 10분 오디오 리뷰 -->
+          <sc-if value="{{ cvIsTutorMode }}" hint-placeholder-val="{{ true }}">
+            <div style="background:var(--card);border:1.5px solid var(--line3);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:11px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                <span style="font-size:14px;font-weight:700;color:var(--accent-ink)">⏱ {{ t.cvSessionH }}</span>
+                <span style="font:600 12px 'IBM Plex Mono',monospace;color:{{ cvTimerColor }}">{{ cvTimeLabel }}</span>
+              </div>
+              <div style="height:7px;border-radius:999px;background:var(--seg);overflow:hidden"><div style="height:100%;width:{{ cvTimerW }};background:{{ cvTimerBar }};border-radius:999px;transition:width .4s"></div></div>
+              <span style="font-size:12.5px;line-height:1.55;color:var(--sub)">{{ cvSessionHint }}</span>
+              <sc-if value="{{ cvReviewGenerating }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:9px;background:var(--accent-soft);border-radius:10px;padding:10px 12px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--hot);animation:pulse 1.4s infinite"></span>
+                  <span style="font-size:12.5px;line-height:1.5;color:var(--ink2)">{{ t.cvReviewGenerating }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ cvReviewReady }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:8px;background:var(--accent-soft);border-radius:10px;padding:12px">
+                  <span style="font-size:12.5px;font-weight:700;color:var(--accent-ink)">{{ t.cvReviewReady }}</span>
+                  <audio controls preload="metadata" src="{{ cvReviewUrl }}" style="width:100%;height:38px"></audio>
+                  <a href="{{ cvReviewUrl }}" download style="font-size:12px;color:var(--accent-ink);font-weight:600;text-decoration:none">⬇ {{ t.cvReviewDownload }}</a>
+                </div>
+              </sc-if>
+              <sc-if value="{{ cvReviewFailed }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:12.5px;line-height:1.5;color:var(--hot)">{{ cvReviewError }}</span>
+              </sc-if>
+            </div>
+          </sc-if>
+
 
           <!-- 🚨 치명적 오류 힌트 카드 (비차단 · 대화는 멈추지 않음) -->
           <sc-if value="{{ cvIsRoleplay }}" hint-placeholder-val="{{ false }}">
@@ -2256,6 +2370,7 @@ const JEONG_POSES = [
   {src:'./assets/정이_장구.png', alt:['Jeongie playing the janggu','장구를 치며 응원하는 정이']}
 ];
 const TAGS = {daily:['Daily talk','일상 회화'], business:['Business','비즈니스'], topik:['TOPIK','TOPIK'], pron:['Pronunciation','발음'], beginner:['Beginner','초급'], intermediate:['Intermediate','중급']};
+const TUTOR_SESSION_SECONDS = 10 * 60;
 const TODAY='2026-09-26';
 const SEED = {
   jiwoo: [
@@ -2321,6 +2436,41 @@ const PARAS = [
   ['사람들은 꽃 아래에서 사진을 찍고, 돗자리를 펴고 앉아서 ',['도시락'],'을 먹어요. 밤에는 조명이 켜져서 낮과는 다른 ',['분위기'],'를 느낄 수 있어요.'],
   ['하지만 벚꽃은 일주일 정도만 피기 때문에 구경하고 싶으면 ',['서둘러야'],' 해요.']
 ];
+// ── 가입 직후 프로필: 국적(모국어는 튜터가 자주 하는 실수를 미리 짚는 데 씀) ──
+const NATIONALITIES = [
+  ['US','미국','United States','English'], ['GB','영국','United Kingdom','English'], ['CA','캐나다','Canada','English'],
+  ['AU','호주','Australia','English'], ['JP','일본','Japan','Japanese'], ['CN','중국','China','Chinese (Mandarin)'],
+  ['TW','대만','Taiwan','Chinese (Mandarin)'], ['HK','홍콩','Hong Kong','Cantonese'], ['VN','베트남','Vietnam','Vietnamese'],
+  ['TH','태국','Thailand','Thai'], ['ID','인도네시아','Indonesia','Indonesian'], ['PH','필리핀','Philippines','Filipino'],
+  ['MY','말레이시아','Malaysia','Malay'], ['SG','싱가포르','Singapore','English'], ['IN','인도','India','Hindi'],
+  ['MN','몽골','Mongolia','Mongolian'], ['UZ','우즈베키스탄','Uzbekistan','Uzbek'], ['KZ','카자흐스탄','Kazakhstan','Kazakh'],
+  ['RU','러시아','Russia','Russian'], ['FR','프랑스','France','French'], ['DE','독일','Germany','German'],
+  ['ES','스페인','Spain','Spanish'], ['IT','이탈리아','Italy','Italian'], ['BR','브라질','Brazil','Portuguese'],
+  ['MX','멕시코','Mexico','Spanish'], ['TR','튀르키예','Türkiye','Turkish'], ['SA','사우디아라비아','Saudi Arabia','Arabic'],
+  ['EG','이집트','Egypt','Arabic'], ['NP','네팔','Nepal','Nepali'], ['MM','미얀마','Myanmar','Burmese'],
+  ['KH','캄보디아','Cambodia','Khmer'], ['OTHER','기타','Other','']
+].map(([code, ko, en, lang]) => ({ code, ko, en, lang }));
+
+const GENDERS = [['female','여성','Female'], ['male','남성','Male'], ['other','기타','Other'], ['none','밝히지 않음','Prefer not to say']]
+  .map(([id, ko, en]) => ({ id, ko, en }));
+
+// ── 관심사: 튜터 수업 주제를 이 순서로 우선 구성한다. seed는 튜터에게 넘기는 대화 소재 예시 ──
+const INTERESTS = [
+  { id:'kdrama',  ko:'K-드라마·영화', en:'K-dramas & films', icon:'🎬', seed:'좋아하는 드라마, 인상 깊은 장면과 명대사, 배우' },
+  { id:'kpop',    ko:'K-POP·음악',    en:'K-pop & music',    icon:'🎤', seed:'좋아하는 가수, 노래 가사, 콘서트 경험' },
+  { id:'food',    ko:'음식·요리',     en:'Food & cooking',   icon:'🍜', seed:'좋아하는 한국 음식, 맛집, 직접 해 본 요리' },
+  { id:'travel',  ko:'여행',          en:'Travel',           icon:'✈️', seed:'가 보고 싶은 도시, 여행 계획, 길 묻기' },
+  { id:'daily',   ko:'일상·쇼핑',     en:'Daily life & shopping', icon:'🛍️', seed:'하루 일과, 주말, 장보기와 쇼핑' },
+  { id:'work',    ko:'비즈니스·직장', en:'Business & work',  icon:'💼', seed:'회사 생활, 회의, 동료와의 대화' },
+  { id:'study',   ko:'유학·학교생활', en:'Study abroad & school', icon:'🎓', seed:'수업, 시험, 친구, 동아리' },
+  { id:'culture', ko:'역사·전통문화', en:'History & tradition', icon:'🏯', seed:'명절, 한복, 궁궐, 전통 예절' },
+  { id:'beauty',  ko:'뷰티·패션',     en:'Beauty & fashion', icon:'💄', seed:'화장품, 옷 스타일, 쇼핑 추천' },
+  { id:'sports',  ko:'스포츠·게임',   en:'Sports & games',   icon:'⚽', seed:'좋아하는 운동, 경기 관람, 게임' },
+  { id:'tech',    ko:'IT·기술',       en:'Tech & IT',        icon:'💻', seed:'앱, 스마트폰, 요즘 기술 이야기' },
+  { id:'relation',ko:'연애·인간관계', en:'Dating & relationships', icon:'💬', seed:'친구 사귀기, 고민 상담, 소개팅' }
+];
+const INTEREST_MAX = 5;
+
 // 읽기 지문 문단별 영어 번역 (영어 번역 보기 토글)
 const PARAS_EN = [
   'Every April, cherry blossoms burst into bloom all over Seoul. Yeouido and Seokchon Lake in particular are packed with people who have come to see the blossoms.',
@@ -2649,12 +2799,21 @@ en:{
  cvScenarioLabel:'SCENARIO',
  cvHintH:'Critical fixes', cvHintEmpty:'Small slips are ignored so the roleplay keeps flowing. Only errors that would break the exchange — wrong counters, reversed negation — pop up here.',
  cvReportH:'PDF review note', cvReportP:'Morpheme analysis (Kiwi) plus a teacher’s corrections, laid out as a PDF with Korean fonts embedded. Signed in, it is archived to your account too.',
+ obTitle1:'반가워요! 먼저 알려 주세요 (Welcome! Tell us about you)', obSub1:'선생님이 이 닉네임으로 불러 드리고, 모국어를 고려해서 교정해 드려요. (Your tutor will call you by this nickname and tailor feedback to your native language.)',
+ obNickLabel:'닉네임 (Nickname)', obNickPh:'예: 에마 (e.g. Emma)', obNickHint:'선생님이 “(닉네임) 님”이라고 불러요. (Your tutor will address you as "(nickname)-nim".)',
+ obNatLabel:'국적 (Nationality)', obNatHint:'모국어 화자가 자주 하는 발음·문법 실수를 미리 짚어 주는 데 써요. (Used to anticipate the pronunciation and grammar slips common for your first language.)',
+ obGenderLabel:'성별 (Gender)', obNext:'다음 (Next)', obBack:'이전 (Back)',
+ obTitle2:'어떤 이야기가 좋으세요? (What topics do you like?)', obSub2:'튜터 수업을 이 관심사 중심으로 먼저 구성해요. 5개까지 고를 수 있고, 누른 순서가 우선순위가 돼요. (Your tutor builds each lesson around these first. Pick up to 5 — the order you tap them sets their priority.)',
+ obInterestHint:'관심사는 사이드바의 내 프로필에서 언제든 바꿀 수 있어요. (You can change these any time from your profile in the sidebar.)',
+ profileEdit:'Edit profile & interests', profileInterestsH:'My interests',
  cvCardH:'Lesson notes', cvCardEmpty:'When your tutor explains a grammar point or corrects you, the card appears here so you can see it as well as hear it.',
  cvLevelLabel:'THIS LEVEL',
  cvKeepNotice:'Transcripts are kept in this browser for 7 days and then deleted automatically. Download anything you want to keep longer.',
  cvKeepBadge:'Kept for 7 days', cvDownloadShort:'Transcript', cvReportShort:'Review PDF',
  cvHistoryH:'Conversation history', cvHistorySub:'Every conversation from the last 7 days, newest first.',
  cvHistoryEmpty:'No conversations yet. Once you finish one, it is saved here for 7 days.',
+ cvSessionH:'Tutor lesson', cvSessionReady:'A 10-minute lesson. Your tutor automatically wraps up during the final minute.', cvSessionLive:'The final minute is reserved for a recap and one last repeat-after-me.', cvSessionWrap:'Wrap-up is in progress. Your review data is being finalized.',
+ cvReviewGenerating:'Creating your 10-minute review in your feedback language. You can keep using the app.', cvReviewReady:'Your personal audio review is ready.', cvReviewDownload:'Download audio review',
  cvTipH:'Tip', cvTipP:'Use headphones so the tutor’s voice does not feed back into your mic. Pause for a moment when you finish a sentence — that is when your tutor replies.',
  recH1:'My progress', weekH:'Study time this week', skillH:'Skill levels', skillTip:'Writing is growing the slowest. Add one sentence exercise a day this week?',
  onlineLabel:'Online now'
@@ -2708,12 +2867,21 @@ ko:{
  cvScenarioLabel:'상황',
  cvHintH:'꼭 고쳐야 할 표현', cvHintEmpty:'사소한 실수는 몰입을 위해 넘어가요. 단위를 잘못 쓰거나 뜻이 반대가 되는 것처럼 거래가 막히는 오류만 여기에 떠요.',
  cvReportH:'복습 노트 PDF', cvReportP:'형태소 분석(Kiwi)과 선생님 첨삭을 합쳐 한글이 깨지지 않는 PDF로 만들어요.',
+ obTitle1:'반가워요! 먼저 알려 주세요 (Welcome! Tell us about you)', obSub1:'선생님이 이 닉네임으로 불러 드리고, 모국어를 고려해서 교정해 드려요. (Your tutor will call you by this nickname and tailor feedback to your native language.)',
+ obNickLabel:'닉네임 (Nickname)', obNickPh:'예: 에마 (e.g. Emma)', obNickHint:'선생님이 “(닉네임) 님”이라고 불러요. (Your tutor will address you as "(nickname)-nim".)',
+ obNatLabel:'국적 (Nationality)', obNatHint:'모국어 화자가 자주 하는 발음·문법 실수를 미리 짚어 주는 데 써요. (Used to anticipate common pronunciation and grammar patterns for your native language.)',
+ obGenderLabel:'성별 (Gender)', obNext:'다음 (Next)', obBack:'이전 (Back)',
+ obTitle2:'어떤 이야기가 좋으세요? (What topics do you like?)', obSub2:'튜터 수업을 이 관심사 중심으로 먼저 구성해요. 5개까지 고를 수 있고, 누른 순서가 우선순위가 돼요. (Lessons will focus on these topics first. Pick up to 5 in order of priority.)',
+ obInterestHint:'관심사는 사이드바의 내 프로필에서 언제든 바꿀 수 있어요. (You can change these anytime in your profile.)',
+ profileEdit:'프로필·관심사 수정 (Edit Profile)', profileInterestsH:'내 관심사 (My Interests)',
  cvCardH:'수업 자료', cvCardEmpty:'선생님이 문법을 설명하거나 문장을 고쳐 주면 그 내용이 카드로 여기에 떠요. 듣기만 하지 않고 눈으로도 확인할 수 있어요.',
  cvLevelLabel:'이 난이도는',
  cvKeepNotice:'전사본은 이 브라우저에 7일간 보관되고 그 뒤 자동으로 삭제돼요. 더 오래 두려면 파일로 내려받아 주세요.',
  cvKeepBadge:'7일간 보관', cvDownloadShort:'전사본', cvReportShort:'복습 PDF',
  cvHistoryH:'대화 기록', cvHistorySub:'최근 7일 동안 나눈 대화예요. 최신순으로 보여 줘요.',
  cvHistoryEmpty:'아직 대화 기록이 없어요. 대화를 마치면 여기에 7일간 보관돼요.',
+ cvSessionH:'튜터 수업', cvSessionReady:'10분 수업이며 마지막 1분에는 선생님이 자동으로 핵심 내용을 정리해요.', cvSessionLive:'마지막 1분은 오늘 내용 요약과 핵심 표현 따라 말하기 시간이에요.', cvSessionWrap:'마무리 수업 중이에요. 복습용 데이터도 함께 정리하고 있어요.',
+ cvReviewGenerating:'지정한 피드백 언어로 10분 오디오 복습을 만들고 있어요. 다른 화면을 이용해도 괜찮아요.', cvReviewReady:'나만의 오디오 복습이 준비됐어요.', cvReviewDownload:'오디오 복습 내려받기',
  cvTipH:'팁', cvTipP:'선생님 목소리가 마이크로 다시 들어가지 않게 이어폰을 쓰면 좋아요. 한 문장을 말한 뒤 잠깐 쉬면 그때 선생님이 답해요.',
  recH1:'나의 학습 기록', weekH:'이번 주 학습 시간', skillH:'영역별 실력', skillTip:'쓰기가 가장 천천히 늘고 있어요. 이번 주는 문장 쓰기를 하루 한 번 추가해 볼까요?',
  onlineLabel:'대화 가능'
@@ -2792,10 +2960,15 @@ class Component extends DCLogic {
     wordKey: null,
     saved: {},
     rAns: {},
+    // 가입 직후 온보딩 (닉네임·국적·성별 → 관심사)
+    profile: null, obOpen: false, obStep: 1, obSaving: false, obError: '',
+    obDraft: { nickname: '', nationality: '', gender: '', interests: [] },
     rTrAll: false,
     cvStatus: 'idle', cvTurns: [], cvPartial: { user: '', tutor: '' }, cvError: '',
     cvMuted: false, cvLevelMeter: 0, cvSpeaking: false, cvLevel: 'beginner', cvTutorName: '', cvModel: '', cvHistory: [],
     cvMode: 'tutor', cvScenario: 'market', cvHints: [], cvReport: null, cvReportLoading: false, cvReportError: '',
+    cvCards: [], cvRemainingSeconds: TUTOR_SESSION_SECONDS, cvWrapUpSent: false, cvFinalizePayload: null,
+    cvReviewStatus: 'idle', cvReviewStage: '', cvReviewUrl: '', cvReviewError: '',
     cvCards: [],
     reviewMode: false, learnedTick: 0,
     studyLevel: 'beginner', genListening: null, genReading: null, genSpeaking: null, genLoading: '', genError: '',
@@ -2981,11 +3154,11 @@ class Component extends DCLogic {
               const db = firebase.firestore();
               const userRef = db.collection('users').doc(user.uid);
               const snap = await userRef.get();
-              if (snap.exists) {
-                const uData = snap.data();
-                if (uData && uData.selectedTutorId && TUTORS.some(t=>t.id===uData.selectedTutorId)) {
-                  this.setState({ tutorId: uData.selectedTutorId });
-                }
+              const uData = snap.exists ? (snap.data() || {}) : {};
+              if (uData.selectedTutorId && TUTORS.some(t=>t.id===uData.selectedTutorId)) {
+                this.setState({ tutorId: uData.selectedTutorId });
+              // 가입 직후 한 번: 닉네임·국적·성별·관심사를 받지 않았으면 온보딩을 띄운다
+              this.applyProfile(user, uData);
               }
               await userRef.set({
                 uid: user.uid,
@@ -2996,9 +3169,11 @@ class Component extends DCLogic {
                 lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
               }, { merge: true });
             } catch(dbErr) {
+              if (!this.state.profile) this.applyProfile(user, {});   // Firestore를 못 읽어도 온보딩은 진행
               console.warn('[Firestore] Sync Warning:', dbErr);
             }
           } else {
+            this.setState({ currentUser: null, profile: null, obOpen: false });
             this.setState({ currentUser: null });
           }
         });
@@ -3012,6 +3187,7 @@ class Component extends DCLogic {
     window.removeEventListener('keydown',this.handleKeyDown);
     window.removeEventListener('keyup',this.handleKeyUp);
     clearInterval(this.iv); clearTimeout(this.tt); clearInterval(this.mockIv); clearTimeout(this.mockTt); clearTimeout(this.autoNextTt);
+    clearTimeout(this.cvReviewPollTt);
     if (this.audioReviewTimer) clearInterval(this.audioReviewTimer);
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try { window.speechSynthesis.cancel(); } catch(e) {}
@@ -3144,9 +3320,169 @@ class Component extends DCLogic {
   };
 
   // ===== 실시간 회화 (Gemini Live) =====
+  // 온보딩에서 받은 닉네임 → 없으면 구글 이름
+  getNickname = () => this.state.profile?.nickname
+    || this.state.currentUser?.displayName || this.state.currentUser?.email?.split('@')[0] || 'Learner';
+  profileInterests = () => (this.state.profile?.interests || [])
+    .map(id => INTERESTS.find(x => x.id === id)).filter(Boolean);
+  // 오늘 수업의 관심사 하나 — 사용자가 고른 우선순위를 따르되, 전역 규칙대로 이미 다룬 것은 뒤로 미룬다
+  //  · 아직 안 다룬 관심사 중 우선순위가 가장 높은 것
+  //  · 모두 다뤘으면 가장 오래전에 다룬 것
+  //  · 복습 모드면 다룬 것 중 가장 오래된 것
+  pickLessonInterest = () => {
+    const list = this.profileInterests();              // 누른 순서 = 우선순위
+    if (!list.length) return null;
+    const learned = this.loadLearned('topic');
+    const key = x => 'interest:' + x.id;
+    const oldest = arr => arr.slice().sort((a, b) => (learned[key(a)]?.lastAt || 0) - (learned[key(b)]?.lastAt || 0))[0];
+    const seen = list.filter(x => learned[key(x)]);
+    if (this.state.reviewMode) return seen.length ? oldest(seen) : list[0];
+    return list.find(x => !learned[key(x)]) || oldest(list);
+  };
+  getConversationUserId = () => {
+    if (this.state.currentUser?.uid) return this.state.currentUser.uid;
+    try {
+      let id = localStorage.getItem('hn-guest-id');
+      if (!id) {
+        id = 'guest-' + (window.crypto?.randomUUID?.() || (Date.now() + '-' + Math.random().toString(16).slice(2)));
+        localStorage.setItem('hn-guest-id', id);
+      }
+      return id;
+    } catch {
+      return 'guest-local';
+    }
+  };
+
+  clearTutorClock = () => {
+    clearInterval(this.cvTimerIv);
+    this.cvTimerIv = null;
+    this.cvEndsAt = null;
+  };
+
+  sendTutorWrapUp = () => {
+    if (this.cvWrapUpTriggered || this.state.cvMode === 'roleplay') return;
+    if (!this.cvWs || this.cvWs.readyState !== WebSocket.OPEN) return;
+    this.cvWrapUpTriggered = true;
+    this.cvWs.send(JSON.stringify({
+      type: 'text',
+      text: '[SYSTEM: WRAP_UP_NOW] 수업 종료 1분 전입니다. 오늘 수업을 요약하고 핵심 표현 1개를 마지막으로 따라 말하게 한 뒤 finalize_session_data 도구를 호출하세요.'
+    }));
+    this.setState({ cvWrapUpSent: true });
+  };
+
+  startTutorClock = () => {
+    this.clearTutorClock();
+    this.cvWrapUpTriggered = false;
+    this.cvEndsAt = Date.now() + TUTOR_SESSION_SECONDS * 1000;
+    this.setState({ cvRemainingSeconds: TUTOR_SESSION_SECONDS, cvWrapUpSent: false });
+    this.cvTimerIv = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((this.cvEndsAt - Date.now()) / 1000));
+      this.setState({ cvRemainingSeconds: remaining });
+      if (remaining <= 60) this.sendTutorWrapUp();
+      if (remaining === 0) {
+        this.clearTutorClock();
+        this.stopConversation(true);
+      }
+    }, 500);
+  };
+
+  buildFinalizeFallback = (turns) => {
+    const cards = this.state.cvCards || [];
+    return {
+      session_summary: turns.slice(-6).map(t => `${t.role}: ${t.text}`).join(' ').slice(0, 500),
+      strengths: [],
+      key_expression: cards.find(c => c.corrected_to)?.corrected_to || '',
+      new_episodes: [],
+      new_mistakes: cards.filter(c => c.corrected_from && c.corrected_to).slice(0, 5).map((c, index) => ({
+        id: `lesson-${Date.now()}-${index + 1}`,
+        topic: c.title || '튜터 수업', wrong: c.corrected_from, correct: c.corrected_to,
+        category: String(c.category || 'EXPRESSION').toUpperCase()
+      })),
+      mastered_mistake_ids: []
+    };
+  };
+
+  collectTutorReviewTurns = () => {
+    const turns = [...(this.state.cvTurns || [])];
+    const partial = this.state.cvPartial || {};
+    const at = new Date();
+    if ((partial.user || '').trim()) turns.push({ role: 'user', text: partial.user.trim(), at });
+    if ((partial.tutor || '').trim()) turns.push({ role: 'tutor', text: partial.tutor.trim(), at });
+    return turns;
+  };
+
+  pollTutorReview = async (statusUrl) => {
+    clearTimeout(this.cvReviewPollTt);
+    try {
+      const res = await fetch(statusUrl, { cache: 'no-store' });
+      const job = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(job.error || `서버 응답 ${res.status}`);
+      if (job.status === 'complete') {
+        this.cvReviewStarted = false;
+        this.setState({
+          cvReviewStatus: 'ready', cvReviewStage: 'complete',
+          cvReviewUrl: job.result?.audioReviewUrl || '', cvReviewError: ''
+        });
+        return;
+      }
+      if (job.status === 'error') throw new Error(job.error || '오디오 리뷰 생성 실패');
+      this.setState({ cvReviewStatus: 'generating', cvReviewStage: job.stage || 'running' });
+      this.cvReviewPollTt = setTimeout(() => this.pollTutorReview(statusUrl), 1000);
+    } catch (err) {
+      this.cvReviewStarted = false;
+      const L = this.langNow() === 'ko';
+      this.setState({
+        cvReviewStatus: 'error', cvReviewStage: 'error',
+        cvReviewError: (L ? '오디오 복습을 만들지 못했어요: ' : 'Could not create the audio review: ') + (err?.message || err)
+      });
+    }
+  };
+
+  completeTutorLesson = async (record, turns, finalizePayload) => {
+    if (!record || !turns.length || this.cvReviewStarted || this.state.cvReviewStatus === 'ready') return;
+    this.cvReviewStarted = true;
+    this.setState({ cvReviewStatus: 'generating', cvReviewStage: 'queued', cvReviewUrl: '', cvReviewError: '' });
+    const L = this.langNow() === 'ko';
+    try {
+      const res = await fetch('/api/session/complete-and-review', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: this.getConversationUserId(), sessionId: record.id,
+          userNickname: this.getNickname(),
+          feedbackLanguage: L ? 'Korean' : 'English', tutorId: this.state.tutorId,
+          transcriptLogs: turns.map(t => ({ role: t.role, text: t.text, at: (t.at instanceof Date ? t.at : new Date(t.at || Date.now())).getTime() })),
+          finalizePayload: finalizePayload || this.buildFinalizeFallback(turns)
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `서버 응답 ${res.status}`);
+      if (data.status === 'complete') {
+        this.cvReviewStarted = false;
+        this.setState({ cvReviewStatus: 'ready', cvReviewStage: 'complete', cvReviewUrl: data.result?.audioReviewUrl || '', cvReviewError: '' });
+      } else if (data.statusUrl) {
+        this.pollTutorReview(data.statusUrl);
+      } else {
+        throw new Error('오디오 리뷰 작업 상태 URL이 없습니다.');
+      }
+    } catch (err) {
+      this.cvReviewStarted = false;
+      this.setState({ cvReviewStatus: 'error', cvReviewError: (L ? '오디오 복습을 만들지 못했어요: ' : 'Could not create the audio review: ') + (err?.message || err) });
+    }
+  };
+
   // 마이크 → 16kHz PCM → 서버(/api/live) → gemini-3.8-live → 24kHz PCM 재생 + 실시간 전사
   startConversation = async () => {
     if (this.state.cvStatus === 'connecting' || this.state.cvStatus === 'live') return;
+    this.clearTutorClock();
+    clearTimeout(this.cvReviewPollTt); this.cvReviewPollTt = null;
+    this.cvReviewStarted = false;
+    this.cvWrapUpTriggered = false;
+    this.cvSessionId = 'cv' + Date.now();
+    this.setState({
+      cvStatus: 'connecting', cvError: '', cvTurns: [], cvPartial: { user: '', tutor: '' },
+      cvHints: [], cvCards: [], cvReport: null, cvReportError: '', cvRemainingSeconds: TUTOR_SESSION_SECONDS,
+      cvWrapUpSent: false, cvFinalizePayload: null, cvReviewStatus: 'idle', cvReviewStage: '', cvReviewUrl: '', cvReviewError: ''
+    });
     this.setState({ cvStatus: 'connecting', cvError: '', cvTurns: [], cvPartial: { user: '', tutor: '' }, cvHints: [], cvCards: [], cvReport: null, cvReportError: '' });
     this.cvStartedAt = Date.now();
     try {
@@ -3159,17 +3495,30 @@ class Component extends DCLogic {
       const ws = new WebSocket(`${proto}://${location.host}/api/live`);
       this.cvWs = ws;
 
+        const tutor = TUTORS.find(t => t.id === this.state.tutorId) || TUTORS[0];
+        const L = this.langNow() === 'ko';
+        const prof = this.state.profile || {};
+        // 관심사를 우선으로 수업 주제를 정한다 (전역 규칙: 최근에 다룬 관심사는 뒤로)
+        const interest = this.state.cvMode === 'roleplay' ? null : this.pickLessonInterest();
+        this.cvInterest = interest;
       ws.onopen = () => {
         ws.send(JSON.stringify({
           type: 'start', tutorId: this.state.tutorId, level: this.state.cvLevel || 'beginner',
           mode: this.state.cvMode || 'tutor', scenarioId: this.state.cvScenario || 'market',
           // 전역 규칙: 서버가 이미 다룬 주제를 피하도록 사용자와 복습 여부를 함께 보낸다
-          userId: this.state.currentUser?.uid || null, review: !!this.state.reviewMode
+          userId: this.getConversationUserId(), review: !!this.state.reviewMode,
+          userNickname: this.getNickname(),
+          // 국적·관심사는 코드/ID만 보낸다. 서버가 자체 표로 해석해 지시문에 넣는다 (사용자 입력이 지시문을 바꾸지 못하게)
+          nationality: prof.nationality || '', interests: prof.interests || [],
+          lessonInterest: interest ? interest.id : '',
+          feedbackLanguage: L ? 'Korean' : 'English',
+          lessonTopic: interest ? interest.ko : (tutor.role[L ? 1 : 0] || (L ? '자유 회화' : 'Free conversation'))
         }));
         this.startMicCapture(stream, ws);
       };
       ws.onmessage = (e) => this.onLiveMessage(JSON.parse(e.data));
       ws.onerror = () => this.setState({ cvError: '서버에 연결하지 못했습니다. npm start로 서버가 켜져 있는지 확인해 주세요.', cvStatus: 'idle' });
+      ws.onclose = () => { this.clearTutorClock(); if (this.state.cvStatus !== 'idle') this.setState({ cvStatus: 'ended' }); this.teardownAudio(); };
       ws.onclose = () => { if (this.state.cvStatus !== 'idle') this.setState({ cvStatus: 'ended' }); this.teardownAudio(); };
     } catch (err) {
       this.setState({ cvStatus: 'idle', cvError: err && err.name === 'NotAllowedError' ? '마이크 사용을 허용해 주세요.' : '마이크를 열 수 없습니다: ' + (err?.message || err) });
@@ -3203,6 +3552,11 @@ class Component extends DCLogic {
   };
 
   onLiveMessage = (msg) => {
+    if (msg.type === 'ready') {
+      this.setState({ cvStatus: 'live', cvTutorName: msg.tutor, cvModel: msg.model });
+      if (this.state.cvMode !== 'roleplay') this.startTutorClock();
+      return;
+    }
     if (msg.type === 'ready') { this.setState({ cvStatus: 'live', cvTutorName: msg.tutor, cvModel: msg.model }); return; }
     if (msg.type === 'error') { this.setState({ cvError: msg.message, cvStatus: 'idle' }); return; }
     if (msg.type === 'audio') { this.playLiveAudio(msg.data); return; }
@@ -3214,6 +3568,14 @@ class Component extends DCLogic {
     if (msg.type === 'hint') {
       this.setState(st => ({ cvHints: [{ ...msg.hint, id: 'h' + Date.now() + Math.random() }, ...(st.cvHints || [])].slice(0, 12) }));
       return;
+    if (msg.type === 'finalize') {
+      const payload = msg.payload || {};
+      this.setState({ cvFinalizePayload: payload }, () => {
+        const turns = this.collectTutorReviewTurns();
+        if (turns.length) this.completeTutorLesson({ id: this.cvSessionId }, turns, payload);
+      });
+      return;
+    }
     }
     if (msg.type === 'interrupted') { this.clearAudioQueue(); return; }
     if (msg.type === 'transcript') {
@@ -3231,6 +3593,7 @@ class Component extends DCLogic {
       this.cvFlushTt = setTimeout(() => this.flushTurn(), 2600);
       return;
     }
+    if (msg.type === 'closed') { this.clearTutorClock(); this.setState({ cvStatus: 'ended' }); }
     if (msg.type === 'closed') { this.setState({ cvStatus: 'ended' }); }
   };
 
@@ -3276,7 +3639,8 @@ class Component extends DCLogic {
     this.cvNode = null; this.cvStream = null; this.cvInCtx = null;
   };
 
-  stopConversation = (flush = true) => {
+    stopConversation = (flush = true) => {
+    this.clearTutorClock();
     clearTimeout(this.cvFlushTt); this.cvFlushTt = null;
     try { this.cvWs && this.cvWs.readyState === WebSocket.OPEN && this.cvWs.send(JSON.stringify({ type: 'stop' })); } catch {}
     try { this.cvWs && this.cvWs.close(); } catch {}
@@ -3288,6 +3652,10 @@ class Component extends DCLogic {
       if ((p.user || '').trim()) turns.push({ role: 'user', text: p.user.trim(), at });
       if ((p.tutor || '').trim()) turns.push({ role: 'tutor', text: p.tutor.trim(), at });
       this.setState({ cvStatus: 'ended', cvTurns: turns, cvPartial: { user: '', tutor: '' }, cvSpeaking: false, cvLevelMeter: 0 });
+      const record = this.saveConversation(turns);   // 전사본을 브라우저에 7일간 보관
+      if (this.state.cvMode !== 'roleplay') {
+        this.completeTutorLesson(record, turns, this.state.cvFinalizePayload);
+      }
       this.saveConversation(turns);   // 전사본을 브라우저에 7일간 보관
       // 전역 규칙: 오늘 다룬 주제를 기록해 다음에는 다른 주제가 나오게 한다
       if (!this.state.reviewMode) {
@@ -3295,6 +3663,10 @@ class Component extends DCLogic {
         const topicKey = this.state.cvMode === 'roleplay' ? ('scenario:' + this.state.cvScenario) : ('lesson:' + (this.state.cvTutorName || ''));
         const topicLabel = this.state.cvMode === 'roleplay' ? (scNames[this.state.cvScenario] || '상황극')
           : ((turns.find(t => t.role === 'tutor')?.text || '').slice(0, 40));
+        // 관심사 기반 수업이었다면 그 관심사를 기록해 다음 수업은 다른 관심사로 시작한다
+        if (this.state.cvMode !== 'roleplay' && this.cvInterest) {
+          this.recordLearn('topic', 'interest:' + this.cvInterest.id, this.cvInterest.ko);
+        }
         if (topicLabel) this.recordLearn('topic', topicKey + ':' + topicLabel.slice(0, 20), topicLabel);
       }
       const scNames = { market:'동대문 옷가게', restaurant:'분식집 주문', taxi:'택시 타기', hospital:'병원 접수' };
@@ -3326,9 +3698,11 @@ class Component extends DCLogic {
     if (!turns || !turns.length) return null;
     const scNames = { market:'동대문 옷가게', restaurant:'분식집 주문', taxi:'택시 타기', hospital:'병원 접수' };
     const rec = {
+      id: this.cvSessionId || ('cv' + Date.now()),
       id: 'cv' + Date.now(),
       savedAt: Date.now(),
       tutor: this.state.cvTutorName || '',
+      mode: this.state.cvMode || 'tutor',
       level: this.state.cvLevel || 'beginner',
       turns: turns.map(t => ({ role: t.role, text: t.text, at: (t.at instanceof Date ? t.at : new Date(t.at || Date.now())).getTime() })),
       hints: (this.state.cvHints || []).map(h => ({
@@ -4034,6 +4408,80 @@ class Component extends DCLogic {
     }
     window.scrollTo(0,0);
   };
+  // ===== 가입 직후 온보딩: 1단계 닉네임·국적·성별 → 2단계 관심사 =====
+  profileKey = (uid) => 'hn-profile-' + uid;
+  // Firestore 문서(없으면 이 브라우저에 저장된 사본)로 프로필을 복원하고, 미완료면 온보딩을 연다
+  applyProfile = (user, uData = {}) => {
+    let local = {};
+    try { local = JSON.parse(localStorage.getItem(this.profileKey(user.uid)) || '{}'); } catch {}
+    const src = uData.onboarded ? uData : (local.onboarded ? local : uData);
+    const profile = {
+      nickname: src.nickname || '', nationality: src.nationality || '', gender: src.gender || '',
+      interests: Array.isArray(src.interests) ? src.interests.filter(id => INTERESTS.some(x => x.id === id)) : [],
+      onboarded: !!src.onboarded
+    };
+    const fallbackNick = (user.displayName || (user.email ? user.email.split('@')[0] : '')).slice(0, 20);
+    this.setState({
+      profile,
+      obOpen: !profile.onboarded,
+      obStep: 1, obError: '',
+      obDraft: { nickname: profile.nickname || fallbackNick, nationality: profile.nationality, gender: profile.gender, interests: profile.interests }
+    });
+  };
+  // 사이드바에서 다시 열어 수정할 수 있다
+  openOnboarding = () => {
+    const p = this.state.profile || {};
+    const u = this.state.currentUser || {};
+    this.setState({
+      obOpen: true, obStep: 1, obError: '',
+      obDraft: { nickname: p.nickname || (u.displayName || '').slice(0, 20), nationality: p.nationality || '', gender: p.gender || '', interests: p.interests || [] }
+    });
+  };
+  obSet = (field, value) => this.setState(st => ({ obDraft: { ...st.obDraft, [field]: value }, obError: '' }));
+  obToggleInterest = (id) => this.setState(st => {
+    const cur = st.obDraft.interests || [];
+    if (cur.includes(id)) return { obDraft: { ...st.obDraft, interests: cur.filter(x => x !== id) }, obError: '' };
+    if (cur.length >= INTEREST_MAX) return { obError: this.langNow() === 'ko' ? `관심사는 ${INTEREST_MAX}개까지 고를 수 있어요.` : `You can pick up to ${INTEREST_MAX}.` };
+    return { obDraft: { ...st.obDraft, interests: [...cur, id] }, obError: '' };
+  });
+  obNext = () => {
+    const d = this.state.obDraft, ko = this.langNow() === 'ko';
+    const nick = (d.nickname || '').trim();
+    if (!nick) return this.setState({ obError: ko ? '닉네임을 입력해 주세요.' : 'Please enter a nickname.' });
+    if (nick.length > 20) return this.setState({ obError: ko ? '닉네임은 20자까지예요.' : 'Nickname must be 20 characters or fewer.' });
+    if (!d.nationality) return this.setState({ obError: ko ? '국적을 선택해 주세요.' : 'Please choose your nationality.' });
+    if (!d.gender) return this.setState({ obError: ko ? '성별을 선택해 주세요.' : 'Please choose an option for gender.' });
+    this.setState({ obStep: 2, obError: '', obDraft: { ...d, nickname: nick } });
+  };
+  obBack = () => this.setState({ obStep: 1, obError: '' });
+  saveProfile = async () => {
+    const d = this.state.obDraft, ko = this.langNow() === 'ko';
+    if (!(d.interests || []).length) return this.setState({ obError: ko ? '관심사를 하나 이상 골라 주세요.' : 'Pick at least one interest.' });
+    const user = this.state.currentUser;
+    if (!user) return;
+    const nat = NATIONALITIES.find(n => n.code === d.nationality);
+    const profile = {
+      nickname: d.nickname.trim(), nationality: d.nationality, nationalityName: nat ? nat.en : '',
+      nativeLanguage: nat ? nat.lang : '', gender: d.gender, interests: d.interests, onboarded: true
+    };
+    this.setState({ obSaving: true, obError: '' });
+    try { localStorage.setItem(this.profileKey(user.uid), JSON.stringify(profile)); } catch {}
+    let warn = '';
+    try {
+      if (typeof firebase !== 'undefined' && firebase.firestore) {
+        await firebase.firestore().collection('users').doc(user.uid).set({
+          ...profile,
+          onboardedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+    } catch (err) {
+      console.warn('[Firestore] Profile save error:', err);
+      warn = ko ? '서버 저장에 실패해 이 브라우저에만 저장했어요.' : 'Saved in this browser only — the server save failed.';
+    }
+    this.setState({ profile, obSaving: false, obOpen: false, obError: '', obNotice: warn });
+  };
+
   openTutor(id){ this.selectTutor(id); }
   loginWithGoogle = async () => {
     if (typeof firebase === 'undefined' || !firebase.auth) {
@@ -4430,7 +4878,7 @@ class Component extends DCLogic {
     };
     const isLoggedIn = !!s.currentUser;
     const isNotLoggedIn = !s.currentUser;
-    const userName = s.currentUser ? (s.currentUser.displayName || s.currentUser.email.split('@')[0]) : (L ? '게스트' : 'Guest');
+    const userName = s.currentUser ? (s.profile?.nickname || s.currentUser.displayName || s.currentUser.email.split('@')[0]) : (L ? '게스트' : 'Guest');
     const userEmail = s.currentUser ? s.currentUser.email : (L ? 'Google 로그인으로 동기화' : 'Sign in to sync');
     const userInitial = s.currentUser ? (s.currentUser.displayName || s.currentUser.email || 'U')[0].toUpperCase() : 'G';
     const hasUserPhoto = !!(s.currentUser && s.currentUser.photoURL);
@@ -5042,6 +5490,13 @@ class Component extends DCLogic {
       ],
       // 실시간 회화
       cvIdle: s.cvStatus === 'idle', cvConnecting: s.cvStatus === 'connecting', cvLive: s.cvStatus === 'live', cvEnded: s.cvStatus === 'ended',
+      cvTimeLabel: `${String(Math.floor((s.cvRemainingSeconds ?? TUTOR_SESSION_SECONDS) / 60)).padStart(2, '0')}:${String((s.cvRemainingSeconds ?? TUTOR_SESSION_SECONDS) % 60).padStart(2, '0')}`,
+      cvTimerW: Math.max(0, Math.min(100, ((s.cvRemainingSeconds ?? TUTOR_SESSION_SECONDS) / TUTOR_SESSION_SECONDS) * 100)).toFixed(1) + '%',
+      cvTimerColor: s.cvWrapUpSent ? 'var(--hot)' : 'var(--accent-ink)',
+      cvTimerBar: s.cvWrapUpSent ? 'var(--hot)' : 'var(--accent)',
+      cvSessionHint: s.cvWrapUpSent ? t.cvSessionWrap : s.cvStatus === 'live' ? t.cvSessionLive : t.cvSessionReady,
+      cvReviewGenerating: s.cvReviewStatus === 'generating', cvReviewReady: s.cvReviewStatus === 'ready',
+      cvReviewFailed: s.cvReviewStatus === 'error', cvReviewUrl: s.cvReviewUrl || '', cvReviewError: s.cvReviewError || '',
       cvNotLive: s.cvStatus !== 'live', cvHasTurns: (s.cvTurns || []).length > 0, cvNoTurns: (s.cvTurns || []).length === 0,
       cvStatusLabel: s.cvStatus === 'live' ? (s.cvSpeaking ? (L ? '선생님이 말하는 중…' : 'Tutor is speaking…') : (L ? '듣고 있어요 — 편하게 말해 보세요' : 'Listening — go ahead and speak'))
         : s.cvStatus === 'connecting' ? (L ? '연결하는 중…' : 'Connecting…')
@@ -5100,15 +5555,52 @@ class Component extends DCLogic {
         });
         return groups;
       })(),
+      // ── 가입 직후 온보딩 ──
+      obOpen: !!(s.obOpen && s.currentUser), obStep1: s.obStep === 1, obStep2: s.obStep === 2,
+      obStepLabel: `${s.obStep} / 2 단계 (Step ${s.obStep}/2)`,
+      obNickname: s.obDraft.nickname, onObNickname: e => this.obSet('nickname', e.target.value.slice(0, 20)),
+      obNickCount: (s.obDraft.nickname || '').length + ' / 20',
+      // <select> 안의 사용자 정의 태그는 HTML 파서가 지우므로 React 요소로 직접 만든다
+      obNationalitySelect: React.createElement('select', {
+        value: s.obDraft.nationality || '', onChange: e => this.obSet('nationality', e.target.value),
+        'aria-label': '국적 (Nationality)',
+        style: { width: '100%', border: '1.5px solid var(--line)', borderRadius: 12, padding: '12px 14px', fontSize: 15,
+          background: 'var(--card)', color: 'var(--ink)', fontFamily: 'inherit', cursor: 'pointer' }
+      }, [React.createElement('option', { key: '_', value: '', disabled: true }, '국적을 선택하세요 (Choose your nationality)')]
+        .concat(NATIONALITIES.map(n => React.createElement('option', { key: n.code, value: n.code }, `${n.ko} (${n.en})`)))),
+      obGenders: GENDERS.map(g => ({
+        label: `${g.ko} (${g.en})`, pick: () => this.obSet('gender', g.id),
+        bg: s.obDraft.gender === g.id ? 'var(--accent)' : 'var(--card)',
+        fg: s.obDraft.gender === g.id ? '#fff' : 'var(--ink)',
+        bd: s.obDraft.gender === g.id ? 'var(--accent)' : 'var(--line)'
+      })),
+      obInterests: INTERESTS.map(x => {
+        const on = (s.obDraft.interests || []).includes(x.id);
+        const rank = on ? (s.obDraft.interests.indexOf(x.id) + 1) : 0;
+        return { icon: x.icon, label: x.ko, sub: x.en, pick: () => this.obToggleInterest(x.id),
+          bg: on ? 'var(--accent-soft)' : 'var(--card)', bd: on ? 'var(--accent)' : 'var(--line)', fw: on ? '700' : '500',
+          on, rank };
+      }),
+      obInterestCount: `선택 (Selected) ${(s.obDraft.interests || []).length} / ${INTEREST_MAX}`,
+      obNext: () => this.obNext(), obBack: () => this.obBack(), obSave: () => this.saveProfile(),
+      obSaving: !!s.obSaving, obNotSaving: !s.obSaving,
+      obSaveLabel: s.obSaving ? '저장하는 중… (Saving…)' : '시작하기 (Get started)',
+      obError: s.obError, obHasError: !!s.obError,
+      obCanClose: !!s.profile?.onboarded, obClose: () => this.setState({ obOpen: false }),
+      openOnboarding: () => this.openOnboarding(),
+      profileNickname: s.profile?.nickname || '', hasProfile: !!s.profile?.onboarded,
+      profileInterestLabels: this.profileInterests().map(x => x.icon + ' ' + (L ? x.ko : x.en)).join('  '),
       cvHasHistory: (s.cvHistory || []).length > 0, cvNoHistory: (s.cvHistory || []).length === 0,
       // ── Survival Korean 롤플레잉 · 치명적 오류 힌트 ──
       cvModes: [['tutor', L ? '튜터 수업' : 'Tutor lesson'], ['roleplay', L ? '상황극 (Survival)' : 'Roleplay (Survival)']].map(([k, lb]) => ({
+        label: lb, pick: () => { if (!['connecting','live'].includes(s.cvStatus)) this.setState({ cvMode: k }); },
         label: lb, pick: () => this.setState({ cvMode: k }),
         bg: s.cvMode === k ? 'var(--accent)' : 'transparent', fg: s.cvMode === k ? '#fff' : 'var(--ink2)'
       })),
       cvIsRoleplay: s.cvMode === 'roleplay', cvIsTutorMode: s.cvMode !== 'roleplay',
       cvScenarios: [['market', L ? '🧥 동대문 옷가게' : '🧥 Clothing store'], ['restaurant', L ? '🍜 분식집 주문' : '🍜 Snack bar'],
                     ['taxi', L ? '🚕 택시 타기' : '🚕 Taxi'], ['hospital', L ? '🏥 병원 접수' : '🏥 Clinic']].map(([k, lb]) => ({
+        label: lb, pick: () => { if (!['connecting','live'].includes(s.cvStatus)) this.setState({ cvScenario: k }); },
         label: lb, pick: () => this.setState({ cvScenario: k }),
         bg: s.cvScenario === k ? 'var(--accent-soft)' : 'var(--card)',
         bd: s.cvScenario === k ? 'var(--accent)' : 'var(--line)',
@@ -5148,6 +5640,7 @@ class Component extends DCLogic {
       cvMuteBg: s.cvMuted ? 'var(--hot-soft)' : 'var(--card)',
       toggleCvMute: () => this.setState(st => ({ cvMuted: !st.cvMuted })),
       cvLevels: [['beginner', L ? '초급' : 'Beginner'], ['intermediate', L ? '중급' : 'Intermediate'], ['advanced', L ? '고급' : 'Advanced']].map(([k, lb]) => ({
+        label: lb, pick: () => { if (!['connecting','live'].includes(s.cvStatus)) this.setState({ cvLevel: k }); },
         label: lb, pick: () => this.setState({ cvLevel: k }),
         bg: s.cvLevel === k ? 'var(--accent)' : 'transparent', fg: s.cvLevel === k ? '#fff' : 'var(--ink2)'
       })),

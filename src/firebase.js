@@ -27,7 +27,7 @@ if (serviceAccountRaw) {
     if (getApps().length === 0) {
       firebaseApp = initializeApp({
         credential: cert(serviceAccount),
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.appspot.com`
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.firebasestorage.app`
       });
     } else {
       firebaseApp = getApps()[0];

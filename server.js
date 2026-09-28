@@ -39,6 +39,7 @@ import { getLearned, recordLearned, pickFresh, todaySeed, LEARN_TYPES } from "./
 import { generateContent, LEVEL_SPEC, translateLines } from "./src/contentGenerator.js";
 import { usageMeter } from "./src/usage-meter.mjs";
 import { db, auth, storage, isInitialized as isFirebaseReady } from "./src/firebase.js";
+import { getLocalAudioReview, getTutorAudioReviewJob, startTutorAudioReview } from "./src/tutorSession.js";
 
 dotenv.config();
 
@@ -255,8 +256,11 @@ app.get("/api/health", (req, res) => {
         chat: process.env.GEMINI_DIALOGUE_MODEL || "gemini-3.8-flash",
         coaching: process.env.GEMINI_PREMIUM_MODEL || "gemini-3.8-flash",
         stt: "gemini-2.5-flash",
-        live: process.env.GEMINI_LIVE_MODEL || "gemini-3.8-live",
-        tts: GEMINI_TTS_MODEL
+        liveTutor: process.env.GEMINI_TUTOR_LIVE_MODEL || "gemini-3.8-live-extended-thinking",
+        liveRoleplay: process.env.GEMINI_LIVE_MODEL || "gemini-3.8-live-extended-thinking",
+        tts: GEMINI_TTS_MODEL,
+        reviewScript: process.env.GEMINI_REVIEW_MODEL || process.env.GEMINI_DIALOGUE_MODEL || "gemini-3.8-flash",
+        reviewTts: process.env.GEMINI_REVIEW_TTS_MODEL || "gemini-3.8-flash-lite-tts"
       },
       tutorVoices: Object.fromEntries(Object.entries(TUTOR_TTS_VOICES).map(([id, voice]) => [id, {
         tutor: voice.tutorName,
@@ -601,6 +605,73 @@ app.post("/api/session/report", async (req, res) => {
     });
   } catch (err) {
     console.error("[/api/session/report]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================
+// Tutor lesson — 경량 장기 기억 + 10분 단독 오디오 리뷰
+// ============================================================
+app.post("/api/session/complete-and-review", async (req, res) => {
+  try {
+    const requestStartedAt = Date.now();
+    const {
+      userId,
+      sessionId,
+      userNickname,
+      feedbackLanguage = "English",
+      tutorId = "jiwoo",
+      transcriptLogs = [],
+      finalizePayload = {}
+    } = req.body || {};
+    if (!Array.isArray(transcriptLogs) || !transcriptLogs.length) {
+      return res.status(400).json({ error: "대화 기록(transcriptLogs)이 비어 있습니다." });
+    }
+    const selected = TUTOR_TTS_VOICES[tutorId] || TUTOR_TTS_VOICES.jiwoo;
+    const job = startTutorAudioReview({
+      userId: userId || "guest",
+      sessionId,
+      userNickname,
+      feedbackLanguage,
+      tutor: {
+        id: TUTOR_TTS_VOICES[tutorId] ? tutorId : "jiwoo",
+        name: selected.tutorName,
+        voiceName: selected.geminiVoice,
+        style: selected.style
+      },
+      transcriptLogs,
+      finalizePayload
+    });
+    res.status(job.status === "complete" ? 200 : 202).json({
+      success: true,
+      ...job,
+      statusUrl: `/api/session/review-status/${encodeURIComponent(job.jobId)}`,
+      queuedInMs: Date.now() - requestStartedAt
+    });
+  } catch (err) {
+    console.error("[/api/session/complete-and-review]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/session/review-status/:jobId", (req, res) => {
+  const job = getTutorAudioReviewJob(req.params.jobId);
+  if (!job) return res.status(404).json({ error: "오디오 리뷰 작업을 찾을 수 없습니다." });
+  res.json(job);
+});
+
+app.get("/api/session/audio-review/:sessionId", async (req, res) => {
+  try {
+    const audio = await getLocalAudioReview(req.params.sessionId);
+    if (!audio) return res.status(404).json({ error: "오디오 리뷰를 찾을 수 없습니다." });
+    res.set({
+      "Content-Type": "audio/wav",
+      "Content-Length": String(audio.length),
+      "Cache-Control": "private, max-age=3600",
+      "Content-Disposition": `inline; filename="${String(req.params.sessionId).replace(/[^a-zA-Z0-9_-]/g, "_")}.wav"`
+    });
+    res.send(audio);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

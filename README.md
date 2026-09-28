@@ -10,6 +10,8 @@
 - 한국어 형태소 분석, 문장 성분 표시 및 로마자 변환
 - 작문 첨삭과 발음 평가
 - 학습 세션 요약 및 오답 기반 복습 퀴즈 생성
+- Gemini Live 기반 10분 튜터 수업, 종료 1분 전 자동 마무리 및 핵심 데이터 확정
+- 최근 일상 3개·반복 실수 5개의 경량 장기 기억과 5챕터 개인 오디오 복습 생성
 - Firebase Admin 연동 시 대화와 학습 기록 저장
 - Gemini API 키가 없을 때도 확인 가능한 데모 응답
 
@@ -49,6 +51,9 @@ npm install
 
 ```dotenv
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_TUTOR_LIVE_MODEL=gemini-3.8-live-extended-thinking
+GEMINI_REVIEW_MODEL=gemini-3.8-flash
+GEMINI_REVIEW_TTS_MODEL=gemini-3.8-flash-lite-tts
 PORT=3000
 ```
 
@@ -56,7 +61,7 @@ Firebase를 연결하려면 다음 값을 추가할 수 있습니다.
 
 ```dotenv
 FIREBASE_SERVICE_ACCOUNT_KEY=base64_or_json_service_account
-FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
 ```
 
 `FIREBASE_SERVICE_ACCOUNT_KEY`는 서비스 계정 JSON 문자열 또는 해당 JSON을 Base64로 인코딩한 값입니다. 비밀키가 포함된 `.env` 파일은 커밋하지 마세요.
@@ -88,6 +93,8 @@ Hangul-Now/
 │   ├── pos/                    # 형태소 분석, 문장 성분, 로마자 변환
 │   ├── firebase.js             # Firebase Admin 초기화
 │   ├── geminiService.js        # Gemini 대화·교정·평가 서비스
+│   ├── liveConversation.js     # Gemini Live WebSocket 중계와 튜터 수업 도구
+│   ├── tutorSession.js         # 장기 기억 및 10분 오디오 복습 파이프라인
 │   ├── tts-verification.mjs    # 한국어 음성 텍스트 검증
 │   └── usage-meter.mjs         # 모델 사용량 계측
 ├── server.js                   # Express API 및 정적 파일 서버
@@ -111,6 +118,9 @@ Hangul-Now/
 | `POST` | `/api/speaking/assess` | 발음 평가 결과 생성 |
 | `POST` | `/api/session/artifact` | 학습 세션 요약 생성 |
 | `POST` | `/api/session/quiz` | 오답 기반 복습 퀴즈 생성 |
+| `POST` | `/api/session/complete-and-review` | 튜터 수업 기억 갱신 및 10분 오디오 복습 생성 |
+| `GET` | `/api/session/audio-review/:sessionId` | 로컬 개발 모드의 생성 오디오 재생 |
+| `WS` | `/api/live` | Gemini Live 튜터 수업·Survival 롤플레잉 중계 |
 
 대화 요청 예시:
 
