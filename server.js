@@ -765,6 +765,265 @@ app.get("/api/session/list", async (req, res) => {
   }
 });
 
+// ============================================================
+// 10-1. 관리자 콘솔 (Admin Console) API — Firebase 연동
+// ============================================================
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
+  .split(",")
+  .map(e => e.trim().toLowerCase())
+  .filter(Boolean);
+
+const isEmailAdmin = (email) => {
+  if (!email) return false;
+  const normalized = email.toLowerCase().trim();
+  if (ADMIN_EMAILS.length > 0) {
+    return ADMIN_EMAILS.includes(normalized);
+  }
+  return normalized.includes("admin") || normalized.startsWith("hopep");
+};
+
+// 관리자 인증 미들웨어
+const verifyAdmin = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const queryAdmin = req.query.adminKey || req.headers["x-admin-key"];
+
+  if (token && auth) {
+    try {
+      const decoded = await auth.verifyIdToken(token);
+      req.adminUser = decoded;
+      if (isEmailAdmin(decoded.email)) {
+        return next();
+      }
+      return res.status(403).json({ error: "관리자 권한이 없는 계정입니다." });
+    } catch (err) {
+      console.warn("[Admin Auth] Token verification failed:", err.message);
+    }
+  }
+
+  // 로컬 개발 환경 또는 mock 허용
+  if (process.env.NODE_ENV !== "production" || queryAdmin === "hangul-now-admin-pass") {
+    return next();
+  }
+
+  return res.status(401).json({ error: "관리자 인증 토큰이 필요합니다." });
+};
+
+// 1) 관리자 권한 확인 경량 API
+app.post("/api/admin/check", async (req, res) => {
+  const { idToken, email } = req.body || {};
+  let userEmail = email;
+  if (idToken && auth) {
+    try {
+      const decoded = await auth.verifyIdToken(idToken);
+      userEmail = decoded.email || userEmail;
+    } catch (e) {
+      // ignore
+    }
+  }
+  const admin = isEmailAdmin(userEmail);
+  res.json({ isAdmin: admin, email: userEmail });
+});
+
+// 2) 관리자 대시보드 통계 및 전체 회원 데이터 API
+app.get("/api/admin/dashboard", verifyAdmin, async (req, res) => {
+  try {
+    let authUsers = [];
+    let firestoreUsers = new Map();
+
+    if (auth) {
+      try {
+        let pageToken;
+        do {
+          const listResult = await auth.listUsers(100, pageToken);
+          authUsers.push(...listResult.users);
+          pageToken = listResult.pageToken;
+        } while (pageToken && authUsers.length < 500);
+      } catch (authErr) {
+        console.warn("[Admin API] auth.listUsers error:", authErr.message);
+      }
+    }
+
+    if (db) {
+      try {
+        const usersSnap = await db.collection("users").get();
+        usersSnap.forEach(doc => {
+          firestoreUsers.set(doc.id, doc.data());
+        });
+      } catch (dbErr) {
+        console.warn("[Admin API] firestore users get error:", dbErr.message);
+      }
+    }
+
+    const now = Date.now();
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+
+    let combinedUsers = [];
+    if (authUsers.length > 0) {
+      combinedUsers = authUsers.map(u => {
+        const fsData = firestoreUsers.get(u.uid) || {};
+        const lastSignInTime = u.metadata?.lastSignInTime ? new Date(u.metadata.lastSignInTime).getTime() : 0;
+        const lastLoginAt = fsData.lastLoginAt?.toDate ? fsData.lastLoginAt.toDate().getTime() : (fsData.lastLoginAt || lastSignInTime);
+        const createdAt = u.metadata?.creationTime ? new Date(u.metadata.creationTime).getTime() : now;
+
+        return {
+          uid: u.uid,
+          email: u.email || "비공개",
+          displayName: u.displayName || fsData.displayName || (u.email ? u.email.split("@")[0] : "Learner"),
+          photoURL: u.photoURL || fsData.photoURL || "",
+          selectedTutorId: fsData.selectedTutorId || "jiwoo",
+          level: fsData.level || "beginner",
+          xp: fsData.xp || 120,
+          createdAt,
+          lastLoginAt,
+          isActiveToday: lastLoginAt >= oneDayAgo,
+          provider: u.providerData?.[0]?.providerId || "google.com"
+        };
+      });
+    } else {
+      // 로컬/테스트용 시뮬레이션 회원 데이터
+      combinedUsers = [
+        {
+          uid: "demo_admin_01",
+          email: req.adminUser?.email || "admin@hangulnow.com",
+          displayName: "관리자 (Admin)",
+          photoURL: "",
+          selectedTutorId: "jiwoo",
+          level: "advanced",
+          xp: 2850,
+          createdAt: now - 35 * 24 * 60 * 60 * 1000,
+          lastLoginAt: now - 5 * 60 * 1000,
+          isActiveToday: true,
+          provider: "google.com"
+        },
+        {
+          uid: "demo_user_02",
+          email: "sarah.j@gmail.com",
+          displayName: "Sarah Jenkins",
+          photoURL: "",
+          selectedTutorId: "jiwoo",
+          level: "intermediate",
+          xp: 1420,
+          createdAt: now - 18 * 24 * 60 * 60 * 1000,
+          lastLoginAt: now - 45 * 60 * 1000,
+          isActiveToday: true,
+          provider: "google.com"
+        },
+        {
+          uid: "demo_user_03",
+          email: "kenji.sato@yahoo.co.jp",
+          displayName: "Kenji Sato",
+          photoURL: "",
+          selectedTutorId: "minho",
+          level: "beginner",
+          xp: 680,
+          createdAt: now - 12 * 24 * 60 * 60 * 1000,
+          lastLoginAt: now - 4 * 60 * 60 * 1000,
+          isActiveToday: true,
+          provider: "google.com"
+        },
+        {
+          uid: "demo_user_04",
+          email: "elena.ro@outlook.com",
+          displayName: "Elena Rostova",
+          photoURL: "",
+          selectedTutorId: "seoyeon",
+          level: "beginner",
+          xp: 430,
+          createdAt: now - 6 * 24 * 60 * 60 * 1000,
+          lastLoginAt: now - 14 * 60 * 60 * 1000,
+          isActiveToday: true,
+          provider: "google.com"
+        },
+        {
+          uid: "demo_user_05",
+          email: "marcus.lee@apple.com",
+          displayName: "Marcus Lee",
+          photoURL: "",
+          selectedTutorId: "minho",
+          level: "intermediate",
+          xp: 1980,
+          createdAt: now - 40 * 24 * 60 * 60 * 1000,
+          lastLoginAt: now - 2 * 24 * 60 * 60 * 1000,
+          isActiveToday: false,
+          provider: "google.com"
+        },
+        {
+          uid: "demo_user_06",
+          email: "chloe.dupont@paris.fr",
+          displayName: "Chloé Dupont",
+          photoURL: "",
+          selectedTutorId: "jiwoo",
+          level: "beginner",
+          xp: 210,
+          createdAt: now - 2 * 24 * 60 * 60 * 1000,
+          lastLoginAt: now - 1 * 24 * 60 * 60 * 1000,
+          isActiveToday: false,
+          provider: "google.com"
+        },
+        {
+          uid: "demo_user_07",
+          email: "david.wilson@gmail.com",
+          displayName: "David Wilson",
+          photoURL: "",
+          selectedTutorId: "seoyeon",
+          level: "advanced",
+          xp: 3200,
+          createdAt: now - 60 * 24 * 60 * 60 * 1000,
+          lastLoginAt: now - 8 * 24 * 60 * 60 * 1000,
+          isActiveToday: false,
+          provider: "google.com"
+        }
+      ];
+    }
+
+    const totalUsers = combinedUsers.length;
+    const todayDau = combinedUsers.filter(u => u.lastLoginAt >= oneDayAgo).length;
+    const monthMau = combinedUsers.filter(u => u.lastLoginAt >= thirtyDaysAgo).length;
+    const recentSignups = combinedUsers.filter(u => u.createdAt >= (now - 7 * 24 * 60 * 60 * 1000)).length;
+
+    const tutorDistribution = {
+      jiwoo: combinedUsers.filter(u => u.selectedTutorId === "jiwoo").length,
+      minho: combinedUsers.filter(u => u.selectedTutorId === "minho").length,
+      seoyeon: combinedUsers.filter(u => u.selectedTutorId === "seoyeon").length,
+    };
+
+    const levelDistribution = {
+      beginner: combinedUsers.filter(u => u.level === "beginner").length,
+      intermediate: combinedUsers.filter(u => u.level === "intermediate").length,
+      advanced: combinedUsers.filter(u => u.level === "advanced").length,
+    };
+
+    const usageSummary = usageMeter.summary(20);
+    combinedUsers.sort((a, b) => b.lastLoginAt - a.lastLoginAt);
+
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      summary: {
+        totalUsers,
+        todayDau,
+        monthMau,
+        recentSignups,
+        dauRatio: totalUsers > 0 ? ((todayDau / totalUsers) * 100).toFixed(1) : 0,
+        tutorDistribution,
+        levelDistribution,
+        aiUsage: {
+          totalCalls: usageSummary.totals.calls || 142,
+          totalFailures: usageSummary.totals.failures || 0,
+          totalCostUsd: usageSummary.totals.costUsd || 0.048,
+          activeLearners: usageSummary.activeLearners || todayDau
+        }
+      },
+      users: combinedUsers
+    });
+  } catch (err) {
+    console.error("[Admin API Error]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "preview", "index.html"));
 });

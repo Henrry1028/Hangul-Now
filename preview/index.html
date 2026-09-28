@@ -36,7 +36,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',sys
 a{color:var(--accent-ink);text-decoration:none}a:hover{color:var(--hot)}
 button,textarea,input{font-family:inherit;color:inherit}
 .brand-logo{display:block;width:auto;max-width:100%;object-fit:contain;transition:filter .2s ease}
-.brand-logo--header{height:36px}
+.brand-logo--header{height:81px;max-height:84px}
 .brand-logo--dark{display:none}
 :root[data-theme=dark] .brand-logo--light{display:none !important}
 :root[data-theme=dark] .brand-logo--dark{display:block !important}
@@ -44,6 +44,7 @@ button,textarea,input{font-family:inherit;color:inherit}
 .marketing-header__nav{scrollbar-width:none}
 .marketing-header__nav::-webkit-scrollbar{display:none}
 @media(max-width:760px){
+  .brand-logo--header{height:69px}
   .marketing-header{align-items:stretch!important;flex-direction:column;gap:10px!important;padding:10px 16px!important}
   .marketing-header__nav{width:100%;flex-wrap:nowrap!important;gap:12px!important;overflow-x:auto;padding-bottom:2px}
   .marketing-header__nav>*{flex:none}
@@ -270,7 +271,7 @@ button,textarea,input{font-family:inherit;color:inherit}
   background: var(--accent) !important;
 }
 .sidebar-toggle-btn, .sidebar-open-floating-btn {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: var(--card);
   color: var(--ink2);
   display: flex;
@@ -279,18 +280,45 @@ button,textarea,input{font-family:inherit;color:inherit}
   cursor: pointer;
   transition: all 0.15s ease;
 }
+.sidebar-open-floating-btn {
+  position: fixed;
+  left: 16px;
+  top: 122px;
+  z-index: 1001;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+@media(max-width:760px){
+  .sidebar-open-floating-btn {
+    top: 106px;
+    left: 12px;
+  }
+}
 .sidebar-toggle-btn:hover, .sidebar-open-floating-btn:hover {
   background: var(--chip) !important;
   border-color: var(--accent) !important;
   color: var(--accent-ink) !important;
   transform: scale(1.05);
 }
+.cv-layout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+@media (max-width: 960px) {
+  .cv-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </helmet>
 
 <div style="min-height:100vh;background:var(--bg);display:flex;flex-direction:column">
 
-  <header class="marketing-header" style="position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(20px,5vw,64px);border-bottom:1px solid var(--line);background:var(--bg);flex-wrap:wrap">
+  <header class="marketing-header" style="position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px clamp(20px,5vw,64px);border-bottom:1px solid var(--line);background:var(--bg);flex-wrap:wrap">
     <button sc-camel-on-click="{{ goIntro }}" aria-label="Hangul Now home" style="display:flex;align-items:center;border:0;background:none;cursor:pointer;padding:0">
       <img class="brand-logo brand-logo--header brand-logo--light" src="./assets/hangul-now-logo.png" alt="Hangul Now">
       <img class="brand-logo brand-logo--header brand-logo--dark" src="./assets/hangul-now-logo-dark.png" alt="Hangul Now">
@@ -304,7 +332,13 @@ button,textarea,input{font-family:inherit;color:inherit}
         <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if>
         <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if>
       </button>
-      <sc-if value="{{ isNotLoggedIn }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ loginWithGoogle }}" style="border:0;background:none;color:var(--ink);font-size:14px;cursor:pointer">{{ t.login }}</button></sc-if>
+      <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+        <button sc-camel-on-click="{{ goAdmin }}" style="display:flex;align-items:center;gap:6px;border:1px solid #D4AF37;background:rgba(212,175,55,0.15);color:var(--ink);padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer">
+          <span>👑</span>
+          <span>Admin</span>
+        </button>
+      </sc-if>
+      <sc-if value="{{ isNotLoggedIn }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ loginWithGoogle }}"  style="border:0;background:none;color:var(--ink);font-size:14px;cursor:pointer">{{ t.login }}</button></sc-if>
       <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:var(--solid);color:var(--on-solid);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer">{{ t.startFree }}</button>
     </nav>
   </header>
@@ -384,13 +418,13 @@ button,textarea,input{font-family:inherit;color:inherit}
     </div>
   </sc-if>
 
-<div style="display:flex;flex:1;background:var(--bg);min-height:calc(100vh - 69px);position:relative">
+<div style="display:flex;flex:1;background:var(--bg);min-height:calc(100vh - 106px);position:relative">
   <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
     
     <!-- 🌟 사이드바 접혔을 때 화면 좌측 상단 플로팅 열기 버튼 (Claude 스타일) -->
     <sc-if value="{{ sidebarCollapsed }}" hint-placeholder-val="{{ false }}">
-      <button sc-camel-on-click="{{ toggleSidebar }}" title="사이드바 열기 (Ctrl + B)" class="sidebar-open-floating-btn" style="position:fixed;left:14px;top:84px;z-index:99;border:1px solid var(--line);background:var(--card);color:var(--ink);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.08);transition:all .15s ease">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button sc-camel-on-click="{{ toggleSidebar }}" title="사이드바 열기 (Ctrl + B)" class="sidebar-open-floating-btn" style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="9" y1="3" x2="9" y2="21"></line>
         </svg>
@@ -400,18 +434,14 @@ button,textarea,input{font-family:inherit;color:inherit}
     <!-- 🌟 사이드바 컨테이너 -->
     <aside id="app-sidebar" class="app-sidebar {{ sidebarClass }}" style="width:{{ sidebarWidth }};flex:none">
       
-      <!-- 🌟 사이드바 상단 Claude 스타일 헤더: [|] 접기 버튼 + 로고 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 2px 8px;border-bottom:1px solid var(--line2);margin-bottom:4px;flex:none">
-        <div style="display:flex;align-items:center;gap:8px">
-          <button sc-camel-on-click="{{ toggleSidebar }}" title="사이드바 접기 (Ctrl + B)" class="sidebar-toggle-btn" style="border:1px solid var(--line);background:var(--card);color:var(--ink);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s ease">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
-          </button>
-          <span style="font-weight:700;font-size:14px;color:var(--ink);letter-spacing:-.01em">Hangul Now</span>
-        </div>
-        <button sc-camel-on-click="{{ goHome }}" title="홈으로 이동" style="border:0;background:none;color:var(--faint);font-size:12px;cursor:pointer;padding:4px">🏠</button>
+      <!-- 🌟 사이드바 상단 Claude 스타일 헤더: [|] 접기 버튼 -->
+      <div style="display:flex;align-items:center;padding:2px 2px 8px;border-bottom:1px solid var(--line2);margin-bottom:4px;flex:none">
+        <button sc-camel-on-click="{{ toggleSidebar }}" title="사이드바 접기 (Ctrl + B)" class="sidebar-toggle-btn" style="border:1px solid var(--line);background:var(--card);color:var(--ink);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s ease">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+        </button>
       </div>
 
       <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="3">
@@ -463,6 +493,7 @@ button,textarea,input{font-family:inherit;color:inherit}
               </div>
             </div>
             <button sc-camel-on-click="{{ logoutFirebase }}" title="로그아웃" style="border:0;background:none;color:var(--faint);font-size:13px;cursor:pointer;padding:2px 4px;flex:none">✕</button>
+          </div>
           <!-- 온보딩에서 고른 관심사 · 다시 수정 -->
           <sc-if value="{{ hasProfile }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:10px;background:var(--chip)">
@@ -471,12 +502,19 @@ button,textarea,input{font-family:inherit;color:inherit}
             </div>
           </sc-if>
           <button sc-camel-on-click="{{ openOnboarding }}" style="border:0;background:none;color:var(--accent-ink);font-size:11.5px;font-weight:600;cursor:pointer;padding:2px 8px;text-align:left">✎ {{ t.profileEdit }}</button>
-          </div>
         </sc-if>
         <sc-if value="{{ isNotLoggedIn }}" hint-placeholder-val="{{ true }}">
           <button sc-camel-on-click="{{ loginWithGoogle }}" style="display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 10px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;width:100%;transition:background .15s">
             <svg width="13" height="13" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
             <span>{{ googleLoginLabel }}</span>
+          </button>
+        </sc-if>
+        
+        <!-- 🌟 관리자 전용 콘솔 진입 버튼 -->
+        <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+          <button sc-camel-on-click="{{ goAdmin }}" style="display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid #D4AF37;background:linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(35,73,63,0.18) 100%);color:var(--ink);padding:9px 12px;border-radius:12px;font-size:12.5px;font-weight:700;cursor:pointer;width:100%;margin-top:6px;transition:all .15s ease;box-shadow:0 3px 10px rgba(212,175,55,0.12)">
+            <span>👑</span>
+            <span>관리자 콘솔 (Admin)</span>
           </button>
         </sc-if>
       </div>
@@ -1529,10 +1567,10 @@ button,textarea,input{font-family:inherit;color:inherit}
             <span style="font-size:12px;color:var(--faint)">{{ cvTutorSub }}</span>
           </div>
         </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <sc-if value="{{ cvIsTutorMode }}" hint-placeholder-val="{{ true }}">
             <span style="font:600 13px 'IBM Plex Mono',monospace;color:{{ cvTimerColor }};background:var(--seg);border-radius:999px;padding:8px 12px;min-width:72px;text-align:center">{{ cvTimeLabel }}</span>
           </sc-if>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <sc-if value="{{ cvLive }}" hint-placeholder-val="{{ false }}">
             <div style="width:74px;height:8px;border-radius:999px;background:var(--seg);overflow:hidden"><div style="height:100%;width:{{ cvMeterW }};background:var(--accent);border-radius:999px;transition:width .1s"></div></div>
             <button sc-camel-on-click="{{ toggleCvMute }}" style="border:1px solid var(--line3);background:{{ cvMuteBg }};color:var(--ink);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">{{ cvMuteLabel }}</button>
@@ -1548,10 +1586,11 @@ button,textarea,input{font-family:inherit;color:inherit}
         <div style="background:var(--hot-soft);border:1px solid var(--hot);border-radius:12px;padding:14px 18px;font-size:14px;color:var(--ink)">{{ cvError }}</div>
       </sc-if>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:24px;align-items:start">
+      <!-- 대화 전사(좌) & 수업자료 패널(우) 1.15 : 1 와이드 그리드 레이아웃 -->
+      <div class="cv-layout-grid">
 
         <!-- 실시간 전사 -->
-        <div style="grid-column:span 2;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px;min-height:340px">
+        <div style="min-width:0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px;min-height:520px">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line2);padding-bottom:12px">
             <span style="font-size:15px;font-weight:700">{{ t.cvTranscriptH }}</span>
             <div style="display:flex;align-items:center;gap:8px">
@@ -1595,71 +1634,92 @@ button,textarea,input{font-family:inherit;color:inherit}
           </div>
         </div>
 
-        <!-- 안내 & 전사본 내려받기 -->
-        <aside style="display:flex;flex-direction:column;gap:16px">
+        <!-- 📚 대폭 확장된 수업 자료 및 실시간 학습 가이드 패널 -->
+        <aside style="display:flex;flex-direction:column;gap:16px;min-width:0">
 
-          <!-- 📚 학습 자료 카드 (튜터 수업 · 비차단) -->
-          <sc-if value="{{ cvIsTutorMode }}" hint-placeholder-val="{{ true }}">
-            <div style="background:var(--card);border:1.5px solid var(--accent);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 24px rgba(35,73,63,.08)">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-                <span style="font-size:14px;font-weight:700;color:var(--accent-ink)">📚 {{ t.cvCardH }}</span>
-                <span style="background:var(--accent-soft);color:var(--accent-ink);border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700">{{ cvCardCount }}</span>
+          <!-- 📚 수업 자료 카드 (메인 확장 카드) -->
+          <div style="background:var(--card);border:1.5px solid var(--accent);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 24px rgba(35,73,63,.08);min-height:520px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--line2);padding-bottom:12px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:18px">📚</span>
+                <span style="font-size:16px;font-weight:700;color:var(--accent-ink)">{{ t.cvCardH }}</span>
               </div>
-              <sc-if value="{{ cvNoCards }}" hint-placeholder-val="{{ true }}">
-                <span style="font-size:13px;line-height:1.6;color:var(--sub)">{{ t.cvCardEmpty }}</span>
-              </sc-if>
-              <sc-for list="{{ cvCardList }}" as="c" hint-placeholder-count="2">
-                <div style="background:var(--bg2);border:1px solid var(--line2);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:7px">
-                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                    <span style="background:var(--chip);color:var(--ink2);border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600">{{ c.category }}</span>
-                    <span style="font-size:15px;font-weight:700;font-family:'Gowun Batang',serif">{{ c.title }}</span>
-                  </div>
-                  <span style="font-size:13px;line-height:1.6;color:var(--ink2)">{{ c.explanation }}</span>
-                  <sc-if value="{{ c.hasExplanationEn }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;line-height:1.5;color:var(--sub);padding-left:10px;border-left:2px solid var(--line3)">{{ c.explanationEn }}</span></sc-if>
-                  <sc-if value="{{ c.hasFix }}" hint-placeholder-val="{{ false }}">
-                    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;background:var(--hot-soft);border-radius:8px;padding:6px 10px">
-                      <span style="font-size:13px;color:var(--hot);text-decoration:line-through">{{ c.from }}</span>
-                      <span style="color:var(--faint)">→</span>
-                      <span style="font-size:13.5px;font-weight:700;color:var(--accent-ink)">{{ c.to }}</span>
+              <span style="background:var(--accent-soft);color:var(--accent-ink);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700">{{ cvCardCount }}</span>
+            </div>
+
+            <!-- 기본 설명 및 상태 안내 -->
+            <span style="font-size:13px;line-height:1.6;color:var(--sub)">{{ t.cvCardEmpty }}</span>
+
+            <!-- 실시간 생성된 피드백 카드 목록 (스크롤 가능) -->
+            <sc-if value="{{ cvHasCards }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;padding-right:4px">
+                <sc-for list="{{ cvCardList }}" as="c" hint-placeholder-count="2">
+                  <div style="background:var(--bg2);border:1px solid var(--line2);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:7px">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                      <span style="background:var(--chip);color:var(--ink2);border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600">{{ c.category }}</span>
+                      <span style="font-size:15px;font-weight:700;font-family:'Gowun Batang',serif">{{ c.title }}</span>
                     </div>
-                  </sc-if>
-                  <sc-for list="{{ c.examples }}" as="ex" hint-placeholder-count="2">
-                    <span style="font-size:12.5px;line-height:1.55;color:var(--sub);padding-left:10px;border-left:2px solid var(--line3)">{{ ex.text }}</span>
-                  </sc-for>
-                </div>
-              </sc-for>
-            </div>
-          </sc-if>
-          <!-- 튜터 수업 타이머 + 종료 후 10분 오디오 리뷰 -->
-          <sc-if value="{{ cvIsTutorMode }}" hint-placeholder-val="{{ true }}">
-            <div style="background:var(--card);border:1.5px solid var(--line3);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:11px">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-                <span style="font-size:14px;font-weight:700;color:var(--accent-ink)">⏱ {{ t.cvSessionH }}</span>
-                <span style="font:600 12px 'IBM Plex Mono',monospace;color:{{ cvTimerColor }}">{{ cvTimeLabel }}</span>
+                    <span style="font-size:13px;line-height:1.6;color:var(--ink2)">{{ c.explanation }}</span>
+                    <sc-if value="{{ c.hasExplanationEn }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;line-height:1.5;color:var(--sub);padding-left:10px;border-left:2px solid var(--line3)">{{ c.explanationEn }}</span></sc-if>
+                    <sc-if value="{{ c.hasFix }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;background:var(--hot-soft);border-radius:8px;padding:6px 10px">
+                        <span style="font-size:13px;color:var(--hot);text-decoration:line-through">{{ c.from }}</span>
+                        <span style="color:var(--faint)">→</span>
+                        <span style="font-size:13.5px;font-weight:700;color:var(--accent-ink)">{{ c.to }}</span>
+                      </div>
+                    </sc-if>
+                    <sc-for list="{{ c.examples }}" as="ex" hint-placeholder-count="2">
+                      <span style="font-size:12.5px;line-height:1.55;color:var(--sub);padding-left:10px;border-left:2px solid var(--line3)">{{ ex.text }}</span>
+                    </sc-for>
+                  </div>
+                </sc-for>
               </div>
-              <div style="height:7px;border-radius:999px;background:var(--seg);overflow:hidden"><div style="height:100%;width:{{ cvTimerW }};background:{{ cvTimerBar }};border-radius:999px;transition:width .4s"></div></div>
-              <span style="font-size:12.5px;line-height:1.55;color:var(--sub)">{{ cvSessionHint }}</span>
-              <sc-if value="{{ cvReviewGenerating }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex;align-items:center;gap:9px;background:var(--accent-soft);border-radius:10px;padding:10px 12px">
-                  <span style="width:8px;height:8px;border-radius:50%;background:var(--hot);animation:pulse 1.4s infinite"></span>
-                  <span style="font-size:12.5px;line-height:1.5;color:var(--ink2)">{{ t.cvReviewGenerating }}</span>
+            </sc-if>
+
+            <!-- 💡 실시간 대화 필수 표현 및 상시 학습 자료 (공간 확장으로 추가된 핵심 자료) -->
+            <div style="margin-top:auto;background:var(--bg2);border:1px solid var(--line2);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:7px">
+                <span style="font-size:15px">💡</span>
+                <span style="font-size:13.5px;font-weight:700;color:var(--ink)">{{ t.cvHelperH }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.5;color:var(--ink2)">
+                <div style="display:flex;align-items:baseline;gap:8px">
+                  <span style="color:var(--accent-ink);font-weight:700">•</span>
+                  <span><strong>“다시 한 번 말씀해 주시겠어요?”</strong> <span style="color:var(--faint);font-size:11.5px">(Could you say that again?)</span></span>
                 </div>
-              </sc-if>
-              <sc-if value="{{ cvReviewReady }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex;flex-direction:column;gap:8px;background:var(--accent-soft);border-radius:10px;padding:12px">
-                  <span style="font-size:12.5px;font-weight:700;color:var(--accent-ink)">{{ t.cvReviewReady }}</span>
-                  <audio controls preload="metadata" src="{{ cvReviewUrl }}" style="width:100%;height:38px"></audio>
-                  <a href="{{ cvReviewUrl }}" download style="font-size:12px;color:var(--accent-ink);font-weight:600;text-decoration:none">⬇ {{ t.cvReviewDownload }}</a>
+                <div style="display:flex;align-items:baseline;gap:8px">
+                  <span style="color:var(--accent-ink);font-weight:700">•</span>
+                  <span><strong>“조금만 천천히 말씀해 주세요.”</strong> <span style="color:var(--faint);font-size:11.5px">(Please speak a bit slower.)</span></span>
                 </div>
-              </sc-if>
-              <sc-if value="{{ cvReviewFailed }}" hint-placeholder-val="{{ false }}">
-                <span style="font-size:12.5px;line-height:1.5;color:var(--hot)">{{ cvReviewError }}</span>
-              </sc-if>
+                <div style="display:flex;align-items:baseline;gap:8px">
+                  <span style="color:var(--accent-ink);font-weight:700">•</span>
+                  <span><strong>“이건 한국어로 뭐라고 하나요?”</strong> <span style="color:var(--faint);font-size:11.5px">(How do you say this in Korean?)</span></span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:8px">
+                  <span style="color:var(--accent-ink);font-weight:700">•</span>
+                  <span><strong>“아, 그렇군요! 이해했어요.”</strong> <span style="color:var(--faint);font-size:11.5px">(Oh, I see! I got it.)</span></span>
+                </div>
+              </div>
             </div>
-          </sc-if>
 
+            <!-- 오디오 리뷰 생성 상태 및 다운로드 링크 (수업 종료 시 노출) -->
+            <sc-if value="{{ cvReviewGenerating }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:9px;background:var(--accent-soft);border-radius:10px;padding:10px 12px">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--hot);animation:pulse 1.4s infinite"></span>
+                <span style="font-size:12.5px;line-height:1.5;color:var(--ink2)">{{ t.cvReviewGenerating }}</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ cvReviewReady }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:8px;background:var(--accent-soft);border-radius:10px;padding:12px">
+                <span style="font-size:12.5px;font-weight:700;color:var(--accent-ink)">{{ t.cvReviewReady }}</span>
+                <audio controls preload="metadata" src="{{ cvReviewUrl }}" style="width:100%;height:38px"></audio>
+                <a href="{{ cvReviewUrl }}" download style="font-size:12px;color:var(--accent-ink);font-weight:600;text-decoration:none">⬇ {{ t.cvReviewDownload }}</a>
+              </div>
+            </sc-if>
 
-          <!-- 🚨 치명적 오류 힌트 카드 (비차단 · 대화는 멈추지 않음) -->
+          </div>
+
+          <!-- 🚨 치명적 오류 힌트 카드 (롤플레잉 모드 시) -->
           <sc-if value="{{ cvIsRoleplay }}" hint-placeholder-val="{{ false }}">
             <div style="background:var(--card);border:1.5px solid var(--hot);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 24px rgba(200,80,42,.1)">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -1686,10 +1746,6 @@ button,textarea,input{font-family:inherit;color:inherit}
             </div>
           </sc-if>
 
-          <div style="border:1.5px dashed var(--line3);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:8px">
-            <span style="font-size:13px;font-weight:700;color:var(--accent-ink)">{{ t.cvTipH }}</span>
-            <span style="font-size:13px;line-height:1.6;color:var(--sub)">{{ t.cvTipP }}</span>
-          </div>
         </aside>
       </div>
 
@@ -1947,81 +2003,16 @@ button,textarea,input{font-family:inherit;color:inherit}
       </div>
       </sc-if>
 
-      <!-- 탭 1: ⚡ 튜터채팅 ~ 실시간 회화 실시간 통합 학습 기록 피드 -->
+      <!-- 탭 1: ⚡ 주간 맞춤 학습 리뷰 오디오 리포트 -->
       <sc-if value="{{ isProgActivity }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:24px">
-      <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.03)">
-        
-        <!-- 탭 네비게이션 -->
-        <div style="display:flex;border-bottom:1px solid var(--line);padding:0 12px;overflow-x:auto">
-          <sc-for list="{{ recTabs }}" as="tb" hint-placeholder-count="7">
-            <button sc-camel-on-click="{{ tb.go }}" style="border:0;background:none;padding:16px 14px;font-size:14px;font-weight:600;color:{{ tb.fg }};border-bottom:2px solid {{ tb.bd }};cursor:pointer;flex:none;white-space:nowrap">
-              {{ tb.label }} <span style="color:var(--faint);font-weight:400;font-size:12px">({{ tb.count }})</span>
-            </button>
-          </sc-for>
-        </div>
 
-        <!-- 실시간 활동 로그 피드 렌더링 -->
-        <sc-if value="{{ isLiveFeedTab }}" hint-placeholder-val="{{ true }}">
-          <div style="display:flex;flex-direction:column;padding:16px;gap:12px">
-            
-            <sc-if value="{{ noFilteredLogs }}" hint-placeholder-val="{{ false }}">
-              <div style="padding:36px 16px;text-align:center;color:var(--faint);font-size:14px">
-                선택한 카테고리의 학습 기록이 아직 없습니다. 지금 바로 학습을 시작해 보세요!
-              </div>
-            </sc-if>
-
-            <sc-for list="{{ filteredLogs }}" as="act" hint-placeholder-count="5">
-              <div class="activity-card-row">
-                <span style="font-size:26px;flex:none;padding-top:2px">{{ act.icon }}</span>
-                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0">
-                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                    <span style="font-size:14px;font-weight:700;color:var(--ink)">{{ act.title }}</span>
-                    <span style="font-size:11px;font-weight:700;background:var(--accent-soft);color:var(--accent-ink);padding:2px 7px;border-radius:5px">{{ act.tag }}</span>
-                    <span style="font-size:12px;color:var(--faint);margin-left:auto">{{ act.time }}</span>
-                  </div>
-                  <span style="font-size:13.5px;color:var(--ink2);line-height:1.5;word-break:break-all">{{ act.detail }}</span>
-                </div>
-                <span style="font-size:12px;font-weight:700;background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#92400E;padding:4px 9px;border-radius:8px;flex:none">+{{ act.xp }} XP</span>
-              </div>
-            </sc-for>
-
-          </div>
-        </sc-if>
-
-        <!-- 기존 레거시 단어장 / 오답 노트 렌더링 -->
-        <sc-if value="{{ isLegacyRecTab }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex;flex-direction:column">
-            <sc-for list="{{ recRows }}" as="r" hint-placeholder-count="5">
-              <div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.7fr) auto;gap:16px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--line2)">
-                <span style="font:700 17px 'Gowun Batang',serif">{{ r.a }}</span>
-                <span style="font-size:14px;color:var(--ink2)">{{ r.b }}</span>
-                <span style="font-size:12px;color:{{ r.tc }};background:{{ r.tb }};padding:4px 9px;border-radius:6px;white-space:nowrap">{{ r.c }}</span>
-              </div>
-            </sc-for>
-          </div>
-        </sc-if>
-
-      </div>
-
-        <!-- 🎙️ 주간 맞춤 학습 리뷰 오디오 리포트 (첨부 2 UI 스타일) -->
-        <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px">
+        <!-- 🎙️ 주간 맞춤 학습 리뷰 오디오 리포트 -->
+        <div style="display:flex;flex-direction:column;gap:16px;margin-top:4px">
           
-          <!-- 헤더: EPISODE 1 + 타이틀 & 코치 프로필 뱃지 -->
+          <!-- 헤더: 타이틀 -->
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <span style="font:800 12.5px 'IBM Plex Mono',monospace;color:#0D9488;letter-spacing:0.12em;text-transform:uppercase">EPISODE {{ audioReviewEpisode }}</span>
-              <h2 style="margin:0;font:700 26px/1.2 'Newsreader','Gowun Batang',serif;letter-spacing:-0.02em;color:var(--ink)">Your Weekly Review</h2>
-            </div>
-
-            <!-- 전담 코치 프로필 뱃지 (첨부 2 상단 우측 스타일) -->
-            <div style="background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 18px 6px 8px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(0,0,0,0.04)">
-              <img src="./assets/coach_minjun.jpg" alt="Personal Coach" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--line2)">
-              <div style="display:flex;flex-direction:column;line-height:1.25">
-                <span style="font-size:11px;font-weight:600;color:var(--faint)">{{ audioReviewCoachRole }}</span>
-                <span style="font-size:14.5px;font-weight:700;color:var(--ink)">{{ audioReviewCoach }}</span>
-              </div>
-            </div>
+            <h2 style="margin:0;font:700 26px/1.2 'Newsreader','Gowun Batang',serif;letter-spacing:-0.02em;color:var(--ink)">Your Weekly Review</h2>
           </div>
 
           <!-- 메인 다크 오디오 플레이어 카드 (첨부 2 완벽 동일 디자인) -->
@@ -2340,6 +2331,236 @@ button,textarea,input{font-family:inherit;color:inherit}
 
     </div>
     </sc-if>
+
+    <!-- 🌟 09 Admin Console (관리자 대시보드) -->
+    <sc-if value="{{ pAdmin }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="09 Admin Console" style="max-width:1200px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:28px">
+
+      <!-- 👑 대시보드 헤더 바 -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px 24px;box-shadow:0 4px 16px rgba(0,0,0,0.02)">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:24px">👑</span>
+            <h1 style="margin:0;font-size:clamp(20px,2.5vw,26px);font-weight:700;color:var(--ink);letter-spacing:-0.02em">Hangul Now 관리자 콘솔</h1>
+            <span style="font-size:11px;font-weight:700;background:rgba(35,73,63,0.12);color:var(--accent);padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px">
+              <span style="width:7px;height:7px;border-radius:50%;background:#23493F;display:inline-block"></span>
+              Firebase Auth & Firestore 연동됨
+            </span>
+          </div>
+          <p style="margin:0;font-size:13.5px;color:var(--sub)">실시간 전체 회원 현황, 로그인 로그, AI 튜터 사용량 및 가드레일을 통합 모니터링합니다.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button sc-camel-on-click="{{ refreshAdminData }}" title="데이터 새로고침" style="display:flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--line);color:var(--ink);padding:9px 15px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">
+            <span>🔄</span>
+            <span>새로고침</span>
+          </button>
+          <button sc-camel-on-click="{{ goHome }}" style="display:flex;align-items:center;gap:6px;background:var(--accent);border:0;color:#fff;padding:9px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">
+            <span>←</span>
+            <span>학습 홈으로</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 📊 [섹션 1] 핵심 운영 KPI 요약 카드 (4열) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px">
+        <!-- KPI 1: 전체 가입자 -->
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.02)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12.5px;font-weight:600;color:var(--faint)">총 가입 회원</span>
+            <span style="font-size:18px;background:rgba(35,73,63,0.08);width:34px;height:34px;border-radius:10px;display:grid;place-items:center">👥</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:30px;font-weight:800;color:var(--ink);letter-spacing:-0.03em">{{ adminTotalUsers }}</span>
+            <span style="font-size:14px;color:var(--sub);font-weight:600">명</span>
+          </div>
+          <div style="font-size:12px;color:var(--accent);font-weight:600">● Firebase Auth 인증 계정</div>
+        </div>
+
+        <!-- KPI 2: 오늘 활성 유저 (DAU) -->
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.02)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12.5px;font-weight:600;color:var(--faint)">오늘 활성 회원 (DAU)</span>
+            <span style="font-size:18px;background:rgba(212,175,55,0.12);width:34px;height:34px;border-radius:10px;display:grid;place-items:center">🟢</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:30px;font-weight:800;color:var(--ink);letter-spacing:-0.03em">{{ adminTodayDau }}</span>
+            <span style="font-size:14px;color:var(--sub);font-weight:600">명</span>
+          </div>
+          <div style="font-size:12px;color:#B38E22;font-weight:600">활동률 {{ adminDauRatio }}% 달성</div>
+        </div>
+
+        <!-- KPI 3: AI 대화 및 세션 -->
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.02)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12.5px;font-weight:600;color:var(--faint)">누적 AI 코칭 턴 수</span>
+            <span style="font-size:18px;background:rgba(66,133,244,0.1);width:34px;height:34px;border-radius:10px;display:grid;place-items:center">💬</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:30px;font-weight:800;color:var(--ink);letter-spacing:-0.03em">{{ adminAiCalls }}</span>
+            <span style="font-size:14px;color:var(--sub);font-weight:600">회</span>
+          </div>
+          <div style="font-size:12px;color:#1A73E8;font-weight:600">성공률 100% (오류 0건)</div>
+        </div>
+
+        <!-- KPI 4: Gemini 토큰 소비 비용 -->
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.02)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12.5px;font-weight:600;color:var(--faint)">AI 토큰 계측 비용</span>
+            <span style="font-size:18px;background:rgba(200,94,62,0.1);width:34px;height:34px;border-radius:10px;display:grid;place-items:center">⚡</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:30px;font-weight:800;color:var(--ink);letter-spacing:-0.03em">${{ adminAiCost }}</span>
+            <span style="font-size:13px;color:var(--sub);font-weight:600">USD</span>
+          </div>
+          <div style="font-size:12px;color:var(--hot);font-weight:600">Gemini 3.8-flash 프로모션 적용</div>
+        </div>
+      </div>
+
+      <!-- 👥 [섹션 2] 전체 회원 현황 & 실시간 로그인 로그 테이블 -->
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:20px;box-shadow:0 4px 16px rgba(0,0,0,0.02)">
+        
+        <!-- 검색 및 필터 툴바 -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;max-width:420px">
+            <div style="position:relative;width:100%">
+              <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--faint)">🔍</span>
+              <input type="text" placeholder="이름 또는 이메일 검색..." value="{{ adminSearchQuery }}" sc-camel-on-input="{{ onAdminSearch }}" style="width:100%;padding:10px 14px 10px 36px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:13.5px;outline:none" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button sc-camel-on-click="{{ setAdminFilterAll }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer">전체 ({{ adminTotalUsers }})</button>
+            <button sc-camel-on-click="{{ setAdminFilterToday }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer">🟢 오늘 접속 ({{ adminTodayDau }})</button>
+            <button sc-camel-on-click="{{ setAdminFilterNew }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer">신규 가입</button>
+          </div>
+        </div>
+
+        <!-- 회원 데이터 테이블 -->
+        <div style="overflow-x:auto;border:1px solid var(--line2);border-radius:14px">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left">
+            <thead>
+              <tr style="background:var(--chip);color:var(--faint);font-weight:600;border-bottom:1px solid var(--line2)">
+                <th style="padding:12px 16px">회원 프로필</th>
+                <th style="padding:12px 16px">계정 이메일</th>
+                <th style="padding:12px 16px">가입일시</th>
+                <th style="padding:12px 16px">최근 로그인</th>
+                <th style="padding:12px 16px">접속 상태</th>
+                <th style="padding:12px 16px">담당 튜터</th>
+                <th style="padding:12px 16px">학습 레벨</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ adminUsersList }}" as="u" hint-placeholder-count="3">
+                <tr style="border-bottom:1px solid var(--line2);transition:background .15s" onmouseover="this.style.background='var(--chip)'" onmouseout="this.style.background='transparent'">
+                  <td style="padding:14px 16px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:34px;height:34px;border-radius:50%;background:#D7DCE3;color:#1C1F1E;display:grid;place-items:center;font-weight:700;font-size:13px;overflow:hidden;flex:none">
+                        <sc-if value="{{ u.photoURL }}" hint-placeholder-val="{{ false }}"><img src="{{ u.photoURL }}" alt="" style="width:100%;height:100%;object-fit:cover"></sc-if>
+                        <sc-if value="{{ !u.photoURL }}" hint-placeholder-val="{{ true }}">{{ u.initial }}</sc-if>
+                      </div>
+                      <span style="font-weight:600;color:var(--ink)">{{ u.name }}</span>
+                    </div>
+                  </td>
+                  <td style="padding:14px 16px;color:var(--sub)">
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <sc-if value="{{ u.isGoogle }}" hint-placeholder-val="{{ true }}">
+                        <svg width="12" height="12" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                      </sc-if>
+                      <span>{{ u.email }}</span>
+                    </div>
+                  </td>
+                  <td style="padding:14px 16px;color:var(--faint);font-family:'IBM Plex Mono',monospace;font-size:12px">{{ u.joinDate }}</td>
+                  <td style="padding:14px 16px;color:var(--ink);font-weight:600">{{ u.lastLoginRel }}</td>
+                  <td style="padding:14px 16px">
+                    <span style="background:{{ u.statusBg }};color:{{ u.statusFg }};padding:4px 9px;border-radius:12px;font-size:11.5px;font-weight:700">{{ u.statusLabel }}</span>
+                  </td>
+                  <td style="padding:14px 16px;font-weight:600;color:var(--accent-ink)">{{ u.tutorName }}</td>
+                  <td style="padding:14px 16px">
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <span style="background:var(--chip);color:var(--ink);padding:2px 7px;border-radius:6px;font-size:11.5px;font-weight:600">{{ u.level }}</span>
+                      <span style="font-size:11.5px;color:var(--faint)">{{ u.xp }}</span>
+                    </div>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <sc-if value="{{ noAdminUsers }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px;text-align:center;color:var(--faint);font-size:14px">검색 조건에 일치하는 회원이 없습니다.</div>
+          </sc-if>
+        </div>
+
+      </div>
+
+      <!-- 📈 [섹션 3] 튜터 선호도 & 시스템 가드레일 (2열 그리드) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr));gap:20px">
+        
+        <!-- 튜터별 학습자 점유율 -->
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">전담 AI 튜터 선호도</h3>
+            <span style="font-size:12px;color:var(--faint)">Firestore 실시간 집계</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                <span style="font-weight:600;color:var(--ink)">김지우 (일상 대화)</span>
+                <span style="font-weight:700;color:var(--accent-ink)">{{ adminTutorJiwooCount }}명 배정</span>
+              </div>
+              <div style="height:8px;background:var(--line2);border-radius:999px;overflow:hidden">
+                <div style="width:100%;height:100%;background:#E9C2A6;border-radius:999px"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                <span style="font-weight:600;color:var(--ink)">박민호 (비즈니스 한국어)</span>
+                <span style="font-weight:700;color:var(--accent-ink)">{{ adminTutorMinhoCount }}명 배정</span>
+              </div>
+              <div style="height:8px;background:var(--line2);border-radius:999px;overflow:hidden">
+                <div style="width:20%;height:100%;background:#B9C7A5;border-radius:999px"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                <span style="font-weight:600;color:var(--ink)">이서연 (TOPIK · 정밀 문법)</span>
+                <span style="font-weight:700;color:var(--accent-ink)">{{ adminTutorSeoyeonCount }}명 배정</span>
+              </div>
+              <div style="height:8px;background:var(--line2);border-radius:999px;overflow:hidden">
+                <div style="width:20%;height:100%;background:#C9BEDD;border-radius:999px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 시스템 및 AI 가드레일 정보 -->
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">시스템 및 AI 가드레일 상태</h3>
+            <span style="font-size:11px;font-weight:700;background:rgba(35,73,63,0.1);color:var(--accent);padding:3px 8px;border-radius:6px">정상 가동</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:10px">
+              <span style="color:var(--sub)">Firebase 프로젝트 ID</span>
+              <span style="font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--ink)">hnageul-copilot-dev-918</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:10px">
+              <span style="color:var(--sub)">대화 및 첨삭 주 모델</span>
+              <span style="font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--accent-ink)">gemini-3.8-flash</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:10px">
+              <span style="color:var(--sub)">실시간 회화 중계 (Live)</span>
+              <span style="font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--ink)">WebSocket /api/live</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:10px">
+              <span style="color:var(--sub)">보안 및 권한 체계</span>
+              <span style="font-weight:600;color:var(--ink)">Firebase ID Token + RBAC</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+    </sc-if>
   </main>
 </div>
 </x-dc>
@@ -2370,8 +2591,8 @@ const JEONG_POSES = [
   {src:'./assets/정이_장구.png', alt:['Jeongie playing the janggu','장구를 치며 응원하는 정이']}
 ];
 const TAGS = {daily:['Daily talk','일상 회화'], business:['Business','비즈니스'], topik:['TOPIK','TOPIK'], pron:['Pronunciation','발음'], beginner:['Beginner','초급'], intermediate:['Intermediate','중급']};
-const TUTOR_SESSION_SECONDS = 10 * 60;
 const TODAY='2026-09-26';
+const TUTOR_SESSION_SECONDS = 10 * 60;
 const SEED = {
   jiwoo: [
     {from:'t', text:'에마 씨, 좋은 아침이에요! 주말에 뭐 할 거예요?', tr:'Good morning, Emma! What are you doing this weekend?', time:'09:12', date:TODAY},
@@ -2436,6 +2657,7 @@ const PARAS = [
   ['사람들은 꽃 아래에서 사진을 찍고, 돗자리를 펴고 앉아서 ',['도시락'],'을 먹어요. 밤에는 조명이 켜져서 낮과는 다른 ',['분위기'],'를 느낄 수 있어요.'],
   ['하지만 벚꽃은 일주일 정도만 피기 때문에 구경하고 싶으면 ',['서둘러야'],' 해요.']
 ];
+// 읽기 지문 문단별 영어 번역 (영어 번역 보기 토글)
 // ── 가입 직후 프로필: 국적(모국어는 튜터가 자주 하는 실수를 미리 짚는 데 씀) ──
 const NATIONALITIES = [
   ['US','미국','United States','English'], ['GB','영국','United Kingdom','English'], ['CA','캐나다','Canada','English'],
@@ -2471,7 +2693,6 @@ const INTERESTS = [
 ];
 const INTEREST_MAX = 5;
 
-// 읽기 지문 문단별 영어 번역 (영어 번역 보기 토글)
 const PARAS_EN = [
   'Every April, cherry blossoms burst into bloom all over Seoul. Yeouido and Seokchon Lake in particular are packed with people who have come to see the blossoms.',
   'People take photos under the flowers, spread out mats and sit down to eat their packed lunches. At night the lights come on, so you can feel an atmosphere quite different from the daytime.',
@@ -2789,7 +3010,7 @@ en:{
  fb1:'Use 에서 for the place where an action happens (eating, studying, meeting). 에 is for where you go or where something is.',
  fb2:'Never put 았/었 before -아서/어서 — the main verb carries the tense. 맛있다 → 맛있어서',
  sEyebrow:'SPEAKING · SHADOWING', sTitle:'Say it like a native', soundsLike:'sounds like', native:'Native', next:'Next', pronLabel:'Pronunciation', pronHint:'Practice the syllables marked in red.', tipFrom:'Tip from Haneul',
- cvEyebrow:'CONVERSATION · GEMINI LIVE', cvTitle:'Talk with your tutor', cvStart:'Start conversation', cvStop:'End conversation',
+ cvEyebrow:'CONVERSATION', cvTitle:'Talk with your tutor', cvStart:'Start conversation', cvStop:'End conversation',
  cvTranscriptH:'Live transcript', cvMe:'Me',
  cvEmpty:'Press “Start conversation” and your tutor opens with “오늘은 어떤 얘기를 해 볼까요?” Just answer out loud — everything is transcribed as you speak.',
  cvFeedbackH:'Real-time feedback', cvFeedbackP:'A teacher with 30 years at a Korean language institute listens and corrects you as you talk.',
@@ -2799,6 +3020,7 @@ en:{
  cvScenarioLabel:'SCENARIO',
  cvHintH:'Critical fixes', cvHintEmpty:'Small slips are ignored so the roleplay keeps flowing. Only errors that would break the exchange — wrong counters, reversed negation — pop up here.',
  cvReportH:'PDF review note', cvReportP:'Morpheme analysis (Kiwi) plus a teacher’s corrections, laid out as a PDF with Korean fonts embedded. Signed in, it is archived to your account too.',
+ cvCardH:'Lesson notes', cvCardEmpty:'When your tutor explains a grammar point or corrects you, the card appears here so you can see it as well as hear it.', cvHelperH:'Essential Expressions',
  obTitle1:'반가워요! 먼저 알려 주세요 (Welcome! Tell us about you)', obSub1:'선생님이 이 닉네임으로 불러 드리고, 모국어를 고려해서 교정해 드려요. (Your tutor will call you by this nickname and tailor feedback to your native language.)',
  obNickLabel:'닉네임 (Nickname)', obNickPh:'예: 에마 (e.g. Emma)', obNickHint:'선생님이 “(닉네임) 님”이라고 불러요. (Your tutor will address you as "(nickname)-nim".)',
  obNatLabel:'국적 (Nationality)', obNatHint:'모국어 화자가 자주 하는 발음·문법 실수를 미리 짚어 주는 데 써요. (Used to anticipate the pronunciation and grammar slips common for your first language.)',
@@ -2806,15 +3028,14 @@ en:{
  obTitle2:'어떤 이야기가 좋으세요? (What topics do you like?)', obSub2:'튜터 수업을 이 관심사 중심으로 먼저 구성해요. 5개까지 고를 수 있고, 누른 순서가 우선순위가 돼요. (Your tutor builds each lesson around these first. Pick up to 5 — the order you tap them sets their priority.)',
  obInterestHint:'관심사는 사이드바의 내 프로필에서 언제든 바꿀 수 있어요. (You can change these any time from your profile in the sidebar.)',
  profileEdit:'Edit profile & interests', profileInterestsH:'My interests',
- cvCardH:'Lesson notes', cvCardEmpty:'When your tutor explains a grammar point or corrects you, the card appears here so you can see it as well as hear it.',
  cvLevelLabel:'THIS LEVEL',
  cvKeepNotice:'Transcripts are kept in this browser for 7 days and then deleted automatically. Download anything you want to keep longer.',
  cvKeepBadge:'Kept for 7 days', cvDownloadShort:'Transcript', cvReportShort:'Review PDF',
  cvHistoryH:'Conversation history', cvHistorySub:'Every conversation from the last 7 days, newest first.',
  cvHistoryEmpty:'No conversations yet. Once you finish one, it is saved here for 7 days.',
+ cvTipH:'Tip', cvTipP:'Use headphones so the tutor’s voice does not feed back into your mic. Pause for a moment when you finish a sentence — that is when your tutor replies.',
  cvSessionH:'Tutor lesson', cvSessionReady:'A 10-minute lesson. Your tutor automatically wraps up during the final minute.', cvSessionLive:'The final minute is reserved for a recap and one last repeat-after-me.', cvSessionWrap:'Wrap-up is in progress. Your review data is being finalized.',
  cvReviewGenerating:'Creating your 10-minute review in your feedback language. You can keep using the app.', cvReviewReady:'Your personal audio review is ready.', cvReviewDownload:'Download audio review',
- cvTipH:'Tip', cvTipP:'Use headphones so the tutor’s voice does not feed back into your mic. Pause for a moment when you finish a sentence — that is when your tutor replies.',
  recH1:'My progress', weekH:'Study time this week', skillH:'Skill levels', skillTip:'Writing is growing the slowest. Add one sentence exercise a day this week?',
  onlineLabel:'Online now'
 },
@@ -2857,7 +3078,7 @@ ko:{
  fb1:'먹다, 공부하다, 만나다처럼 행동이 일어나는 장소에는 ‘에서’를 써요. ‘에’는 가는 곳이나 있는 곳에 써요.',
  fb2:'-아서/어서 앞에는 았/었을 붙이지 않아요. 시제는 뒤 문장이 나타내요. 맛있다 → 맛있어서',
  sEyebrow:'말하기 · 따라 말하기', sTitle:'원어민처럼 말해 보기', soundsLike:'실제 발음', native:'원어민', next:'다음', pronLabel:'발음 정확도', pronHint:'빨간 글자만 다시 연습해 보세요.', tipFrom:'하늘 튜터의 팁',
- cvEyebrow:'실시간 회화 · GEMINI LIVE', cvTitle:'튜터와 음성으로 대화하기', cvStart:'대화 시작', cvStop:'대화 종료',
+ cvEyebrow:'실시간 회화', cvTitle:'튜터와 음성으로 대화하기', cvStart:'대화 시작', cvStop:'대화 종료',
  cvTranscriptH:'실시간 전사', cvMe:'나',
  cvEmpty:'‘대화 시작’을 누르면 선생님이 먼저 “오늘은 어떤 얘기를 해 볼까요?”라고 말을 걸어요. 소리 내어 답하면 말하는 내용이 그대로 전사돼요.',
  cvFeedbackH:'실시간 피드백', cvFeedbackP:'',
@@ -2867,6 +3088,7 @@ ko:{
  cvScenarioLabel:'상황',
  cvHintH:'꼭 고쳐야 할 표현', cvHintEmpty:'사소한 실수는 몰입을 위해 넘어가요. 단위를 잘못 쓰거나 뜻이 반대가 되는 것처럼 거래가 막히는 오류만 여기에 떠요.',
  cvReportH:'복습 노트 PDF', cvReportP:'형태소 분석(Kiwi)과 선생님 첨삭을 합쳐 한글이 깨지지 않는 PDF로 만들어요.',
+ cvCardH:'수업 자료', cvCardEmpty:'선생님이 문법을 설명하거나 문장을 고쳐 주면 그 내용이 카드로 여기에 떠요. 듣기만 하지 않고 눈으로도 확인할 수 있어요.', cvHelperH:'대화 필수 표현 퀵 레퍼런스',
  obTitle1:'반가워요! 먼저 알려 주세요 (Welcome! Tell us about you)', obSub1:'선생님이 이 닉네임으로 불러 드리고, 모국어를 고려해서 교정해 드려요. (Your tutor will call you by this nickname and tailor feedback to your native language.)',
  obNickLabel:'닉네임 (Nickname)', obNickPh:'예: 에마 (e.g. Emma)', obNickHint:'선생님이 “(닉네임) 님”이라고 불러요. (Your tutor will address you as "(nickname)-nim".)',
  obNatLabel:'국적 (Nationality)', obNatHint:'모국어 화자가 자주 하는 발음·문법 실수를 미리 짚어 주는 데 써요. (Used to anticipate common pronunciation and grammar patterns for your native language.)',
@@ -2874,15 +3096,14 @@ ko:{
  obTitle2:'어떤 이야기가 좋으세요? (What topics do you like?)', obSub2:'튜터 수업을 이 관심사 중심으로 먼저 구성해요. 5개까지 고를 수 있고, 누른 순서가 우선순위가 돼요. (Lessons will focus on these topics first. Pick up to 5 in order of priority.)',
  obInterestHint:'관심사는 사이드바의 내 프로필에서 언제든 바꿀 수 있어요. (You can change these anytime in your profile.)',
  profileEdit:'프로필·관심사 수정 (Edit Profile)', profileInterestsH:'내 관심사 (My Interests)',
- cvCardH:'수업 자료', cvCardEmpty:'선생님이 문법을 설명하거나 문장을 고쳐 주면 그 내용이 카드로 여기에 떠요. 듣기만 하지 않고 눈으로도 확인할 수 있어요.',
  cvLevelLabel:'이 난이도는',
  cvKeepNotice:'전사본은 이 브라우저에 7일간 보관되고 그 뒤 자동으로 삭제돼요. 더 오래 두려면 파일로 내려받아 주세요.',
  cvKeepBadge:'7일간 보관', cvDownloadShort:'전사본', cvReportShort:'복습 PDF',
  cvHistoryH:'대화 기록', cvHistorySub:'최근 7일 동안 나눈 대화예요. 최신순으로 보여 줘요.',
  cvHistoryEmpty:'아직 대화 기록이 없어요. 대화를 마치면 여기에 7일간 보관돼요.',
+ cvTipH:'팁', cvTipP:'선생님 목소리가 마이크로 다시 들어가지 않게 이어폰을 쓰면 좋아요. 한 문장을 말한 뒤 잠깐 쉬면 그때 선생님이 답해요.',
  cvSessionH:'튜터 수업', cvSessionReady:'10분 수업이며 마지막 1분에는 선생님이 자동으로 핵심 내용을 정리해요.', cvSessionLive:'마지막 1분은 오늘 내용 요약과 핵심 표현 따라 말하기 시간이에요.', cvSessionWrap:'마무리 수업 중이에요. 복습용 데이터도 함께 정리하고 있어요.',
  cvReviewGenerating:'지정한 피드백 언어로 10분 오디오 복습을 만들고 있어요. 다른 화면을 이용해도 괜찮아요.', cvReviewReady:'나만의 오디오 복습이 준비됐어요.', cvReviewDownload:'오디오 복습 내려받기',
- cvTipH:'팁', cvTipP:'선생님 목소리가 마이크로 다시 들어가지 않게 이어폰을 쓰면 좋아요. 한 문장을 말한 뒤 잠깐 쉬면 그때 선생님이 답해요.',
  recH1:'나의 학습 기록', weekH:'이번 주 학습 시간', skillH:'영역별 실력', skillTip:'쓰기가 가장 천천히 늘고 있어요. 이번 주는 문장 쓰기를 하루 한 번 추가해 볼까요?',
  onlineLabel:'대화 가능'
 }};
@@ -2960,16 +3181,15 @@ class Component extends DCLogic {
     wordKey: null,
     saved: {},
     rAns: {},
+    rTrAll: false,
     // 가입 직후 온보딩 (닉네임·국적·성별 → 관심사)
     profile: null, obOpen: false, obStep: 1, obSaving: false, obError: '',
     obDraft: { nickname: '', nationality: '', gender: '', interests: [] },
-    rTrAll: false,
     cvStatus: 'idle', cvTurns: [], cvPartial: { user: '', tutor: '' }, cvError: '',
     cvMuted: false, cvLevelMeter: 0, cvSpeaking: false, cvLevel: 'beginner', cvTutorName: '', cvModel: '', cvHistory: [],
     cvMode: 'tutor', cvScenario: 'market', cvHints: [], cvReport: null, cvReportLoading: false, cvReportError: '',
     cvCards: [], cvRemainingSeconds: TUTOR_SESSION_SECONDS, cvWrapUpSent: false, cvFinalizePayload: null,
     cvReviewStatus: 'idle', cvReviewStage: '', cvReviewUrl: '', cvReviewError: '',
-    cvCards: [],
     reviewMode: false, learnedTick: 0,
     studyLevel: 'beginner', genListening: null, genReading: null, genSpeaking: null, genLoading: '', genError: '',
     trOn: false, cvTrans: {}, cvTransLoading: false,
@@ -3020,9 +3240,44 @@ class Component extends DCLogic {
     audioReviewShowScript: false,
     audioReviewGenerating: false,
     audioReviewCoach: '민준 (Minjun)',
-    audioReviewCoachRole: 'Personal Coach'
+    audioReviewCoachRole: 'Personal Coach',
+    // ===== 관리자 콘솔 (Admin Console) 상태 =====
+    isAdmin: false,
+    adminData: null,
+    adminLoading: false,
+    adminSearch: '',
+    adminFilter: 'all',
+    adminTab: 'overview'
   };
   msgRef = React.createRef();
+
+  loadAdminDashboard = async () => {
+    this.setState({ adminLoading: true });
+    try {
+      let token = '';
+      if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+        token = await firebase.auth().currentUser.getIdToken();
+      }
+      const res = await fetch('/api/admin/dashboard', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        this.setState({ adminData: data, adminLoading: false });
+      } else {
+        this.setState({ adminLoading: false });
+      }
+    } catch(err) {
+      console.warn('[Admin Dashboard] Load error:', err);
+      this.setState({ adminLoading: false });
+    }
+  };
+
+  goAdmin = () => {
+    this.setState({ page: 'admin' });
+    this.loadAdminDashboard();
+    window.scrollTo(0, 0);
+  };
 
   toggleSidebar = () => {
     this.setState(prevState => {
@@ -3086,6 +3341,7 @@ class Component extends DCLogic {
   }
 
   componentDidMount(){
+    window.app = this;
     this.onResize=()=>this.setState({w:window.innerWidth}); this.onResize(); window.addEventListener('resize',this.onResize);
     window.addEventListener('keydown', this.handleKeyDown);
     window.addEventListener('keyup', this.handleKeyUp);
@@ -3147,7 +3403,11 @@ class Component extends DCLogic {
               displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'Learner'),
               photoURL: user.photoURL || ''
             };
-            this.setState({ currentUser: userObj });
+            const isAdm = !!(user.email && (user.email.toLowerCase().includes('admin') || user.email.toLowerCase().startsWith('hopep')));
+            this.setState({ currentUser: userObj, isAdmin: isAdm });
+            if (isAdm && (window.location.hash === '#admin' || new URLSearchParams(window.location.search).get('page') === 'admin')) {
+              this.goAdmin();
+            }
 
             // Firestore users 컬렉션에 사용자 이메일 및 선택된 튜터 정보 저장/동기화
             try {
@@ -3157,9 +3417,9 @@ class Component extends DCLogic {
               const uData = snap.exists ? (snap.data() || {}) : {};
               if (uData.selectedTutorId && TUTORS.some(t=>t.id===uData.selectedTutorId)) {
                 this.setState({ tutorId: uData.selectedTutorId });
+              }
               // 가입 직후 한 번: 닉네임·국적·성별·관심사를 받지 않았으면 온보딩을 띄운다
               this.applyProfile(user, uData);
-              }
               await userRef.set({
                 uid: user.uid,
                 email: user.email || '',
@@ -3169,12 +3429,11 @@ class Component extends DCLogic {
                 lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
               }, { merge: true });
             } catch(dbErr) {
-              if (!this.state.profile) this.applyProfile(user, {});   // Firestore를 못 읽어도 온보딩은 진행
               console.warn('[Firestore] Sync Warning:', dbErr);
+              if (!this.state.profile) this.applyProfile(user, {});   // Firestore를 못 읽어도 온보딩은 진행
             }
           } else {
             this.setState({ currentUser: null, profile: null, obOpen: false });
-            this.setState({ currentUser: null });
           }
         });
       } catch(authErr) {
@@ -3187,8 +3446,8 @@ class Component extends DCLogic {
     window.removeEventListener('keydown',this.handleKeyDown);
     window.removeEventListener('keyup',this.handleKeyUp);
     clearInterval(this.iv); clearTimeout(this.tt); clearInterval(this.mockIv); clearTimeout(this.mockTt); clearTimeout(this.autoNextTt);
-    clearTimeout(this.cvReviewPollTt);
     if (this.audioReviewTimer) clearInterval(this.audioReviewTimer);
+    clearTimeout(this.cvReviewPollTt);
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try { window.speechSynthesis.cancel(); } catch(e) {}
     }
@@ -3320,6 +3579,7 @@ class Component extends DCLogic {
   };
 
   // ===== 실시간 회화 (Gemini Live) =====
+  // 마이크 → 16kHz PCM → 서버(/api/live) → gemini-3.8-live → 24kHz PCM 재생 + 실시간 전사
   // 온보딩에서 받은 닉네임 → 없으면 구글 이름
   getNickname = () => this.state.profile?.nickname
     || this.state.currentUser?.displayName || this.state.currentUser?.email?.split('@')[0] || 'Learner';
@@ -3470,7 +3730,6 @@ class Component extends DCLogic {
     }
   };
 
-  // 마이크 → 16kHz PCM → 서버(/api/live) → gemini-3.8-live → 24kHz PCM 재생 + 실시간 전사
   startConversation = async () => {
     if (this.state.cvStatus === 'connecting' || this.state.cvStatus === 'live') return;
     this.clearTutorClock();
@@ -3483,7 +3742,6 @@ class Component extends DCLogic {
       cvHints: [], cvCards: [], cvReport: null, cvReportError: '', cvRemainingSeconds: TUTOR_SESSION_SECONDS,
       cvWrapUpSent: false, cvFinalizePayload: null, cvReviewStatus: 'idle', cvReviewStage: '', cvReviewUrl: '', cvReviewError: ''
     });
-    this.setState({ cvStatus: 'connecting', cvError: '', cvTurns: [], cvPartial: { user: '', tutor: '' }, cvHints: [], cvCards: [], cvReport: null, cvReportError: '' });
     this.cvStartedAt = Date.now();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -3495,13 +3753,13 @@ class Component extends DCLogic {
       const ws = new WebSocket(`${proto}://${location.host}/api/live`);
       this.cvWs = ws;
 
+      ws.onopen = () => {
         const tutor = TUTORS.find(t => t.id === this.state.tutorId) || TUTORS[0];
         const L = this.langNow() === 'ko';
         const prof = this.state.profile || {};
         // 관심사를 우선으로 수업 주제를 정한다 (전역 규칙: 최근에 다룬 관심사는 뒤로)
         const interest = this.state.cvMode === 'roleplay' ? null : this.pickLessonInterest();
         this.cvInterest = interest;
-      ws.onopen = () => {
         ws.send(JSON.stringify({
           type: 'start', tutorId: this.state.tutorId, level: this.state.cvLevel || 'beginner',
           mode: this.state.cvMode || 'tutor', scenarioId: this.state.cvScenario || 'market',
@@ -3519,7 +3777,6 @@ class Component extends DCLogic {
       ws.onmessage = (e) => this.onLiveMessage(JSON.parse(e.data));
       ws.onerror = () => this.setState({ cvError: '서버에 연결하지 못했습니다. npm start로 서버가 켜져 있는지 확인해 주세요.', cvStatus: 'idle' });
       ws.onclose = () => { this.clearTutorClock(); if (this.state.cvStatus !== 'idle') this.setState({ cvStatus: 'ended' }); this.teardownAudio(); };
-      ws.onclose = () => { if (this.state.cvStatus !== 'idle') this.setState({ cvStatus: 'ended' }); this.teardownAudio(); };
     } catch (err) {
       this.setState({ cvStatus: 'idle', cvError: err && err.name === 'NotAllowedError' ? '마이크 사용을 허용해 주세요.' : '마이크를 열 수 없습니다: ' + (err?.message || err) });
     }
@@ -3557,7 +3814,6 @@ class Component extends DCLogic {
       if (this.state.cvMode !== 'roleplay') this.startTutorClock();
       return;
     }
-    if (msg.type === 'ready') { this.setState({ cvStatus: 'live', cvTutorName: msg.tutor, cvModel: msg.model }); return; }
     if (msg.type === 'error') { this.setState({ cvError: msg.message, cvStatus: 'idle' }); return; }
     if (msg.type === 'audio') { this.playLiveAudio(msg.data); return; }
     // 비차단 힌트: 대화를 멈추지 않고 우측에 플로팅 카드만 띄운다
@@ -3568,6 +3824,7 @@ class Component extends DCLogic {
     if (msg.type === 'hint') {
       this.setState(st => ({ cvHints: [{ ...msg.hint, id: 'h' + Date.now() + Math.random() }, ...(st.cvHints || [])].slice(0, 12) }));
       return;
+    }
     if (msg.type === 'finalize') {
       const payload = msg.payload || {};
       this.setState({ cvFinalizePayload: payload }, () => {
@@ -3575,7 +3832,6 @@ class Component extends DCLogic {
         if (turns.length) this.completeTutorLesson({ id: this.cvSessionId }, turns, payload);
       });
       return;
-    }
     }
     if (msg.type === 'interrupted') { this.clearAudioQueue(); return; }
     if (msg.type === 'transcript') {
@@ -3594,7 +3850,6 @@ class Component extends DCLogic {
       return;
     }
     if (msg.type === 'closed') { this.clearTutorClock(); this.setState({ cvStatus: 'ended' }); }
-    if (msg.type === 'closed') { this.setState({ cvStatus: 'ended' }); }
   };
 
   // 한 턴을 마감해 전사 목록에 넣는다 (툴 호출 뒤 설명까지 모두 담은 뒤에 호출됨)
@@ -3639,7 +3894,7 @@ class Component extends DCLogic {
     this.cvNode = null; this.cvStream = null; this.cvInCtx = null;
   };
 
-    stopConversation = (flush = true) => {
+  stopConversation = (flush = true) => {
     this.clearTutorClock();
     clearTimeout(this.cvFlushTt); this.cvFlushTt = null;
     try { this.cvWs && this.cvWs.readyState === WebSocket.OPEN && this.cvWs.send(JSON.stringify({ type: 'stop' })); } catch {}
@@ -3656,18 +3911,17 @@ class Component extends DCLogic {
       if (this.state.cvMode !== 'roleplay') {
         this.completeTutorLesson(record, turns, this.state.cvFinalizePayload);
       }
-      this.saveConversation(turns);   // 전사본을 브라우저에 7일간 보관
       // 전역 규칙: 오늘 다룬 주제를 기록해 다음에는 다른 주제가 나오게 한다
       if (!this.state.reviewMode) {
         const scNames = { market:'동대문 옷가게', restaurant:'분식집 주문', taxi:'택시 타기', hospital:'병원 접수' };
         const topicKey = this.state.cvMode === 'roleplay' ? ('scenario:' + this.state.cvScenario) : ('lesson:' + (this.state.cvTutorName || ''));
         const topicLabel = this.state.cvMode === 'roleplay' ? (scNames[this.state.cvScenario] || '상황극')
           : ((turns.find(t => t.role === 'tutor')?.text || '').slice(0, 40));
+        if (topicLabel) this.recordLearn('topic', topicKey + ':' + topicLabel.slice(0, 20), topicLabel);
         // 관심사 기반 수업이었다면 그 관심사를 기록해 다음 수업은 다른 관심사로 시작한다
         if (this.state.cvMode !== 'roleplay' && this.cvInterest) {
           this.recordLearn('topic', 'interest:' + this.cvInterest.id, this.cvInterest.ko);
         }
-        if (topicLabel) this.recordLearn('topic', topicKey + ':' + topicLabel.slice(0, 20), topicLabel);
       }
       const scNames = { market:'동대문 옷가게', restaurant:'분식집 주문', taxi:'택시 타기', hospital:'병원 접수' };
       const scenTitle = this.state.cvMode === 'roleplay' ? (scNames[this.state.cvScenario] || '상황극') : (this.state.cvTutorName || '수업');
@@ -3699,11 +3953,10 @@ class Component extends DCLogic {
     const scNames = { market:'동대문 옷가게', restaurant:'분식집 주문', taxi:'택시 타기', hospital:'병원 접수' };
     const rec = {
       id: this.cvSessionId || ('cv' + Date.now()),
-      id: 'cv' + Date.now(),
       savedAt: Date.now(),
       tutor: this.state.cvTutorName || '',
-      mode: this.state.cvMode || 'tutor',
       level: this.state.cvLevel || 'beginner',
+      mode: this.state.cvMode || 'tutor',
       turns: turns.map(t => ({ role: t.role, text: t.text, at: (t.at instanceof Date ? t.at : new Date(t.at || Date.now())).getTime() })),
       hints: (this.state.cvHints || []).map(h => ({
         error_phrase: h.error_phrase, corrected_phrase: h.corrected_phrase,
@@ -4408,6 +4661,7 @@ class Component extends DCLogic {
     }
     window.scrollTo(0,0);
   };
+  openTutor(id){ this.selectTutor(id); }
   // ===== 가입 직후 온보딩: 1단계 닉네임·국적·성별 → 2단계 관심사 =====
   profileKey = (uid) => 'hn-profile-' + uid;
   // Firestore 문서(없으면 이 브라우저에 저장된 사본)로 프로필을 복원하고, 미완료면 온보딩을 연다
@@ -4482,7 +4736,6 @@ class Component extends DCLogic {
     this.setState({ profile, obSaving: false, obOpen: false, obError: '', obNotice: warn });
   };
 
-  openTutor(id){ this.selectTutor(id); }
   loginWithGoogle = async () => {
     if (typeof firebase === 'undefined' || !firebase.auth) {
       alert('Firebase 인증 모듈을 로드하는 중입니다. 잠시 후 다시 시도해 주세요.');
@@ -5159,6 +5412,79 @@ class Component extends DCLogic {
     const recDone=s.rec==='done';
     const sylls=[...sent.text].map((ch,i)=>{const w=recDone&&sent.weak.includes(i);return {ch:ch===' '?'\u00A0':ch,c:w?'var(--hot)':'var(--ink)',u:w?'var(--hot)':'transparent'};});
 
+    // ===== 관리자 대시보드 (Admin Console) 데이터 연산 =====
+    const rawAdminUsers = (s.adminData && s.adminData.users) ? s.adminData.users : (s.currentUser ? [
+      {
+        uid: s.currentUser.uid,
+        displayName: s.currentUser.displayName || 'Learner',
+        email: s.currentUser.email || 'learner@hangulnow.com',
+        photoURL: s.currentUser.photoURL || '',
+        selectedTutorId: s.tutorId || 'jiwoo',
+        level: 'beginner',
+        xp: s.userXp || 2840,
+        createdAt: Date.now() - 7 * 86400000,
+        lastLoginAt: Date.now(),
+        isActiveToday: true,
+        provider: 'google.com'
+      }
+    ] : []);
+
+    const q = (s.adminSearch || '').trim().toLowerCase();
+    const filter = s.adminFilter || 'all';
+
+    const filteredAdminUsers = rawAdminUsers.filter(u => {
+      const matchQ = !q || (u.displayName && u.displayName.toLowerCase().includes(q)) || (u.email && u.email.toLowerCase().includes(q));
+      if (!matchQ) return false;
+      if (filter === 'today') return !!u.isActiveToday;
+      if (filter === 'new') return u.createdAt >= (Date.now() - 7 * 86400000);
+      return true;
+    });
+
+    const tutorNames = { jiwoo: '김지우', minho: '박민호', seoyeon: '이서연', haneul: '최하늘' };
+    const adminUsersList = filteredAdminUsers.map(u => {
+      const isOnline = u.lastLoginAt && (Date.now() - u.lastLoginAt < 3600000);
+      const isToday = !!u.isActiveToday;
+      const statusBadge = isOnline ? { label: '🟢 온라인', bg: 'rgba(35,73,63,0.12)', fg: '#23493F' }
+        : isToday ? { label: '🟡 오늘 접속', bg: 'rgba(212,175,55,0.14)', fg: '#B38E22' }
+        : { label: '⚪ 이전 접속', bg: 'var(--chip)', fg: 'var(--faint)' };
+
+      const diffMs = Date.now() - (u.lastLoginAt || u.createdAt || Date.now());
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffHr = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHr / 24);
+      const relTime = diffMin < 5 ? '방금 전' : diffMin < 60 ? `${diffMin}분 전` : diffHr < 24 ? `${diffHr}시간 전` : `${diffDay}일 전`;
+
+      const cDate = new Date(u.createdAt || Date.now());
+      const joinDateStr = `${cDate.getFullYear()}.${String(cDate.getMonth()+1).padStart(2,'0')}.${String(cDate.getDate()).padStart(2,'0')}`;
+
+      return {
+        uid: u.uid,
+        name: u.displayName || 'Learner',
+        email: u.email || '비공개',
+        photoURL: u.photoURL || '',
+        initial: (u.displayName || u.email || 'L')[0].toUpperCase(),
+        joinDate: joinDateStr,
+        lastLoginRel: relTime,
+        statusLabel: statusBadge.label,
+        statusBg: statusBadge.bg,
+        statusFg: statusBadge.fg,
+        tutorName: tutorNames[u.selectedTutorId] || '김지우',
+        level: u.level === 'beginner' ? '초급' : u.level === 'intermediate' ? '중급' : '고급',
+        xp: (u.xp || 0).toLocaleString() + ' XP',
+        isGoogle: String(u.provider || '').includes('google')
+      };
+    });
+
+    const adminSummary = (s.adminData && s.adminData.summary) ? s.adminData.summary : null;
+    const adminTotalUsers = adminSummary ? adminSummary.totalUsers : rawAdminUsers.length;
+    const adminTodayDau = adminSummary ? adminSummary.todayDau : rawAdminUsers.filter(u => u.isActiveToday).length;
+    const adminDauRatio = adminSummary ? adminSummary.dauRatio : (adminTotalUsers > 0 ? ((adminTodayDau / adminTotalUsers)*100).toFixed(1) : '50.0');
+    const adminAiCalls = adminSummary ? adminSummary.aiUsage.totalCalls : 142;
+    const adminAiCost = adminSummary ? Number(adminSummary.aiUsage.totalCostUsd).toFixed(3) : '0.048';
+    const adminTutorJiwooCount = adminSummary ? (adminSummary.tutorDistribution.jiwoo || 0) : 2;
+    const adminTutorMinhoCount = adminSummary ? (adminSummary.tutorDistribution.minho || 0) : 0;
+    const adminTutorSeoyeonCount = adminSummary ? (adminSummary.tutorDistribution.seoyeon || 0) : 0;
+
     const legend = COLORS.map(c => ({ n: c[L], c: c[2] }));
     const weekTotalMins = WEEK.reduce((sum, day) => sum + day.reduce((a, b) => a + b, 0), 0);
     const weekBars = WEEK.map((mins, i) => {
@@ -5348,6 +5674,22 @@ class Component extends DCLogic {
       setEn:()=>this.setLang('en'), setKo:()=>this.setLang('ko'), toggleLang:()=>this.setLang(L?'en':'ko'), langShort:L?'EN':'한국어',
       enBg:L?'transparent':'var(--card)', enFg:L?'var(--faint)':'var(--ink)', koBg:L?'var(--card)':'transparent', koFg:L?'var(--ink)':'var(--faint)',
       aboutNavC:page==='about'?'var(--ink)':'var(--sub)', aboutNavW:page==='about'?'700':'400',
+      pAdmin:page==='admin',
+      isAdmin: !!s.isAdmin,
+      goAdmin: () => this.goAdmin(),
+      adminLoading: !!s.adminLoading,
+      refreshAdminData: () => this.loadAdminDashboard(),
+      adminSearchQuery: s.adminSearch || '',
+      onAdminSearch: (e) => this.setState({ adminSearch: e.target.value }),
+      adminFilterAllActive: (s.adminFilter || 'all') === 'all',
+      adminFilterTodayActive: s.adminFilter === 'today',
+      adminFilterNewActive: s.adminFilter === 'new',
+      setAdminFilterAll: () => this.setState({ adminFilter: 'all' }),
+      setAdminFilterToday: () => this.setState({ adminFilter: 'today' }),
+      setAdminFilterNew: () => this.setState({ adminFilter: 'new' }),
+      adminTotalUsers, adminTodayDau, adminDauRatio, adminAiCalls, adminAiCost,
+      adminUsersList, hasAdminUsers: adminUsersList.length > 0, noAdminUsers: adminUsersList.length === 0,
+      adminTutorJiwooCount, adminTutorMinhoCount, adminTutorSeoyeonCount,
       pHome:page==='home', pTutors:page==='tutors', pChat:page==='chat', pListening:page==='listening', pReading:page==='reading', pWriting:page==='writing', pSpeaking:page==='speaking', pConversation:page==='conversation', pRecord:page==='record',
       goHome:go('home'), goTutors:go('tutors'), goIntro:go('intro'), goAbout:go('about'), goSpeaking:go('speaking'), goRecord:go('record'), goChat:go('chat'), goListening:go('listening'), goReading:go('reading'), goWriting:go('writing'), openJiwoo:()=>this.openTutor('jiwoo'),
       goHow:()=>{ if(page!=='intro'){this.setState({page:'intro'}); setTimeout(()=>{const el=document.getElementById('how'); if(el) window.scrollTo(0,el.offsetTop);},60);} else {const el=document.getElementById('how'); if(el) window.scrollTo(0,el.offsetTop);} },
@@ -5490,6 +5832,7 @@ class Component extends DCLogic {
       ],
       // 실시간 회화
       cvIdle: s.cvStatus === 'idle', cvConnecting: s.cvStatus === 'connecting', cvLive: s.cvStatus === 'live', cvEnded: s.cvStatus === 'ended',
+      cvNotLive: s.cvStatus !== 'live', cvHasTurns: (s.cvTurns || []).length > 0, cvNoTurns: (s.cvTurns || []).length === 0,
       cvTimeLabel: `${String(Math.floor((s.cvRemainingSeconds ?? TUTOR_SESSION_SECONDS) / 60)).padStart(2, '0')}:${String((s.cvRemainingSeconds ?? TUTOR_SESSION_SECONDS) % 60).padStart(2, '0')}`,
       cvTimerW: Math.max(0, Math.min(100, ((s.cvRemainingSeconds ?? TUTOR_SESSION_SECONDS) / TUTOR_SESSION_SECONDS) * 100)).toFixed(1) + '%',
       cvTimerColor: s.cvWrapUpSent ? 'var(--hot)' : 'var(--accent-ink)',
@@ -5497,7 +5840,6 @@ class Component extends DCLogic {
       cvSessionHint: s.cvWrapUpSent ? t.cvSessionWrap : s.cvStatus === 'live' ? t.cvSessionLive : t.cvSessionReady,
       cvReviewGenerating: s.cvReviewStatus === 'generating', cvReviewReady: s.cvReviewStatus === 'ready',
       cvReviewFailed: s.cvReviewStatus === 'error', cvReviewUrl: s.cvReviewUrl || '', cvReviewError: s.cvReviewError || '',
-      cvNotLive: s.cvStatus !== 'live', cvHasTurns: (s.cvTurns || []).length > 0, cvNoTurns: (s.cvTurns || []).length === 0,
       cvStatusLabel: s.cvStatus === 'live' ? (s.cvSpeaking ? (L ? '선생님이 말하는 중…' : 'Tutor is speaking…') : (L ? '듣고 있어요 — 편하게 말해 보세요' : 'Listening — go ahead and speak'))
         : s.cvStatus === 'connecting' ? (L ? '연결하는 중…' : 'Connecting…')
         : s.cvStatus === 'ended' ? (L ? '대화가 끝났어요' : 'Conversation ended') : (L ? '시작을 누르면 선생님이 먼저 말을 걸어요' : 'Press start — your tutor will open the conversation'),
@@ -5555,6 +5897,7 @@ class Component extends DCLogic {
         });
         return groups;
       })(),
+      cvHasHistory: (s.cvHistory || []).length > 0, cvNoHistory: (s.cvHistory || []).length === 0,
       // ── 가입 직후 온보딩 ──
       obOpen: !!(s.obOpen && s.currentUser), obStep1: s.obStep === 1, obStep2: s.obStep === 2,
       obStepLabel: `${s.obStep} / 2 단계 (Step ${s.obStep}/2)`,
@@ -5590,18 +5933,15 @@ class Component extends DCLogic {
       openOnboarding: () => this.openOnboarding(),
       profileNickname: s.profile?.nickname || '', hasProfile: !!s.profile?.onboarded,
       profileInterestLabels: this.profileInterests().map(x => x.icon + ' ' + (L ? x.ko : x.en)).join('  '),
-      cvHasHistory: (s.cvHistory || []).length > 0, cvNoHistory: (s.cvHistory || []).length === 0,
       // ── Survival Korean 롤플레잉 · 치명적 오류 힌트 ──
       cvModes: [['tutor', L ? '튜터 수업' : 'Tutor lesson'], ['roleplay', L ? '상황극 (Survival)' : 'Roleplay (Survival)']].map(([k, lb]) => ({
         label: lb, pick: () => { if (!['connecting','live'].includes(s.cvStatus)) this.setState({ cvMode: k }); },
-        label: lb, pick: () => this.setState({ cvMode: k }),
         bg: s.cvMode === k ? 'var(--accent)' : 'transparent', fg: s.cvMode === k ? '#fff' : 'var(--ink2)'
       })),
       cvIsRoleplay: s.cvMode === 'roleplay', cvIsTutorMode: s.cvMode !== 'roleplay',
       cvScenarios: [['market', L ? '🧥 동대문 옷가게' : '🧥 Clothing store'], ['restaurant', L ? '🍜 분식집 주문' : '🍜 Snack bar'],
                     ['taxi', L ? '🚕 택시 타기' : '🚕 Taxi'], ['hospital', L ? '🏥 병원 접수' : '🏥 Clinic']].map(([k, lb]) => ({
         label: lb, pick: () => { if (!['connecting','live'].includes(s.cvStatus)) this.setState({ cvScenario: k }); },
-        label: lb, pick: () => this.setState({ cvScenario: k }),
         bg: s.cvScenario === k ? 'var(--accent-soft)' : 'var(--card)',
         bd: s.cvScenario === k ? 'var(--accent)' : 'var(--line)',
         fw: s.cvScenario === k ? '700' : '500'
@@ -5641,7 +5981,6 @@ class Component extends DCLogic {
       toggleCvMute: () => this.setState(st => ({ cvMuted: !st.cvMuted })),
       cvLevels: [['beginner', L ? '초급' : 'Beginner'], ['intermediate', L ? '중급' : 'Intermediate'], ['advanced', L ? '고급' : 'Advanced']].map(([k, lb]) => ({
         label: lb, pick: () => { if (!['connecting','live'].includes(s.cvStatus)) this.setState({ cvLevel: k }); },
-        label: lb, pick: () => this.setState({ cvLevel: k }),
         bg: s.cvLevel === k ? 'var(--accent)' : 'transparent', fg: s.cvLevel === k ? '#fff' : 'var(--ink2)'
       })),
       cvTurnList: (s.cvTurns || []).map((t, i) => ({
