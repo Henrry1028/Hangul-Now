@@ -40,6 +40,7 @@ import { generateContent, LEVEL_SPEC, translateLines } from "./src/contentGenera
 import { usageMeter } from "./src/usage-meter.mjs";
 import { db, auth, storage, isInitialized as isFirebaseReady } from "./src/firebase.js";
 import { getLocalAudioReview, getTutorAudioReviewJob, startTutorAudioReview } from "./src/tutorSession.js";
+import videoClassRouter from "./src/videoClassService.js";
 
 dotenv.config();
 
@@ -747,7 +748,11 @@ app.post("/api/translate", async (req, res) => {
   try {
     const { lines = [] } = req.body || {};
     if (!Array.isArray(lines) || !lines.length) return res.json({ translations: [] });
-    res.json({ translations: await translateLines(lines.slice(0, 60)) });
+    if (lines.length > 500) {
+      return res.status(413).json({ error: "한 번에 번역할 수 있는 문장은 최대 500개입니다." });
+    }
+    const normalized = lines.map((line) => String(line || "").trim().slice(0, 4000));
+    res.json({ translations: await translateLines(normalized) });
   } catch (err) {
     console.error("[/api/translate]", err.message);
     res.status(500).json({ error: err.message });
@@ -1023,6 +1028,11 @@ app.get("/api/admin/dashboard", verifyAdmin, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ============================================================
+// 10. 1:1 화상 한국어 수업 매칭 플랫폼 API (PRD v1)
+// ============================================================
+app.use("/api/v1", videoClassRouter);
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "preview", "index.html"));

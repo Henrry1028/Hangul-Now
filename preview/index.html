@@ -2,6 +2,12 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hangul Now | 행글 나우</title>
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="manifest" href="./site.webmanifest">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" />
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -36,7 +42,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',sys
 a{color:var(--accent-ink);text-decoration:none}a:hover{color:var(--hot)}
 button,textarea,input{font-family:inherit;color:inherit}
 .brand-logo{display:block;width:auto;max-width:100%;object-fit:contain;transition:filter .2s ease}
-.brand-logo--header{height:81px;max-height:84px}
+.brand-logo--header{height:40px;max-height:42px}
 .brand-logo--dark{display:none}
 :root[data-theme=dark] .brand-logo--light{display:none !important}
 :root[data-theme=dark] .brand-logo--dark{display:block !important}
@@ -44,7 +50,7 @@ button,textarea,input{font-family:inherit;color:inherit}
 .marketing-header__nav{scrollbar-width:none}
 .marketing-header__nav::-webkit-scrollbar{display:none}
 @media(max-width:760px){
-  .brand-logo--header{height:69px}
+  .brand-logo--header{height:32px}
   .marketing-header{align-items:stretch!important;flex-direction:column;gap:10px!important;padding:10px 16px!important}
   .marketing-header__nav{width:100%;flex-wrap:nowrap!important;gap:12px!important;overflow-x:auto;padding-bottom:2px}
   .marketing-header__nav>*{flex:none}
@@ -96,91 +102,388 @@ button,textarea,input{font-family:inherit;color:inherit}
 .tutor-speech-button.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
 @media(max-width:520px){.writing-build-stage{grid-template-columns:166px 96px;gap:8px}.writing-build-block{width:166px!important;height:166px!important;font-size:96px!important}.jeong-celebration{max-height:150px}.tutor-speech-button .speech-label{display:none}}
 @media(prefers-reduced-motion:reduce){.jeong-celebration{animation:none}.tutor-speech-button{transition:none}}
-@media(min-width:860px){
-  .writing-screen{height:calc(100vh - 69px);max-width:1440px!important;padding:12px 24px!important;gap:10px!important;overflow:hidden}
-  .writing-page-header{min-height:42px;flex:none}
-  .writing-page-header>div:first-child{gap:1px!important}
-  .writing-page-header h1{font-size:30px!important;line-height:1!important}
-  .writing-build-content{display:grid!important;grid-template-rows:auto minmax(270px,38vh) minmax(0,1fr);gap:10px!important;flex:1;min-height:0}
-  .writing-level-bar{padding:7px 12px!important;min-height:42px}
-  .writing-main-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important;align-items:stretch!important;min-height:0}
-  .writing-target-card,.writing-jamo-card{height:100%;min-height:0;padding:12px!important;gap:8px!important;border-radius:16px!important}
-  .writing-target-card{overflow:hidden}
-  .writing-jamo-card{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line3) transparent}
-  .writing-jamo-card::-webkit-scrollbar{width:7px}
-  .writing-jamo-card::-webkit-scrollbar-thumb{background:var(--line3);border-radius:999px}
-  .writing-jamo-card::-webkit-scrollbar-track{background:transparent}
-  .writing-target-header{padding:8px 12px!important;gap:8px!important;flex-wrap:nowrap!important;border-radius:12px!important}
-  .writing-target-header>div:first-child{gap:1px!important;min-width:0}
-  .writing-target-header>div:first-child>span{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .target-letter-badge{width:54px!important;height:54px!important;border-radius:13px!important;font-size:36px!important}
-  .writing-word-progress{gap:6px!important}
-  .writing-word-progress span{font-size:28px!important}
-  .writing-canvas-section{gap:5px!important;padding:0!important;min-height:0;flex:1;justify-content:center}
-  .writing-build-stage{grid-template-columns:128px 104px;gap:10px}
-  .writing-build-block{width:128px!important;height:128px!important;font-size:76px!important;border-radius:15px!important}
-  .jeong-celebration{max-height:116px}
-  .writing-canvas-section>div:last-child{gap:1px!important}
-  .writing-canvas-section>div:last-child span:first-child{font-size:13px!important}
-  .writing-actions{padding-top:7px!important;gap:7px!important}
-  .writing-actions button{padding:7px 12px!important;font-size:12px!important}
-  .writing-jamo-row{flex:none;gap:4px!important}
-  .writing-jamo-row>div:first-child span{font-size:12px!important}
-  .writing-jamo-row>div:last-child{gap:4px!important}
-  .writing-jamo-key{min-width:34px!important;height:34px!important;border-radius:8px!important;font-size:16px!important}
-  .writing-jamo-note{flex:none;font-size:11px!important;line-height:1.35!important;padding-top:6px!important}
-  .writing-keyboard-card{min-height:0;overflow:hidden;padding:9px 12px!important;gap:6px!important;border-radius:16px!important}
-  .writing-keyboard-header{min-height:38px;flex:none;gap:8px!important;padding-bottom:5px!important;flex-wrap:nowrap!important}
-  .writing-keyboard-header>div:first-child>div:last-child span:first-child{font-size:13px!important}
-  .writing-keyboard-header>div:first-child>div:last-child span:last-child{display:none}
-  .writing-keyboard-header button{padding:5px 10px!important;font-size:11px!important}
-  .writing-keyboard-header>div:last-child>div:last-child{padding:5px 10px!important}
-  .writing-keyboard-header>div:last-child>div:last-child span{font-size:11px!important}
-  .writing-keyboard-viewport{flex:1;min-height:0;padding:4px!important;border-radius:12px!important}
-  #virtual-keyboard-root{width:100%!important;max-width:none!important;height:100%;min-height:0;align-items:center}
-  #virtual-keyboard-root svg{width:100%!important;height:100%!important;max-width:100%!important}
-  .writing-keyboard-footer{min-height:24px;flex:none;padding-top:4px!important;gap:6px!important}
-  .writing-keyboard-footer span{font-size:10.5px!important}
+/* ============================================================ */
+/* 🌟 웹 환경 사용자 최적화: 뷰포트 피트 (Fit-to-Screen) 대시보드 시스템 */
+/* ============================================================ */
+html, body { height: 100% !important; margin: 0 !important; overflow: hidden !important; }
+x-dc { display: flex !important; flex-direction: column !important; height: 100% !important; min-height: 0 !important; flex: 1 !important; }
+.app-root-shell { height: 100vh !important; height: 100dvh !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; }
+.marketing-header { flex: none !important; height: 60px !important; min-height: 60px !important; max-height: 60px !important; padding: 6px clamp(16px, 2.5vw, 36px) !important; box-sizing: border-box !important; }
+.brand-logo--header { height: 40px !important; max-height: 42px !important; }
+.app-body-container { flex: 1 1 0 !important; min-height: 0 !important; height: calc(100vh - 60px) !important; height: calc(100dvh - 60px) !important; display: flex !important; overflow: hidden !important; position: relative !important; }
+.app-sidebar { height: 100% !important; max-height: 100% !important; overflow-y: auto !important; box-sizing: border-box !important; }
+.app-main-viewport { flex: 1 1 0 !important; min-width: 0 !important; height: 100% !important; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; scroll-behavior: smooth !important; }
+
+/* 모든 학습 페이지 공통 뷰포트 여백 최적화 */
+.home-screen, .tutors-screen, .listening-screen, .reading-screen, .writing-screen, .speaking-screen, .conversation-screen, .record-screen {
+  max-width: 1400px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
 }
-@media(min-width:860px) and (min-height:1050px){
-  .writing-screen{padding:18px 28px!important;gap:14px!important}
-  .writing-page-header{min-height:52px}
-  .writing-page-header h1{font-size:38px!important}
-  .writing-build-content{grid-template-rows:auto minmax(400px,40vh) minmax(0,1fr);gap:14px!important}
-  .writing-level-bar{min-height:50px;padding:9px 16px!important}
-  .writing-target-card,.writing-jamo-card{padding:20px!important;gap:14px!important;border-radius:20px!important}
-  .writing-target-header{padding:12px 16px!important}
-  .writing-target-header>div:first-child>span{font-size:13px!important}
-  .target-letter-badge{width:68px!important;height:68px!important;font-size:44px!important}
-  .writing-canvas-section{gap:10px!important}
-  .writing-build-stage{grid-template-columns:clamp(160px,15vh,210px) 140px;gap:16px}
-  .writing-build-block{width:clamp(160px,15vh,210px)!important;height:clamp(160px,15vh,210px)!important;font-size:clamp(92px,8vh,118px)!important}
-  .jeong-celebration{max-height:178px}
-  .writing-canvas-section>div:last-child span:first-child{font-size:15px!important}
-  .writing-actions{padding-top:10px!important}
-  .writing-actions button{padding:9px 16px!important;font-size:13px!important}
-  .writing-jamo-row{gap:7px!important}
-  .writing-jamo-row>div:first-child span{font-size:14px!important}
-  .writing-jamo-row>div:last-child{gap:6px!important}
-  .writing-jamo-key{min-width:42px!important;height:42px!important;border-radius:10px!important;font-size:19px!important}
-  .writing-jamo-note{font-size:13px!important;line-height:1.5!important;padding-top:10px!important}
-  .writing-keyboard-card{padding:12px 16px!important;gap:9px!important;border-radius:20px!important}
-  .writing-keyboard-header{min-height:44px}
-  .writing-keyboard-header>div:first-child>div:last-child span:first-child{font-size:15px!important}
-  .writing-keyboard-header button{font-size:12px!important}
-  .writing-keyboard-footer{min-height:28px}
-  .writing-keyboard-footer span{font-size:12px!important}
-}
-@media(min-width:860px) and (max-height:800px){
-  .writing-screen{height:auto;min-height:calc(100vh - 69px);overflow:visible}
-  .writing-build-content{grid-template-rows:auto auto auto}
-  .writing-target-card,.writing-jamo-card{gap:5px!important}
-  .writing-target-card,.writing-jamo-card{height:auto;overflow:visible}
-  .writing-canvas-section>div:last-child span:last-child{display:none}
-  .writing-actions{padding-top:4px!important}
-  .writing-jamo-row{gap:3px!important}
-  .writing-jamo-key{height:32px!important}
-  .writing-jamo-note{display:none}
+
+@media(min-width: 860px) {
+  .home-screen, .tutors-screen, .listening-screen, .reading-screen, .speaking-screen, .conversation-screen, .record-screen {
+    padding: clamp(12px, 1.6vh, 20px) clamp(16px, 2vw, 32px) !important;
+    gap: clamp(10px, 1.4vh, 18px) !important;
+  }
+
+  /* ------------------------------------------------------------ */
+  /* 🌟 [07 Writing] 쓰기 연습: 스크롤 0px 완전 일체형 레이아웃   */
+  /* ------------------------------------------------------------ */
+  .writing-screen {
+    height: 100% !important;
+    max-height: calc(100vh - 60px) !important;
+    padding: 8px 18px !important;
+    gap: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+  }
+  .writing-page-header {
+    min-height: 34px !important;
+    max-height: 36px !important;
+    flex: none !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    align-items: center !important;
+  }
+  .writing-page-header > div:first-child {
+    flex-direction: row !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+  }
+  .writing-page-header > div:first-child span {
+    font-size: 11px !important;
+    letter-spacing: .08em !important;
+  }
+  .writing-page-header h1 {
+    font-size: 19px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+  }
+  .writing-page-header > div:last-child {
+    padding: 2px !important;
+    border-radius: 8px !important;
+  }
+  .writing-page-header > div:last-child button {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+  }
+
+  .writing-build-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    justify-content: space-between !important;
+  }
+
+  .writing-level-bar {
+    min-height: 30px !important;
+    max-height: 32px !important;
+    padding: 2px 10px !important;
+    border-radius: 9px !important;
+    flex: none !important;
+    gap: 8px !important;
+  }
+  .writing-level-bar span { font-size: 11px !important; }
+  .writing-level-bar button { padding: 3px 8px !important; font-size: 11px !important; }
+
+  /* 🌟 메인 2단 그리드: 좌측(목표글자/조합) + 우측(자모선택) -> 넉넉한 공간 확보 (300px~360px) */
+  .writing-main-grid {
+    display: grid !important;
+    grid-template-columns: minmax(310px, 1fr) minmax(380px, 1.35fr) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    flex: 1 1 auto !important;
+    min-height: 280px !important;
+    max-height: 360px !important;
+    overflow: hidden !important;
+  }
+
+  .writing-target-card, .writing-jamo-card {
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 10px 14px !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 🌟 좌측: 목표 글자 카드 (식별성 극대화 및 겹침 제로) */
+  .writing-target-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+    gap: 6px !important;
+  }
+
+  /* 🎯 TARGET LETTER 헤더 박스: 가독성 극대화 및 선명한 식별 */
+  .writing-target-header {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+    flex-wrap: nowrap !important;
+    flex: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+  .writing-target-header > div:first-child {
+    gap: 3px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+  .writing-target-header > div:first-child > span {
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .target-letter-badge {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 12px !important;
+    font-size: 30px !important;
+    box-shadow: 0 4px 12px rgba(35,73,63,0.2) !important;
+  }
+
+  /* 단어 모드 진행 표시줄 */
+  .writing-word-progress {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 2px 0 !important;
+    flex: none !important;
+  }
+  .writing-word-progress span {
+    font-size: 26px !important;
+    padding: 0 4px !important;
+  }
+
+  /* 🎯 중앙 조합 캔버스 영역: 헤더와 겹치지 않고 정갈하게 분리 */
+  .writing-canvas-section {
+    gap: 6px !important;
+    padding: 4px 0 !important;
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  .writing-build-stage {
+    display: grid !important;
+    grid-template-columns: 80px 72px !important;
+    gap: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .writing-build-block {
+    width: 80px !important;
+    height: 80px !important;
+    font-size: 50px !important;
+    border-radius: 14px !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.05), 0 3px 10px rgba(0,0,0,0.04) !important;
+  }
+  .jeong-celebration {
+    max-height: 76px !important;
+  }
+  .writing-canvas-section > div:last-child {
+    gap: 2px !important;
+    margin-top: 2px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .writing-canvas-section > div:last-child span:first-child {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+  }
+  .writing-canvas-section > div:last-child span:last-child {
+    font-size: 11.5px !important;
+  }
+
+  /* 하단 액션 버튼 */
+  .writing-actions {
+    padding-top: 6px !important;
+    gap: 8px !important;
+    border-top: 1px solid var(--line2) !important;
+    flex: none !important;
+  }
+  .writing-actions button {
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+    border-radius: 7px !important;
+    font-weight: 600 !important;
+  }
+
+  /* 🌟 우측: 자모 선택기 (심화 선택 시에도 스크롤바 0px 보장) */
+  .writing-jamo-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+    gap: 8px !important;
+  }
+  .writing-jamo-row {
+    gap: 3px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .writing-jamo-row > div:first-child span {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: var(--ink) !important;
+  }
+  .writing-jamo-row > div:last-child {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+    align-items: center !important;
+  }
+  .writing-jamo-key {
+    min-width: 26px !important;
+    height: 26px !important;
+    border-radius: 6px !important;
+    font-size: 12.5px !important;
+    padding: 0 2px !important;
+    line-height: 26px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform .08s ease, background .15s ease !important;
+  }
+  .writing-jamo-note { display: none !important; }
+
+  /* ------------------------------------------------------------ */
+  /* 🌟 한컴 타자 키보드 카드: 컴팩트 슬림 핏 (높이 약 205px)    */
+  /* ------------------------------------------------------------ */
+  .writing-keyboard-card {
+    flex: 0 0 auto !important;
+    height: clamp(195px, 28vh, 215px) !important;
+    max-height: 215px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 5px 12px 3px !important;
+    gap: 2px !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+  }
+  .writing-keyboard-header {
+    min-height: 24px !important;
+    max-height: 25px !important;
+    padding-bottom: 2px !important;
+    gap: 6px !important;
+    flex: none !important;
+    border-bottom: 1px solid var(--line2) !important;
+  }
+  .writing-keyboard-header > div:first-child > div:first-child {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+    border-radius: 5px !important;
+  }
+  .writing-keyboard-header > div:first-child > div:last-child span:first-child {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+  }
+  .writing-keyboard-header > div:first-child > div:last-child span:last-child {
+    display: none !important;
+  }
+  .writing-keyboard-header button {
+    padding: 2px 7px !important;
+    font-size: 10.5px !important;
+  }
+
+  .writing-keyboard-viewport {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    padding: 1px 2px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+  .writing-keyboard-viewport > div:first-child {
+    height: 22px !important;
+    margin-bottom: 2px !important;
+    flex: none !important;
+  }
+  .writing-keyboard-viewport > div:first-child > div {
+    padding: 2px 8px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+  }
+  #virtual-keyboard-root {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  #virtual-keyboard-root svg {
+    max-height: 100% !important;
+    max-width: 720px !important;
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+
+  .writing-keyboard-footer {
+    min-height: 16px !important;
+    max-height: 17px !important;
+    padding-top: 1px !important;
+    gap: 6px !important;
+    flex: none !important;
+  }
+  .writing-keyboard-footer span { font-size: 9.5px !important; }
+
+    /* ------------------------------------------------------------ */
+  /* 🌟 [06 Reading] 읽기 독해: 지문과 문제 2열 분할 뷰포트 피트  */
+  /* ------------------------------------------------------------ */
+  .reading-screen {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  /* ------------------------------------------------------------ */
+  /* 🌟 [05 Listening] 듣기 연습: 컴팩트 플레이어 & 문제 그리드   */
+  /* ------------------------------------------------------------ */
+  .listening-player {
+    padding: 14px 18px !important;
+    gap: 10px !important;
+    border-radius: 16px !important;
+  }
+  .listening-wave-shell {
+    padding: 8px 12px 6px !important;
+    border-radius: 12px !important;
+  }
+  .listening-wave-shell > div:first-child {
+    height: 44px !important;
+  }
+
+  /* ------------------------------------------------------------ */
+  /* 🌟 [08 Speaking] 말하기 코치: 한눈에 들어오는 콤팩트 카드    */
+  /* ------------------------------------------------------------ */
+  .speaking-screen {
+    max-width: 920px !important;
+  }
 }
 
 /* === 학습 캘린더 & 게이미피케이션 & 실시간 랭킹 CSS === */
@@ -316,16 +619,23 @@ button,textarea,input{font-family:inherit;color:inherit}
 </style>
 </helmet>
 
-<div style="min-height:100vh;background:var(--bg);display:flex;flex-direction:column">
+<div class="app-root-shell" style="height:100vh;height:100dvh;background:var(--bg);display:flex;flex-direction:column;overflow:hidden">
 
-  <header class="marketing-header" style="position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px clamp(20px,5vw,64px);border-bottom:1px solid var(--line);background:var(--bg);flex-wrap:wrap">
+  <header class="marketing-header" style="position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px clamp(16px,3vw,36px);border-bottom:1px solid var(--line);background:var(--bg);flex-wrap:wrap;flex:none;height:62px;box-sizing:border-box">
     <button sc-camel-on-click="{{ goIntro }}" aria-label="Hangul Now home" style="display:flex;align-items:center;border:0;background:none;cursor:pointer;padding:0">
-      <img class="brand-logo brand-logo--header brand-logo--light" src="./assets/hangul-now-logo.png" alt="Hangul Now">
-      <img class="brand-logo brand-logo--header brand-logo--dark" src="./assets/hangul-now-logo-dark.png" alt="Hangul Now">
+      <img class="brand-logo brand-logo--header brand-logo--light" src="./assets/logo-new.png?v=2" alt="Hangul Now">
+      <img class="brand-logo brand-logo--header brand-logo--dark" src="./assets/logo-new-dark.png?v=2" alt="Hangul Now">
     </button>
     <nav class="marketing-header__nav" style="display:flex;align-items:center;gap:20px;font-size:14px;flex-wrap:wrap">
       <button sc-camel-on-click="{{ goHow }}" style="border:0;background:none;color:var(--sub);font-size:14px;cursor:pointer">{{ t.navHow }}</button>
       <button sc-camel-on-click="{{ goTutors }}" style="border:0;background:none;color:var(--sub);font-size:14px;cursor:pointer">{{ t.navTutors }}</button>
+      <!-- 🌟 [Admin 전용] 1:1 화상수업 메뉴 (추후 정식 반영 예정) -->
+      <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+        <button sc-camel-on-click="{{ goVideoClass }}" style="border:0;background:none;color:var(--ink);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:8px;transition:all .15s ease" title="1:1 화상 한국어 수업 매칭 플랫폼 (관리자 전용 미리보기)">
+          <span style="font-weight:600">{{ t.navVideoClass }}</span>
+          <span style="font-size:10px;font-weight:700;padding:1.5px 6px;border-radius:6px;background:rgba(212,175,55,0.18);color:#B8860B;border:1px solid rgba(212,175,55,0.4);letter-spacing:0.3px">Admin</span>
+        </button>
+      </sc-if>
       <button sc-camel-on-click="{{ goAbout }}" style="border:0;background:none;color:{{ aboutNavC }};font-size:14px;cursor:pointer;font-weight:{{ aboutNavW }}">{{ t.navAbout }}</button>
       <div style="display:flex;background:var(--seg);border-radius:999px;padding:3px"><button sc-camel-on-click="{{ setEn }}" style="border:0;background:{{ enBg }};color:{{ enFg }};border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer">EN</button><button sc-camel-on-click="{{ setKo }}" style="border:0;background:{{ koBg }};color:{{ koFg }};border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer">한국어</button></div>
       <button sc-camel-on-click="{{ toggleTheme }}" title="{{ t.themeTitle }}" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer">
@@ -418,7 +728,345 @@ button,textarea,input{font-family:inherit;color:inherit}
     </div>
   </sc-if>
 
-<div style="display:flex;flex:1;background:var(--bg);min-height:calc(100vh - 106px);position:relative">
+  <!-- 🌟 [모달 1] 튜터 소개 영상 재생 모달 (FR-001) -->
+  <sc-if value="{{ vcVideoModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:3600;background:rgba(20,22,21,.75);backdrop-filter:blur(6px);display:grid;place-items:center;padding:16px">
+      <div style="width:min(100%,700px);background:var(--bg);border:1.5px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.6)">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line2)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">▶</span>
+            <span style="font-size:14.5px;font-weight:700;color:var(--ink)">{{ vcPlayingVideoTitle }} 튜터 자기소개 영상</span>
+          </div>
+          <button sc-camel-on-click="{{ closeVideoModal }}" style="border:0;background:none;color:var(--faint);font-size:20px;cursor:pointer;padding:4px">✕</button>
+        </div>
+        <div style="position:relative;padding-bottom:56.25%;height:0;background:#000">
+          <iframe src="{{ vcPlayingVideoUrl }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 🌟 [모달 2] 튜터 수업 예약(Arrange) 플로우 모달 (FR-002, FR-003) -->
+  <sc-if value="{{ vcArrangeModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:3600;background:rgba(20,22,21,.7);backdrop-filter:blur(6px);display:grid;place-items:center;padding:16px;overflow-y:auto">
+      <div style="width:min(100%,600px);background:var(--bg);border:1.5px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.6);max-height:calc(100vh - 40px);overflow-y:auto">
+        
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line2);padding-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🗓️</span>
+            <div>
+              <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">{{ vcSelectedTutor.name }} 튜터 1:1 수업 예약</h3>
+              <span style="font-size:12px;color:var(--sub)">타임존: {{ vcTimezone }}</span>
+            </div>
+          </div>
+          <button sc-camel-on-click="{{ closeArrangeModal }}" style="border:0;background:none;color:var(--faint);font-size:20px;cursor:pointer">✕</button>
+        </div>
+
+        <!-- 1단계: 수업 시간 선택 (30분 / 50분) -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">1. 수업 시간 선택</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <button sc-camel-on-click="{{ setDuration30 }}" style="border:1.5px solid {{ vcDuration30Active ? 'var(--accent)' : 'var(--line)' }};background:{{ vcDuration30Active ? 'rgba(35,73,63,0.1)' : 'var(--card)' }};color:var(--ink);padding:12px;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:3px">
+              <span>30분 집중 수업</span>
+              <span style="font-size:12px;color:var(--accent)">₩19,000</span>
+            </button>
+            <button sc-camel-on-click="{{ setDuration50 }}" style="border:1.5px solid {{ vcDuration50Active ? 'var(--accent)' : 'var(--line)' }};background:{{ vcDuration50Active ? 'rgba(35,73,63,0.1)' : 'var(--card)' }};color:var(--ink);padding:12px;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:3px">
+              <span>50분 표준 수업 (권장)</span>
+              <span style="font-size:12px;color:var(--accent)">₩29,000</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2단계: 예약 희망 날짜 선택 -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">2. 수업 희망 일자</span>
+          <input type="date" value="{{ vcSelectedDate }}" sc-camel-on-change="{{ onVcDateChange }}" style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:14px;outline:none">
+        </div>
+
+        <!-- 3단계: 예약 가능 슬롯 선택 (이중 예약 잠금) -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:700;color:var(--ink)">3. 시간 슬롯 선택 (현지 시간 기준)</span>
+            <span style="font-size:12px;color:var(--sub)">선택: {{ vcSelectedSlotLabel }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">
+            <sc-for list="{{ vcTutorSlots }}" as="slot" hint-placeholder-count="6">
+              <button sc-camel-on-click="{{ slot.select }}" disabled="{{ slot.isBooked }}" style="border:1.5px solid {{ slot.isSelected ? 'var(--accent)' : (slot.isBooked ? 'var(--line2)' : 'var(--line)') }};background:{{ slot.isSelected ? 'var(--accent)' : (slot.isBooked ? 'var(--line2)' : 'var(--card)') }};color:{{ slot.isSelected ? '#fff' : (slot.isBooked ? 'var(--faint)' : 'var(--ink)') }};padding:9px 6px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:{{ slot.isBooked ? 'not-allowed' : 'pointer' }};display:flex;flex-direction:column;align-items:center;gap:2px">
+                <span>{{ slot.clientFormattedTime }}</span>
+                <span style="font-size:10px;opacity:0.8">{{ slot.isBooked ? '예약 완료' : slot.kstTime + ' KST' }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- 4단계: 희망 연습 주제 -->
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">4. 튜터에게 남길 메모 / 연습하고 싶은 주제</span>
+          <input value="{{ vcBookingNote }}" sc-camel-on-change="{{ onVcBookingNote }}" placeholder="예: 카페 주문 및 과거형 표현을 집중 연습하고 싶어요" style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:13.5px;outline:none">
+        </label>
+
+        <!-- 예약 확정 버튼 (Google Meet 링크 자동 발급 트리거) -->
+        <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line2);padding-top:16px">
+          <button sc-camel-on-click="{{ closeArrangeModal }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer">취소</button>
+          <button sc-camel-on-click="{{ submitBooking }}" style="border:0;background:var(--accent);color:#fff;padding:11px 22px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer">Google Meet 링크 발급 & 예약 확정</button>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 🌟 [모달 3] 튜터 전용 학습 리포트 작성 모달 (FR-004) -->
+  <sc-if value="{{ vcFeedbackTutorModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:3600;background:rgba(20,22,21,.7);backdrop-filter:blur(6px);display:grid;place-items:center;padding:16px;overflow-y:auto">
+      <div style="width:min(100%,600px);background:var(--bg);border:1.5px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:16px;box-shadow:0 30px 80px -20px rgba(0,0,0,.6);max-height:calc(100vh - 40px);overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line2);padding-bottom:12px">
+          <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">📝 튜터 전용 학습 리포트 피드백 등록 (FR-004)</h3>
+          <button sc-camel-on-click="{{ closeFeedbackTutorModal }}" style="border:0;background:none;color:var(--faint);font-size:20px;cursor:pointer">✕</button>
+        </div>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">1. 수업 총평 및 요약</span>
+          <textarea value="{{ vcTutorFbSummary }}" sc-camel-on-change="{{ onVcTutorFbSummary }}" rows="3" placeholder="오늘 수업에서 다룬 주요 대화 내용과 학습자 참여도를 적어주세요." style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:13.5px;outline:none"></textarea>
+        </label>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">2. 오늘 배운 핵심 표현 (3~5개 권장)</span>
+          <input value="{{ vcTutorFbKeyExp1 }}" sc-camel-on-change="{{ onVcTutorFbKeyExp1 }}" placeholder="핵심 표현 1: 예) 디카페인으로 변경해 주세요" style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:8px 12px;border-radius:8px;font-size:13px;outline:none">
+          <input value="{{ vcTutorFbKeyExp2 }}" sc-camel-on-change="{{ onVcTutorFbKeyExp2 }}" placeholder="핵심 표현 2: 예) 여기서 마시고 갈게요" style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:8px 12px;border-radius:8px;font-size:13px;outline:none">
+          <input value="{{ vcTutorFbKeyExp3 }}" sc-camel-on-change="{{ onVcTutorFbKeyExp3 }}" placeholder="핵심 표현 3: 예) 영수증은 버려주세요" style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:8px 12px;border-radius:8px;font-size:13px;outline:none">
+        </div>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">3. 발음 및 문법 교정 노트</span>
+          <textarea value="{{ vcTutorFbCorrections }}" sc-camel-on-change="{{ onVcTutorFbCorrections }}" rows="2" placeholder="자주 실수한 조사나 발음 억양 교정 피드백을 기록하세요." style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:13.5px;outline:none"></textarea>
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">4. 학생에게 남기는 따뜻한 격려</span>
+          <input value="{{ vcTutorFbEncouragement }}" sc-camel-on-change="{{ onVcTutorFbEncouragement }}" placeholder="오늘 정말 열심히 잘 하셨어요! 다음 수업도 기대됩니다." style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:13px;outline:none">
+        </label>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line2);padding-top:14px">
+          <button sc-camel-on-click="{{ closeFeedbackTutorModal }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:10px;font-size:13px;cursor:pointer">닫기</button>
+          <button sc-camel-on-click="{{ submitTutorFeedback }}" style="border:0;background:var(--accent);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">학습 리포트 등록</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 🌟 [모달 4] 학생 수업 리뷰 작성 모달 (FR-004) -->
+  <sc-if value="{{ vcFeedbackStudentModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:3600;background:rgba(20,22,21,.7);backdrop-filter:blur(6px);display:grid;place-items:center;padding:16px">
+      <div style="width:min(100%,520px);background:var(--bg);border:1.5px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.6)">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line2);padding-bottom:12px">
+          <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink)">⭐ 수업 만족도 리뷰 작성 (FR-004)</h3>
+          <button sc-camel-on-click="{{ closeFeedbackStudentModal }}" style="border:0;background:none;color:var(--faint);font-size:20px;cursor:pointer">✕</button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">튜터님의 수업은 어떠셨나요?</span>
+          <div style="display:flex;gap:10px;font-size:28px;cursor:pointer">
+            <span sc-camel-on-click="{{ () => setVcRating(1) }}">★</span>
+            <span sc-camel-on-click="{{ () => setVcRating(2) }}">★</span>
+            <span sc-camel-on-click="{{ () => setVcRating(3) }}">★</span>
+            <span sc-camel-on-click="{{ () => setVcRating(4) }}">★</span>
+            <span sc-camel-on-click="{{ () => setVcRating(5) }}">★</span>
+          </div>
+          <span style="font-size:12.5px;color:var(--accent);font-weight:700">{{ vcStudentFbRating }}점 / 5.0점 만점</span>
+        </div>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">수업 만족도 코멘트</span>
+          <textarea value="{{ vcStudentFbComment }}" sc-camel-on-change="{{ onVcStudentFbComment }}" rows="3" placeholder="수업에서 좋았던 점이나 튜터님께 전하고 싶은 말을 남겨주세요." style="border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:13.5px;outline:none"></textarea>
+        </label>
+
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" checked="{{ vcStudentFbRecommend }}" sc-camel-on-change="{{ toggleVcRecommend }}" style="width:16px;height:16px">
+          <span style="font-size:13px;color:var(--ink);font-weight:600">이 튜터님을 다른 친구에게도 적극 추천합니다!</span>
+        </label>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line2);padding-top:14px">
+          <button sc-camel-on-click="{{ closeFeedbackStudentModal }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:10px;font-size:13px;cursor:pointer">닫기</button>
+          <button sc-camel-on-click="{{ submitStudentFeedback }}" style="border:0;background:var(--accent);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">리뷰 제출하기</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 🌟 [모달 5] 양방향 피드백 리포트 열람 뷰어 모달 (FR-004) -->
+  <sc-if value="{{ vcFeedbackViewModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:3600;background:rgba(20,22,21,.7);backdrop-filter:blur(6px);display:grid;place-items:center;padding:16px;overflow-y:auto">
+      <div style="width:min(100%,640px);background:var(--bg);border:1.5px solid var(--line);border-radius:24px;padding:26px;display:flex;flex-direction:column;gap:20px;box-shadow:0 30px 80px -20px rgba(0,0,0,.6);max-height:calc(100vh - 40px);overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line2);padding-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">📋</span>
+            <div>
+              <h3 style="margin:0;font-size:17px;font-weight:700;color:var(--ink)">{{ activeFbBooking.tutorName }} 튜터 1:1 수업 학습 리포트</h3>
+              <span style="font-size:12px;color:var(--sub)">수업 일시: {{ activeFbBooking.slotTime }}</span>
+            </div>
+          </div>
+          <button sc-camel-on-click="{{ closeFeedbackViewModal }}" style="border:0;background:none;color:var(--faint);font-size:20px;cursor:pointer">✕</button>
+        </div>
+
+        <!-- 튜터 학습 리포트 섹션 -->
+        <sc-if value="{{ activeFbTutor }}" hint-placeholder-val="{{ true }}">
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:16px">👨‍🏫</span>
+              <span style="font-size:14px;font-weight:700;color:var(--ink)">튜터 피드백 (Lesson Report)</span>
+            </div>
+            
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:12px;font-weight:700;color:var(--sub)">📌 오늘 수업 요약</span>
+              <p style="margin:0;font-size:13px;color:var(--ink);line-height:1.55">{{ activeFbTutor.summary }}</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;font-weight:700;color:var(--sub)">🎯 오늘 배운 핵심 표현</span>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <sc-for list="{{ activeFbTutor.keyExpressions }}" as="exp" hint-placeholder-count="3">
+                  <span style="font-size:12px;padding:4px 10px;border-radius:8px;background:rgba(35,73,63,0.1);color:var(--accent);font-weight:700">{{ exp }}</span>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:12px;font-weight:700;color:var(--sub)">✍️ 발음 및 문법 교정 노트</span>
+              <p style="margin:0;font-size:13px;color:var(--ink);line-height:1.55;background:var(--bg);padding:10px 12px;border-radius:8px;border:1px solid var(--line2)">{{ activeFbTutor.corrections }}</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:12px;font-weight:700;color:var(--sub)">💌 튜터의 격려 메시지</span>
+              <p style="margin:0;font-size:13px;color:var(--accent);font-weight:600;font-style:italic">“{{ activeFbTutor.encouragement }}”</p>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ !activeFbTutor }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:16px;background:var(--card);border-radius:12px;text-align:center;font-size:13px;color:var(--sub)">
+            아직 튜터 학습 리포트가 등록되지 않았습니다.
+          </div>
+        </sc-if>
+
+        <!-- 학생 리뷰 섹션 -->
+        <sc-if value="{{ activeFbStudent }}" hint-placeholder-val="{{ true }}">
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:16px">🎓</span>
+                <span style="font-size:14px;font-weight:700;color:var(--ink)">학습자 리뷰 (Student Review)</span>
+              </div>
+              <span style="font-size:13.5px;font-weight:700;color:#F2C94C">★ {{ activeFbStudent.rating }}.0 / 5.0</span>
+            </div>
+            <p style="margin:0;font-size:13px;color:var(--ink);line-height:1.55">“{{ activeFbStudent.comment }}”</p>
+            <sc-if value="{{ activeFbStudent.recommend }}" hint-placeholder-val="{{ true }}">
+              <span style="font-size:11.5px;color:var(--accent);font-weight:700">👍 이 튜터를 다른 학습자에게 적극 추천함</span>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;justify-content:flex-end;border-top:1px solid var(--line2);padding-top:14px">
+          <button sc-camel-on-click="{{ closeFeedbackViewModal }}" style="border:0;background:var(--solid);color:var(--on-solid);padding:10px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">닫기 (Close)</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- 🌟 [Admin 전용] 1:1 화상 한국어 수업 매칭 플랫폼 PRD 프리뷰 모달 -->
+  <sc-if value="{{ vcModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:3500;background:rgba(20,22,21,.65);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;overflow-y:auto">
+      <div style="width:min(100%,740px);background:var(--bg);border:1.5px solid var(--line);border-radius:24px;padding:clamp(22px,4vw,32px);display:flex;flex-direction:column;gap:20px;box-shadow:0 30px 80px -20px rgba(0,0,0,.5);max-height:calc(100vh - 40px);overflow-y:auto;box-sizing:border-box">
+        
+        <!-- 모달 상단 헤더 & 닫기 버튼 -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line2);padding-bottom:16px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(212,175,55,0.18);color:#B8860B;border:1px solid rgba(212,175,55,0.4)">👑 Admin Preview</span>
+              <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:rgba(35,73,63,0.12);color:var(--accent);border:1px solid var(--accent)">개발 준비 중 (PRD MVP)</span>
+            </div>
+            <h2 style="margin:0;font:600 clamp(20px,3vw,26px)/1.3 'Newsreader','Gowun Batang',serif;color:var(--ink)">
+              📹 1:1 화상 한국어 수업 매칭 플랫폼
+            </h2>
+            <span style="font-size:13.5px;color:var(--sub);line-height:1.5">
+              글로벌 학습자와 튜터 간 실시간 화상 수업 예약 및 Google Meet 자동 연동 시스템
+            </span>
+          </div>
+          <button sc-camel-on-click="{{ closeVideoClassModal }}" aria-label="Close" style="border:0;background:none;color:var(--faint);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px">✕</button>
+        </div>
+
+        <!-- 핵심 가치 제안 (Value Proposition) -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:16px">🎓</span>
+              <span style="font-size:13.5px;font-weight:700;color:var(--ink)">학습자 (Sarah, 미국 거주)</span>
+            </div>
+            <span style="font-size:12.5px;color:var(--sub);line-height:1.55">
+              발음·억양·티칭 스타일이 담긴 짧은 소개 영상으로 실패 없는 튜터 선택 및 시차 고민 없는 KST ↔ 현지 타임존 자동 변환 예약
+            </span>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:16px">👨‍🏫</span>
+              <span style="font-size:13.5px;font-weight:700;color:var(--ink)">튜터 (김민수, 한국 거주)</span>
+            </div>
+            <span style="font-size:12.5px;color:var(--sub);line-height:1.55">
+              복잡한 일정 조율 없이 예약 슬롯 관리와 Google Meet 자동 연동을 통한 수업 운영, 종료 후 학습 피드백 노트 발송
+            </span>
+          </div>
+        </div>
+
+        <!-- 기능 요구사항 (FR Checklist) -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:13.5px;font-weight:700;color:var(--ink)">🛠️ 핵심 기능 요구사항 (Functional Requirements)</span>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px">
+            <div style="background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">FR-001: 튜터 프로필 및 소개 영상 등록</span>
+              <span style="font-size:12px;color:var(--sub);line-height:1.5">YouTube/Vimeo 임베드 링크 및 MP4 비디오(최대 100MB), 상세 소개 50자 검증, 수업 가능 시간표 등록</span>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">FR-002: 튜터 탐색 및 스케줄링 (Arrange)</span>
+              <span style="font-size:12px;color:var(--sub);line-height:1.5">30분/50분 슬롯, 브라우저 타임존 감지로 KST 시간 자동 변환, 이중 예약(Double-booking) 방지 잠금</span>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">FR-003: Google Meet 연동 & 회의 링크 자동 발급</span>
+              <span style="font-size:12px;color:var(--sub);line-height:1.5">예약 시 Google Calendar API 호출로 Meet 회의실 자동 생성, 수업 시작 10분 전 활성화되는 입장 CTA 버튼</span>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">FR-004: 수업 완료 처리 및 양방향 피드백</span>
+              <span style="font-size:12px;color:var(--sub);line-height:1.5">세션 COMPLETED 전환, 튜터 전용 학습 리포트(핵심 표현 3~5개, 교정 노트) + 학생 튜터 리뷰/별점</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 기술 명세 및 API 요약 -->
+        <div style="background:rgba(35,73,63,0.06);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px;font-weight:700;color:var(--ink)">🔌 기술 명세 및 연동 구조 (API v1)</span>
+            <span style="font-size:11.5px;color:var(--sub)">인증: JWT + Google OAuth 2.0</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11.5px;font-family:'IBM Plex Mono',monospace">
+            <span style="padding:3px 8px;border-radius:6px;background:var(--card);border:1px solid var(--line)">POST /api/v1/tutors/profile</span>
+            <span style="padding:3px 8px;border-radius:6px;background:var(--card);border:1px solid var(--line)">GET /api/v1/tutors/{id}/slots</span>
+            <span style="padding:3px 8px;border-radius:6px;background:var(--card);border:1px solid var(--line)">POST /api/v1/bookings</span>
+            <span style="padding:3px 8px;border-radius:6px;background:var(--card);border:1px solid var(--line)">POST /api/v1/bookings/{id}/feedback</span>
+          </div>
+        </div>
+
+        <!-- 안내 메모 및 닫기 버튼 -->
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line2);padding-top:16px;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--faint);line-height:1.4">
+            💡 본 메뉴는 관리자(<code style="font-family:monospace;color:var(--hot)">isAdmin === true</code>)에게만 노출되는 기획 프리뷰입니다.
+          </span>
+          <button sc-camel-on-click="{{ closeVideoClassModal }}" style="border:0;background:var(--solid);color:var(--on-solid);border-radius:10px;padding:10px 22px;font-size:13.5px;font-weight:700;cursor:pointer">
+            확인 (Close)
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+<div class="app-body-container" style="display:flex;flex:1;min-height:0;height:calc(100vh - 62px);height:calc(100dvh - 62px);background:var(--bg);position:relative;overflow:hidden">
   <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
     
     <!-- 🌟 사이드바 접혔을 때 화면 좌측 상단 플로팅 열기 버튼 (Claude 스타일) -->
@@ -432,7 +1080,7 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <!-- 🌟 사이드바 컨테이너 -->
-    <aside id="app-sidebar" class="app-sidebar {{ sidebarClass }}" style="width:{{ sidebarWidth }};flex:none">
+    <aside id="app-sidebar" class="app-sidebar {{ sidebarClass }}" style="width:{{ sidebarWidth }};flex:none;height:100%;overflow-y:auto;box-sizing:border-box">
       
       <!-- 🌟 사이드바 상단 Claude 스타일 헤더: [|] 접기 버튼 -->
       <div style="display:flex;align-items:center;padding:2px 2px 8px;border-bottom:1px solid var(--line2);margin-bottom:4px;flex:none">
@@ -524,7 +1172,7 @@ button,textarea,input{font-family:inherit;color:inherit}
     </aside>
   </sc-if>
 
-  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+  <main class="app-main-viewport" style="flex:1;min-width:0;height:100%;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden">
     <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
       <div style="position:sticky;top:69px;z-index:5;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 12px;align-items:center">
         <sc-for list="{{ navFlat }}" as="n" hint-placeholder-count="6">
@@ -788,7 +1436,7 @@ button,textarea,input{font-family:inherit;color:inherit}
   </sc-if>
 
     <sc-if value="{{ pHome }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="02 Today" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+    <div class="home-screen" data-screen-label="02 Today" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
       <!-- 🌟 처음 접속한 사용자를 위한 신규 기능 쇼케이스 허브 (Welcome Feature Hub) -->
       <div style="background:linear-gradient(135deg, rgba(35,73,63,0.08) 0%, rgba(200,94,62,0.09) 100%);border:1.5px solid var(--accent);border-radius:20px;padding:24px clamp(16px,3vw,28px);position:relative;overflow:hidden;box-shadow:0 10px 25px -5px rgba(35,73,63,0.08)">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;position:relative;z-index:2">
@@ -930,7 +1578,7 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <sc-if value="{{ pTutors }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="03 Tutors" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+    <div class="tutors-screen" data-screen-label="03 Tutors" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
       <div style="display:flex;flex-direction:column;gap:8px">
         <h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.tutorsH1 }}</h1>
         <p style="margin:0;color:var(--sub)">{{ t.tutorsP }}</p>
@@ -998,6 +1646,9 @@ button,textarea,input{font-family:inherit;color:inherit}
             <button sc-camel-on-click="{{ toggleAllTr }}" style="border:1px solid var(--line3);background:{{ trBtnBg }};border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer">{{ trLabel }}</button>
           </div>
         </div>
+        <sc-if value="{{ hasChatTranslationError }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--hot-soft);border-bottom:1px solid var(--hot);padding:9px 18px;font-size:12.5px;color:var(--ink)">{{ chatTranslationError }}</div>
+        </sc-if>
         <div ref="{{ msgRef }}" style="flex:1;overflow-y:auto;padding:16px 18px 20px;display:flex;flex-direction:column;gap:6px">
           <sc-for list="{{ msgs }}" as="m" hint-placeholder-count="4">
             <div style="display:flex;flex-direction:column;gap:6px">
@@ -1011,6 +1662,7 @@ button,textarea,input{font-family:inherit;color:inherit}
                       <div sc-camel-on-click="{{ m.toggleTr }}" title="{{ t.tapTr }}" style="background:var(--tbubble);padding:9px 12px;border-radius:{{ m.rad }};font-size:15px;line-height:1.5;cursor:pointer;display:flex;flex-direction:column;gap:6px">
                         <span>{{ m.text }}</span>
                         <sc-if value="{{ m.showTr }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--sub);border-top:1px dashed var(--line3);padding-top:6px">{{ m.tr }}</span></sc-if>
+                        <sc-if value="{{ m.showTrLoading }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:var(--faint);border-top:1px dashed var(--line3);padding-top:6px">{{ m.trLoadingLabel }}</span></sc-if>
                       </div>
                       <span style="font-size:11px;color:var(--chat-ink);flex:none;white-space:nowrap">{{ m.timeLabel }}</span>
                     </div>
@@ -1023,11 +1675,14 @@ button,textarea,input{font-family:inherit;color:inherit}
                     <div style="display:flex;flex-direction:column;align-items:flex-end;flex:none"><sc-if value="{{ m.pending }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;color:#C99A00">1</span></sc-if><span style="font-size:11px;color:var(--chat-ink);white-space:nowrap">{{ m.timeLabel }}</span></div>
                     <div style="background:var(--bubble);color:#1C1F1E;padding:9px 12px;border-radius:{{ m.rad }};font-size:15px;line-height:1.5">{{ m.text }}</div>
                   </div>
+                  <sc-if value="{{ m.fixLoading }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:var(--chat-ink);padding-right:4px">{{ m.fixLoadingLabel }}</span></sc-if>
+                  <sc-if value="{{ m.hasFixError }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:var(--hot);padding-right:4px">{{ m.fixErrorLabel }}</span></sc-if>
                   <sc-if value="{{ m.hasFix }}" hint-placeholder-val="{{ false }}">
                     <div style="background:var(--tbubble);border-radius:12px;padding:12px 14px;max-width:min(76%,440px);display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.5;border:1px solid rgba(0,0,0,.05)">
                       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span style="font-size:11px;font-weight:700;color:var(--accent-ink);letter-spacing:.06em">{{ t.correction }}</span><span style="font-size:11.5px;color:var(--faint)">{{ t.savedNotes }}</span></div>
                       <span><span style="text-decoration:line-through;color:var(--hot)">{{ m.fixWrong }}</span> → <b style="color:var(--accent-ink)">{{ m.fixRight }}</b></span>
-                      <span style="color:var(--sub);font-size:13px">{{ m.fixNote }}</span>
+                      <span style="color:var(--sub);font-size:13px">{{ m.fixNoteKo }}</span>
+                      <sc-if value="{{ m.showFixNoteEn }}" hint-placeholder-val="{{ false }}"><span style="color:var(--sub);font-size:12.5px;border-top:1px dashed var(--line3);padding-top:6px">{{ m.fixNoteEn }}</span></sc-if>
                     </div>
                   </sc-if>
                 </div>
@@ -1058,7 +1713,7 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <sc-if value="{{ pListening }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="05 Listening" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+    <div class="listening-screen" data-screen-label="05 Listening" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
       <div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">{{ t.lEyebrow }}</span><h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ listeningTitle }} <sc-if value="{{ noGenListening }}" hint-placeholder-val="{{ true }}"><span style="font:400 .6em 'Gowun Batang',serif;color:var(--faint)">{{ t.lTitleSub }}</span></sc-if><sc-if value="{{ showListeningTitleEn }}" hint-placeholder-val="{{ false }}"><span style="font:400 .52em 'Pretendard',sans-serif;color:var(--faint)"> · {{ listeningTitleEn }}</span></sc-if></h1><span style="color:var(--sub)">{{ listeningSub }}</span></div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><sc-if value="{{ genIdleListening }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ genListeningNew }}" style="border:1px solid var(--line3);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">{{ genNewLabel }}</button></sc-if><sc-if value="{{ genLoadingListening }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--hot);font-weight:600;white-space:nowrap;padding:8px 12px">{{ genBusyLabel }}</span></sc-if><div style="display:flex;background:var(--seg);border-radius:12px;padding:4px"><sc-for list="{{ studyLevels }}" as="lv" hint-placeholder-count="3"><button sc-camel-on-click="{{ lv.pickListening }}" style="border:0;background:{{ lv.bg }};color:{{ lv.fg }};border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer">{{ lv.label }}</button></sc-for></div><button sc-camel-on-click="{{ toggleTr }}" style="border:1px solid var(--line3);background:{{ trToggleBg }};color:{{ trToggleFg }};border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">{{ trToggleLabel }}</button></div>
@@ -1120,7 +1775,7 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <sc-if value="{{ pReading }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="06 Reading" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+    <div class="reading-screen" data-screen-label="06 Reading" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
       <!-- 🌟 Reading 페이지 상단 헤더: 제목/메타정보 + 우측 새로 생성 & 초급/중급/고급 세그먼트 (첨부 이미지 위치) -->
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
         <div style="display:flex;flex-direction:column;gap:6px">
@@ -1488,7 +2143,7 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <sc-if value="{{ pSpeaking }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="08 Speaking" style="max-width:880px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+    <div class="speaking-screen" data-screen-label="08 Speaking" style="max-width:880px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--hot);letter-spacing:.1em">{{ t.sEyebrow }}</span><h1 style="margin:0;font:500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif;letter-spacing:-.02em">{{ t.sTitle }}</h1></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><sc-if value="{{ genIdleSpeaking }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ genSpeakingNew }}" style="border:1px solid var(--line3);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">{{ genNewLabel }}</button></sc-if><sc-if value="{{ genLoadingSpeaking }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--hot);font-weight:600;white-space:nowrap;padding:8px 12px">{{ genBusyLabel }}</span></sc-if><div style="display:flex;background:var(--seg);border-radius:12px;padding:4px"><sc-for list="{{ studyLevels }}" as="lv" hint-placeholder-count="3"><button sc-camel-on-click="{{ lv.pickSpeaking }}" style="border:0;background:{{ lv.bg }};color:{{ lv.fg }};border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer">{{ lv.label }}</button></sc-for></div><button sc-camel-on-click="{{ toggleTr }}" style="border:1px solid var(--line3);background:{{ trToggleBg }};color:{{ trToggleFg }};border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">{{ trToggleLabel }}</button><span style="font:500 13px 'IBM Plex Mono',monospace;color:var(--faint)">{{ sIdxLabel }}</span></div></div>
       <div style="background:var(--card);border:1px solid var(--line);border-radius:24px;padding:clamp(28px,5vw,48px);display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
         <div style="display:flex;gap:2px;flex-wrap:wrap;justify-content:center">
@@ -1519,7 +2174,7 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <sc-if value="{{ pConversation }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="08b Conversation" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+    <div class="conversation-screen" data-screen-label="08b Conversation" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
 
       <!-- 페이지 헤더: 다른 페이지와 동일한 형태 -->
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
@@ -1818,7 +2473,7 @@ button,textarea,input{font-family:inherit;color:inherit}
     </sc-if>
 
     <sc-if value="{{ pRecord }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="09 My progress" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:28px">
+    <div class="record-screen" data-screen-label="09 My progress" style="max-width:1120px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:28px">
       
       <!-- 상단 헤더 & 핵심 지표 + 🌟 첨부 이미지 형태의 세그먼트 탭 (화면 분할 제어기) -->
       <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px">
@@ -2561,6 +3216,297 @@ button,textarea,input{font-family:inherit;color:inherit}
 
     </div>
     </sc-if>
+
+    <!-- 🌟 10 1:1 화상 한국어 수업 매칭 플랫폼 (Video Class Platform - PRD MVP) -->
+    <sc-if value="{{ pVideoClass }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="10 Video Class Platform" style="max-width:1200px;width:100%;margin:0 auto;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:24px">
+
+      <!-- 👑 플랫폼 최상단 헤더 배너 -->
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;box-shadow:0 4px 20px rgba(0,0,0,0.03)">
+        <div style="display:flex;flex-direction:column;gap:6px;max-width:760px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:24px">📹</span>
+            <h1 style="margin:0;font-size:clamp(20px,2.5vw,26px);font-weight:700;color:var(--ink);letter-spacing:-0.02em">
+              1:1 화상 한국어 수업 매칭 플랫폼
+            </h1>
+            <span style="font-size:11px;font-weight:700;background:rgba(212,175,55,0.18);color:#B8860B;border:1px solid rgba(212,175,55,0.4);padding:3px 9px;border-radius:12px">
+              👑 Admin Preview
+            </span>
+            <span style="font-size:11px;font-weight:600;background:rgba(35,73,63,0.12);color:var(--accent);border:1px solid var(--accent);padding:3px 9px;border-radius:12px">
+              Google Meet 연동 MVP
+            </span>
+          </div>
+          <p style="margin:0;font-size:13.5px;color:var(--sub);line-height:1.55">
+            원어민 튜터의 자기소개 영상과 프로필을 확인하고 시차 고민 없이 원하는 시간을 선택하여 1:1 맞춤 화상 수업을 예약하세요. 수업 10분 전 자동 발급된 Google Meet 회의실에 입장할 수 있습니다.
+          </p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button sc-camel-on-click="{{ refreshVideoClass }}" style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:9px 15px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">
+            <span>🔄</span>
+            <span>데이터 새로고침</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 세그먼트 탭 메뉴 -->
+      <div style="display:flex;gap:8px;border-bottom:1px solid var(--line2);padding-bottom:10px;flex-wrap:wrap">
+        <button sc-camel-on-click="{{ setVcTabTutors }}" style="border:0;background:{{ vcTabTutors ? 'var(--solid)' : 'var(--card)' }};color:{{ vcTabTutors ? 'var(--on-solid)' : 'var(--ink)' }};padding:10px 18px;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid {{ vcTabTutors ? 'var(--solid)' : 'var(--line)' }};transition:all .15s ease">
+          <span>🔍</span>
+          <span>튜터 탐색 및 예약 (Find Tutors)</span>
+        </button>
+        <button sc-camel-on-click="{{ setVcTabSessions }}" style="border:0;background:{{ vcTabSessions ? 'var(--solid)' : 'var(--card)' }};color:{{ vcTabSessions ? 'var(--on-solid)' : 'var(--ink)' }};padding:10px 18px;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid {{ vcTabSessions ? 'var(--solid)' : 'var(--line)' }};transition:all .15s ease">
+          <span>📅</span>
+          <span>내 화상 수업 대시보드 (My Sessions)</span>
+          <span style="font-size:11px;padding:1px 6px;border-radius:10px;background:{{ vcTabSessions ? '#fff' : 'var(--accent)' }};color:{{ vcTabSessions ? 'var(--accent)' : '#fff' }};font-weight:700">{{ scheduledBookingsCount }}</span>
+        </button>
+        <button sc-camel-on-click="{{ setVcTabAdmin }}" style="border:0;background:{{ vcTabAdmin ? 'var(--solid)' : 'var(--card)' }};color:{{ vcTabAdmin ? 'var(--on-solid)' : 'var(--ink)' }};padding:10px 18px;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid {{ vcTabAdmin ? 'var(--solid)' : 'var(--line)' }};transition:all .15s ease">
+          <span>⚙️</span>
+          <span>튜터 프로필 및 슬롯 관리 (Tutor Admin)</span>
+        </button>
+      </div>
+
+      <!-- ================= 탭 1: 튜터 탐색 및 수업 예약 ================= -->
+      <sc-if value="{{ vcTabTutors }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:20px">
+          
+          <!-- 타임존 안내 및 정보 배너 -->
+          <div style="background:rgba(35,73,63,0.06);border:1px solid var(--line);border-radius:14px;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:16px">🌏</span>
+              <span style="font-size:13px;color:var(--ink);font-weight:600">내 로컬 타임존:</span>
+              <code style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--card);padding:2px 8px;border-radius:6px;border:1px solid var(--line)">{{ vcTimezone }}</code>
+              <span style="font-size:12px;color:var(--sub)">· 한국 시간(KST) 슬롯이 현지 시간으로 자동 변환되어 표기됩니다.</span>
+            </div>
+            <span style="font-size:12px;color:var(--faint)">FR-002 타임존 자동 변환 & 이중 예약 방지 잠금 적용됨</span>
+          </div>
+
+          <!-- 튜터 카드 리스트 그리드 -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px">
+            <sc-for list="{{ vcTutors }}" as="t" hint-placeholder-count="3">
+              <div style="background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:18px;box-shadow:0 4px 14px rgba(0,0,0,0.03);transition:transform .15s ease,box-shadow .15s ease">
+                
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <!-- 튜터 프로필 상단 헤더 -->
+                  <div style="display:flex;align-items:center;gap:14px">
+                    <div style="position:relative;width:56px;height:56px;flex:none">
+                      <img src="{{ t.photoURL }}" alt="{{ t.name }}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid var(--line)">
+                      <span style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:#27AE60;border:2px solid var(--card);border-radius:50%" title="온라인"></span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                      <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</h3>
+                      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)">
+                        <span style="color:#F2C94C;font-weight:700">★ {{ t.rating }}</span>
+                        <span>· 리뷰 {{ t.reviewCount }}개</span>
+                        <span>· 완료 {{ t.lessonsCompleted }}회</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 한 줄 소개 및 상세 소개 요약 -->
+                  <p style="margin:0;font-size:13px;font-weight:600;color:var(--accent);line-height:1.4">“{{ t.shortIntro }}”</p>
+                  <p style="margin:0;font-size:12.5px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">{{ t.bio }}</p>
+
+                  <!-- 전문 분야 태그 -->
+                  <div style="display:flex;flex-wrap:wrap;gap:6px">
+                    <sc-for list="{{ t.specialtyList }}" as="sp" hint-placeholder-count="3">
+                      <span style="font-size:11px;padding:3px 8px;border-radius:6px;background:rgba(35,73,63,0.08);color:var(--accent);font-weight:600">#{{ sp }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <!-- 하단 가격 및 액션 버튼들 -->
+                <div style="display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line2);padding-top:14px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub)">
+                    <span>수업료 (회당)</span>
+                    <span style="font-weight:700;color:var(--ink);font-size:13.5px">50분 ₩{{ t.pricePerSession.min50 }}</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <button sc-camel-on-click="{{ t.openVideo }}" style="display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer">
+                      <span>▶</span>
+                      <span>소개 영상</span>
+                    </button>
+                    <button sc-camel-on-click="{{ t.openArrange }}" style="display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:var(--accent);color:#fff;padding:10px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer">
+                      <span>🗓️</span>
+                      <span>수업 예약</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </sc-for>
+          </div>
+
+        </div>
+      </sc-if>
+
+      <!-- ================= 탭 2: 내 화상 수업 대시보드 ================= -->
+      <sc-if value="{{ vcTabSessions }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:20px">
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+            <h2 style="margin:0;font-size:17px;font-weight:700;color:var(--ink)">📅 예약된 1:1 화상 수업 세션</h2>
+            <span style="font-size:12.5px;color:var(--sub)">Google Meet 화상 회의실 자동 생성 및 수업 전후 피드백 노트</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <sc-for list="{{ vcBookings }}" as="b" hint-placeholder-count="2">
+              <div style="background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 4px 14px rgba(0,0,0,0.03)">
+                
+                <!-- 세션 카드 헤더 -->
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <img src="{{ b.tutorPhoto }}" alt="{{ b.tutorName }}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:1.5px solid var(--line)">
+                    <div style="display:flex;flex-direction:column;gap:2px">
+                      <span style="font-size:15px;font-weight:700;color:var(--ink)">{{ b.tutorName }} 튜터와의 1:1 화상 수업</span>
+                      <span style="font-size:12.5px;color:var(--sub)">학생: {{ b.studentName }} ({{ b.duration }}분 세션)</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <sc-if value="{{ b.isScheduled }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(47,128,237,0.12);color:#2F80ED;border:1px solid #2F80ED">
+                        SCHEDULED (예약 완료)
+                      </span>
+                    </sc-if>
+                    <sc-if value="{{ b.isLive }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(235,87,87,0.15);color:#EB5757;border:1px solid #EB5757;animation:pulse 1.5s infinite">
+                        🔴 LIVE (수업 진행 중)
+                      </span>
+                    </sc-if>
+                    <sc-if value="{{ b.isCompleted }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(39,174,96,0.12);color:#27AE60;border:1px solid #27AE60">
+                        COMPLETED (수업 완료)
+                      </span>
+                    </sc-if>
+                  </div>
+                </div>
+
+                <!-- 일정 및 Google Meet 연동 정보 박스 -->
+                <div style="background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:11.5px;color:var(--faint);font-weight:600">수업 일시 (현지 시간)</span>
+                    <span style="font-size:13.5px;font-weight:700;color:var(--ink)">{{ b.formattedTime }}</span>
+                    <span style="font-size:11px;color:var(--sub)">한국 시간: {{ b.kstTimeLabel }}</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:11.5px;color:var(--faint);font-weight:600">Google Meet 회의실 링크 (FR-003)</span>
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);word-break:break-all">{{ b.googleMeetUrl }}</code>
+                      <button sc-camel-on-click="{{ b.copyMeet }}" title="링크 복사" style="border:0;background:none;cursor:pointer;font-size:13px;padding:2px">📋</button>
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:11.5px;color:var(--faint);font-weight:600">수업 카운트다운</span>
+                    <span style="font-size:13px;font-weight:700;color:var(--hot)">{{ b.countdownLabel }}</span>
+                  </div>
+                </div>
+
+                <!-- 액션 버튼 바 -->
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+                  
+                  <!-- 입장 CTA (10분 전 활성화) -->
+                  <sc-if value="{{ b.canEnterMeet }}" hint-placeholder-val="{{ true }}">
+                    <button sc-camel-on-click="{{ b.enterMeet }}" style="display:inline-flex;align-items:center;gap:8px;border:0;background:#27AE60;color:#fff;padding:11px 22px;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(39,174,96,0.3)">
+                      <span>📹</span>
+                      <span>Google Meet 입장하기 (수업 참여)</span>
+                    </button>
+                  </sc-if>
+                  <sc-if value="{{ !b.canEnterMeet && !b.isCompleted }}" hint-placeholder-val="{{ false }}">
+                    <button disabled style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);color:var(--faint);padding:11px 20px;border-radius:12px;font-size:13px;font-weight:600;cursor:not-allowed">
+                      <span>🔒</span>
+                      <span>Google Meet 입장 (수업 10분 전 오픈)</span>
+                    </button>
+                  </sc-if>
+
+                  <!-- 수업 완료 시 피드백 액션 버튼들 -->
+                  <sc-if value="{{ b.isCompleted }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                      <button sc-camel-on-click="{{ b.openFeedbackView }}" style="border:1px solid var(--accent);background:rgba(35,73,63,0.08);color:var(--accent);padding:9px 15px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer">
+                        📋 피드백 리포트 열람
+                      </button>
+                      <button sc-camel-on-click="{{ b.openFeedbackTutor }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer">
+                        ✍️ 튜터 리포트 작성
+                      </button>
+                      <button sc-camel-on-click="{{ b.openFeedbackStudent }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer">
+                        ⭐ 학생 리뷰 작성
+                      </button>
+                    </div>
+                  </sc-if>
+
+                  <!-- 세션 상태 시뮬레이션 버튼 (테스트 편의용) -->
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <span style="font-size:11px;color:var(--faint)">상태 변경:</span>
+                    <button sc-camel-on-click="{{ b.makeLive }}" style="border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">LIVE</button>
+                    <button sc-camel-on-click="{{ b.makeCompleted }}" style="border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">COMPLETED</button>
+                  </div>
+
+                </div>
+
+              </div>
+            </sc-for>
+          </div>
+
+        </div>
+      </sc-if>
+
+      <!-- ================= 탭 3: 튜터 프로필 및 슬롯 관리 (Tutor Admin) ================= -->
+      <sc-if value="{{ vcTabAdmin }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:26px;display:flex;flex-direction:column;gap:20px">
+          
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <h2 style="margin:0;font-size:18px;font-weight:700;color:var(--ink)">👨‍🏫 튜터 프로필 및 수업 소개 영상 등록 (FR-001)</h2>
+            <p style="margin:0;font-size:13px;color:var(--sub)">튜터 프로필, YouTube/Vimeo 소개 영상(Embed), 전문 분야 및 예약 시간표를 등록합니다.</p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">튜터 성명 및 영문명</span>
+              <input value="{{ vcAdminTutorName }}" sc-camel-on-change="{{ onVcAdminName }}" placeholder="예: 정하늘 (Haneul Jung)" style="border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:14px;outline:none">
+            </label>
+
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">한 줄 소개 (Catchphrase)</span>
+              <input value="{{ vcAdminTutorShort }}" sc-camel-on-change="{{ onVcAdminShort }}" placeholder="예: 첫걸음부터 유창한 발음까지 이끌어 드립니다" style="border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:14px;outline:none">
+            </label>
+          </div>
+
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">상세 자기소개 및 티칭 스타일 (최소 50자 필수 검증)</span>
+              <span style="font-size:12px;font-weight:600;color:{{ vcAdminBioValid ? 'var(--accent)' : 'var(--hot)' }}">
+                {{ vcAdminBioCount }} / 50자 이상 필수
+              </span>
+            </div>
+            <textarea value="{{ vcAdminTutorBio }}" sc-camel-on-change="{{ onVcAdminBio }}" rows="4" placeholder="안녕하세요! 외국인 학습자를 대상으로 한국어 발음과 실전 회화를 1:1로 지도하는 튜터입니다..." style="border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:12px 14px;border-radius:10px;font-size:13.5px;line-height:1.5;outline:none"></textarea>
+          </label>
+
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:13px;font-weight:700;color:var(--ink)">소개 영상 URL (YouTube 또는 Vimeo 링크)</span>
+            <input value="{{ vcAdminTutorVideo }}" sc-camel-on-change="{{ onVcAdminVideo }}" placeholder="예: https://www.youtube.com/watch?v=kJQP7kiw5Fk" style="border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:14px;outline:none">
+            <span style="font-size:11.5px;color:var(--faint)">유효한 YouTube / Vimeo / MP4 링크 형식 검증이 수행됩니다.</span>
+          </label>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">전문 분야 (쉼표 구분)</span>
+              <input value="{{ vcAdminTutorSpecialties }}" sc-camel-on-change="{{ onVcAdminSpecialties }}" placeholder="일상 회화, 발음 교정, K-드라마" style="border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:14px;outline:none">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">지원 가능 언어 (쉼표 구분)</span>
+              <input value="{{ vcAdminTutorLanguages }}" sc-camel-on-change="{{ onVcAdminLanguages }}" placeholder="한국어 (Native), English (Fluent)" style="border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:14px;outline:none">
+            </label>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;border-top:1px solid var(--line2);padding-top:16px">
+            <button sc-camel-on-click="{{ submitTutorProfile }}" style="border:0;background:var(--accent);color:#fff;padding:12px 26px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
+              튜터 프로필 저장 (POST /api/v1/tutors/profile)
+            </button>
+          </div>
+
+        </div>
+      </sc-if>
+
+    </div>
+    </sc-if>
   </main>
 </div>
 </x-dc>
@@ -2972,7 +3918,7 @@ const MON = ['January','February','March','April','May','June','July','August','
 
 const T = {
 en:{
- navHow:'How it works', navTutors:'Curriculum', navAbout:'About us', login:'Log in', startFree:'Start free', themeTitle:'Toggle dark mode',
+ navHow:'How it works', navTutors:'Curriculum', navVideoClass:'1:1 Video', navAbout:'About us', login:'Log in', startFree:'Start free', themeTitle:'Toggle dark mode',
  heroEyebrow:'한국어, 대화로 배워요', heroH1:'Learn Korean by texting a real tutor.',
  heroP:'Pick a tutor and chat the way Koreans actually message each other. Mistakes are corrected gently, right inside the conversation — then short listening, reading, writing and speaking drills lock in what you used.',
  ctaTutor:'Choose a tutor', ctaLevel:'Take the 5-min level check', heroNote:'From your very first ㄱ to TOPIK 6 · Explanations in English',
@@ -3040,7 +3986,7 @@ en:{
  onlineLabel:'Online now'
 },
 ko:{
- navHow:'학습 방법', navTutors:'커리큘럼', navAbout:'회사 소개', login:'로그인', startFree:'무료로 시작', themeTitle:'다크 모드 전환',
+ navHow:'학습 방법', navTutors:'커리큘럼', navVideoClass:'화상수업', navAbout:'회사 소개', login:'로그인', startFree:'무료로 시작', themeTitle:'다크 모드 전환',
  heroEyebrow:'Learn Korean by chatting', heroH1:'실제 튜터와 메시지를 주고받으며 한국어를 배워요.',
  heroP:'튜터를 고르고, 한국 사람들이 실제로 메시지를 주고받는 방식 그대로 대화해요. 실수는 대화 안에서 바로 부드럽게 고쳐 주고, 짧은 듣기·읽기·쓰기·말하기 연습으로 쓴 표현을 다시 익혀요.',
  ctaTutor:'튜터 고르기', ctaLevel:'5분 레벨 테스트', heroNote:'첫 자음 ㄱ부터 TOPIK 6급까지 · 영어 해설 제공',
@@ -3169,6 +4115,9 @@ class Component extends DCLogic {
     typing: false,
     w: 1200,
     trAll: false,
+    chatTransLoading: false,
+    chatTransTutorId: '',
+    chatTranslationError: '',
     trOpen: {},
     filter: 'all',
     playing: false,
@@ -3247,9 +4196,295 @@ class Component extends DCLogic {
     adminLoading: false,
     adminSearch: '',
     adminFilter: 'all',
-    adminTab: 'overview'
+    adminTab: 'overview',
+    // ===== 1:1 화상수업 (Video Class Matching) 상태 =====
+    vcModalOpen: false,
+    vcTab: 'tutors', // 'tutors' | 'mySessions' | 'admin'
+    vcTutors: [],
+    vcBookings: [],
+    vcLoading: false,
+    vcSelectedTutor: null,
+    vcArrangeModalOpen: false,
+    vcVideoModalOpen: false,
+    vcPlayingVideoUrl: '',
+    vcPlayingVideoTitle: '',
+    vcSelectedDuration: 50,
+    vcSelectedDate: new Date().toISOString().split('T')[0],
+    vcSelectedSlot: null,
+    vcTutorSlots: [],
+    vcSlotsLoading: false,
+    vcStudentName: 'Sarah Jenkins',
+    vcStudentEmail: 'sarah.j@gmail.com',
+    vcTimezone: (typeof Intl !== 'undefined' && Intl.DateTimeFormat) ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Asia/Seoul',
+    vcBookingNote: '',
+    vcActiveFeedbackBooking: null,
+    vcFeedbackTutorModalOpen: false,
+    vcFeedbackStudentModalOpen: false,
+    vcFeedbackViewModalOpen: false,
+    vcTutorFbSummary: '',
+    vcTutorFbKeyExp1: '',
+    vcTutorFbKeyExp2: '',
+    vcTutorFbKeyExp3: '',
+    vcTutorFbCorrections: '',
+    vcTutorFbEncouragement: '',
+    vcStudentFbRating: 5,
+    vcStudentFbComment: '',
+    vcStudentFbRecommend: true,
+    vcAdminTutorName: '',
+    vcAdminTutorShort: '',
+    vcAdminTutorBio: '',
+    vcAdminTutorVideo: '',
+    vcAdminTutorSpecialties: '일상 회화, 발음 교정, K-드라마',
+    vcAdminTutorLanguages: '한국어 (Native), English (Fluent)',
+    vcFilterSearch: '',
+    vcFilterSpecialty: 'all',
+    vcFilterDay: 'all'
   };
   msgRef = React.createRef();
+
+  goVideoClass = () => {
+    this.setState({ page: 'videoclass', vcModalOpen: false });
+    this.loadVideoClassData();
+    window.scrollTo(0, 0);
+  };
+
+  closeVideoClassModal = () => {
+    this.setState({ vcModalOpen: false });
+  };
+
+  loadVideoClassData = async () => {
+    this.setState({ vcLoading: true });
+    try {
+      const [tutorsRes, bookingsRes] = await Promise.all([
+        fetch('/api/v1/tutors').then(r => r.json()).catch(() => null),
+        fetch('/api/v1/bookings').then(r => r.json()).catch(() => null)
+      ]);
+      const updates = { vcLoading: false };
+      if (tutorsRes && tutorsRes.success) updates.vcTutors = tutorsRes.tutors;
+      if (bookingsRes && bookingsRes.success) updates.vcBookings = bookingsRes.bookings;
+      this.setState(updates);
+    } catch (err) {
+      console.warn('[VideoClass] load error:', err);
+      this.setState({ vcLoading: false });
+    }
+  };
+
+  openVideoModal = (tutor) => {
+    this.setState({
+      vcVideoModalOpen: true,
+      vcPlayingVideoUrl: tutor.embedVideoUrl || tutor.videoUrl,
+      vcPlayingVideoTitle: tutor.name
+    });
+  };
+
+  closeVideoModal = () => {
+    this.setState({ vcVideoModalOpen: false, vcPlayingVideoUrl: '' });
+  };
+
+  openArrangeModal = (tutor) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    this.setState({
+      vcSelectedTutor: tutor,
+      vcArrangeModalOpen: true,
+      vcSelectedSlot: null,
+      vcSelectedDate: todayStr,
+      vcSlotsLoading: true
+    });
+    this.loadTutorSlots(tutor.id, todayStr);
+  };
+
+  loadTutorSlots = async (tutorId, dateStr) => {
+    this.setState({ vcSlotsLoading: true });
+    try {
+      const tz = this.state.vcTimezone || 'Asia/Seoul';
+      const res = await fetch(`/api/v1/tutors/${tutorId}/slots?date=${dateStr}&timezone=${encodeURIComponent(tz)}`);
+      const data = await res.json();
+      if (data && data.success) {
+        this.setState({ vcTutorSlots: data.slots || [], vcSlotsLoading: false });
+      } else {
+        this.setState({ vcSlotsLoading: false });
+      }
+    } catch (e) {
+      this.setState({ vcSlotsLoading: false });
+    }
+  };
+
+  closeArrangeModal = () => {
+    this.setState({ vcArrangeModalOpen: false, vcSelectedTutor: null, vcSelectedSlot: null });
+  };
+
+  submitBooking = async () => {
+    const { vcSelectedTutor, vcSelectedSlot, vcSelectedDuration, vcStudentName, vcStudentEmail, vcTimezone, vcBookingNote } = this.state;
+    if (!vcSelectedTutor || !vcSelectedSlot) {
+      alert('예약하실 시간 슬롯을 선택해 주세요.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/v1/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tutorId: vcSelectedTutor.id,
+          slotTime: vcSelectedSlot.slotTime,
+          duration: vcSelectedDuration,
+          studentName: (this.state.currentUser && this.state.currentUser.displayName) || vcStudentName || 'Sarah Jenkins',
+          studentEmail: (this.state.currentUser && this.state.currentUser.email) || vcStudentEmail || 'sarah.j@gmail.com',
+          timezone: vcTimezone,
+          note: vcBookingNote
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        alert('🎉 1:1 화상 수업 예약이 완료되었습니다!\nGoogle Meet 링크가 자동 발급되었습니다.');
+        this.setState({ vcArrangeModalOpen: false, vcTab: 'mySessions' });
+        this.loadVideoClassData();
+      } else {
+        alert(data.error || '예약 처리에 실패했습니다.');
+      }
+    } catch (e) {
+      alert('서버 통신 오류가 발생했습니다.');
+    }
+  };
+
+  simulateBookingStatus = async (bookingId, nextStatus) => {
+    try {
+      const res = await fetch(`/api/v1/bookings/${bookingId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        this.loadVideoClassData();
+      }
+    } catch (e) {
+      console.warn('Status simulation error:', e);
+    }
+  };
+
+  openFeedbackModal = (booking, type) => {
+    if (type === 'tutor') {
+      this.setState({
+        vcActiveFeedbackBooking: booking,
+        vcFeedbackTutorModalOpen: true,
+        vcTutorFbSummary: booking.feedback?.tutor?.summary || '',
+        vcTutorFbKeyExp1: booking.feedback?.tutor?.keyExpressions?.[0] || '',
+        vcTutorFbKeyExp2: booking.feedback?.tutor?.keyExpressions?.[1] || '',
+        vcTutorFbKeyExp3: booking.feedback?.tutor?.keyExpressions?.[2] || '',
+        vcTutorFbCorrections: booking.feedback?.tutor?.corrections || '',
+        vcTutorFbEncouragement: booking.feedback?.tutor?.encouragement || ''
+      });
+    } else if (type === 'student') {
+      this.setState({
+        vcActiveFeedbackBooking: booking,
+        vcFeedbackStudentModalOpen: true,
+        vcStudentFbRating: booking.feedback?.student?.rating || 5,
+        vcStudentFbComment: booking.feedback?.student?.comment || '',
+        vcStudentFbRecommend: booking.feedback?.student?.recommend ?? true
+      });
+    } else if (type === 'view') {
+      this.setState({
+        vcActiveFeedbackBooking: booking,
+        vcFeedbackViewModalOpen: true
+      });
+    }
+  };
+
+  submitTutorFeedback = async () => {
+    const { vcActiveFeedbackBooking, vcTutorFbSummary, vcTutorFbKeyExp1, vcTutorFbKeyExp2, vcTutorFbKeyExp3, vcTutorFbCorrections, vcTutorFbEncouragement } = this.state;
+    if (!vcActiveFeedbackBooking) return;
+    if (!vcTutorFbSummary || !vcTutorFbCorrections) {
+      alert('수업 요약과 교정 노트를 작성해 주세요.');
+      return;
+    }
+    const keyExpressions = [vcTutorFbKeyExp1, vcTutorFbKeyExp2, vcTutorFbKeyExp3].filter(Boolean);
+    try {
+      const res = await fetch(`/api/v1/bookings/${vcActiveFeedbackBooking.id}/feedback/tutor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          summary: vcTutorFbSummary,
+          keyExpressions,
+          corrections: vcTutorFbCorrections,
+          encouragement: vcTutorFbEncouragement
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        alert('튜터 학습 리포트가 성공적으로 등록되었습니다.');
+        this.setState({ vcFeedbackTutorModalOpen: false });
+        this.loadVideoClassData();
+      } else {
+        alert(data.error || '리포트 등록 실패');
+      }
+    } catch (e) {
+      alert('서버 통신 오류');
+    }
+  };
+
+  submitStudentFeedback = async () => {
+    const { vcActiveFeedbackBooking, vcStudentFbRating, vcStudentFbComment, vcStudentFbRecommend } = this.state;
+    if (!vcActiveFeedbackBooking) return;
+    try {
+      const res = await fetch(`/api/v1/bookings/${vcActiveFeedbackBooking.id}/feedback/student`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: vcStudentFbRating,
+          comment: vcStudentFbComment,
+          recommend: vcStudentFbRecommend
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        alert('수업 리뷰가 등록되었습니다. 감사합니다!');
+        this.setState({ vcFeedbackStudentModalOpen: false });
+        this.loadVideoClassData();
+      } else {
+        alert(data.error || '리뷰 등록 실패');
+      }
+    } catch (e) {
+      alert('서버 통신 오류');
+    }
+  };
+
+  submitTutorProfile = async () => {
+    const { vcAdminTutorName, vcAdminTutorShort, vcAdminTutorBio, vcAdminTutorVideo, vcAdminTutorSpecialties, vcAdminTutorLanguages } = this.state;
+    if (!vcAdminTutorBio || vcAdminTutorBio.trim().length < 50) {
+      alert('소개 텍스트는 최소 50자 이상이어야 합니다 (현재 ' + (vcAdminTutorBio ? vcAdminTutorBio.trim().length : 0) + '자)');
+      return;
+    }
+    try {
+      const res = await fetch('/api/v1/tutors/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: vcAdminTutorName || '새 튜터',
+          shortIntro: vcAdminTutorShort,
+          bio: vcAdminTutorBio,
+          videoUrl: vcAdminTutorVideo,
+          specialties: vcAdminTutorSpecialties.split(',').map(s => s.trim()).filter(Boolean),
+          languages: vcAdminTutorLanguages.split(',').map(s => s.trim()).filter(Boolean)
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        alert('튜터 프로필이 성공적으로 저장되었습니다!');
+        this.setState({
+          vcAdminTutorName: '',
+          vcAdminTutorShort: '',
+          vcAdminTutorBio: '',
+          vcAdminTutorVideo: '',
+          vcTab: 'tutors'
+        });
+        this.loadVideoClassData();
+      } else {
+        alert(data.error || '프로필 저장 실패');
+      }
+    } catch (e) {
+      alert('서버 통신 오류');
+    }
+  };
 
   loadAdminDashboard = async () => {
     this.setState({ adminLoading: true });
@@ -3368,9 +4603,12 @@ class Component extends DCLogic {
       if (sw >= 180 && sw <= 460) savedSidebarWidth = sw;
     }catch(e){}
     const initialDates = savedDates ? JSON.parse(savedDates) : ['2026-09-01','2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-08','2026-09-09','2026-09-10','2026-09-11','2026-09-12','2026-09-14','2026-09-15','2026-09-16','2026-09-17','2026-09-18','2026-09-19','2026-09-21','2026-09-22','2026-09-23','2026-09-24','2026-09-25','2026-09-26','2026-09-27'];
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlAdmin = urlParams.get('admin') === '1' || urlParams.get('admin') === 'true';
     this.setState({
       lang,
       theme,
+      isAdmin: urlAdmin || this.state.isAdmin,
       cvHistory: this.loadConversations(),
       activityLogs: this.loadActivityLogs(),
       userXp: savedXp ? Number(savedXp) : 2840,
@@ -4645,7 +5883,9 @@ class Component extends DCLogic {
     }
     const u = { ...this.state.unread };
     delete u[id];
-    this.setState({ tutorId: id, unread: u, page: 'chat' });
+    this.setState({ tutorId: id, unread: u, page: 'chat', chatTranslationError: '' }, () => {
+      if (this.state.trAll) this.translateMissingChatMessages(id);
+    });
     try { localStorage.setItem('hn-tutor', id); } catch(e){}
     if (this.state.currentUser) {
       try {
@@ -4765,12 +6005,133 @@ class Component extends DCLogic {
       }
     }
   };
+  toggleChatTranslations = () => {
+    const next = !this.state.trAll;
+    this.setState({ trAll: next, chatTranslationError: '' }, () => {
+      if (next) this.translateMissingChatMessages(this.state.tutorId);
+    });
+  };
+  translateMissingChatMessages = async (tutorId = this.state.tutorId) => {
+    if (!tutorId) return;
+    if (!this.chatTranslationRequests) this.chatTranslationRequests = new Set();
+    if (this.chatTranslationRequests.has(tutorId)) return;
+
+    const source = this.state.msgs[tutorId] || [];
+    const missing = source
+      .map((message, index) => ({ index, id: message.id || '', text: String(message.text || '').trim(), tr: message.tr, from: message.from }))
+      .filter((message) => message.from === 't' && message.text && !message.tr);
+    if (!missing.length) {
+      if (this.state.chatTransTutorId === tutorId) {
+        this.setState({ chatTransLoading: false, chatTransTutorId: '' });
+      }
+      return;
+    }
+
+    this.chatTranslationRequests.add(tutorId);
+    this.setState({ chatTransLoading: true, chatTransTutorId: tutorId, chatTranslationError: '' });
+    let completed = false;
+    try {
+      // 브라우저에서도 작은 단위로 요청해 수백 개의 메시지가 쌓인 대화가
+      // 한 번의 큰 요청이나 서버 본문 제한 때문에 실패하지 않게 한다.
+      for (let start = 0; start < missing.length; start += 20) {
+        const batch = missing.slice(start, start + 20);
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lines: batch.map((message) => message.text) })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || ('HTTP_' + res.status));
+        if (!Array.isArray(data.translations) || data.translations.length !== batch.length || data.translations.some((text) => !String(text || '').trim())) {
+          throw new Error('번역 응답이 일부 누락되었습니다.');
+        }
+
+        await new Promise((resolve) => this.setState((prevState) => {
+          const list = [...(prevState.msgs[tutorId] || [])];
+          batch.forEach((requested, offset) => {
+            let index = requested.index;
+            if (requested.id) index = list.findIndex((message) => message.id === requested.id);
+            const current = list[index];
+            if (current?.from === 't' && current.text === requested.text && !current.tr) {
+              list[index] = { ...current, tr: String(data.translations[offset]).trim() };
+            }
+          });
+          return { msgs: { ...prevState.msgs, [tutorId]: list } };
+        }, resolve));
+      }
+      completed = true;
+    } catch (err) {
+      this.setState({
+        chatTranslationError: '영어 번역을 불러오지 못했습니다: ' + (err?.message || err)
+      });
+    } finally {
+      this.chatTranslationRequests.delete(tutorId);
+      const finish = {};
+      if (this.state.chatTransTutorId === tutorId) {
+        finish.chatTransLoading = false;
+        finish.chatTransTutorId = '';
+      }
+      this.setState(finish, () => {
+        // 번역 요청 도중 새 답변이 도착했으면 방금 도착한 답변까지 이어서 번역한다.
+        if (completed && this.state.trAll && this.state.tutorId === tutorId) {
+          const hasMore = (this.state.msgs[tutorId] || []).some((message) => message.from === 't' && message.text && !message.tr);
+          if (hasMore) this.translateMissingChatMessages(tutorId);
+        }
+      });
+    }
+  };
+  requestInlineCorrection = async (tutorId, messageId, sentence) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    try {
+      const res = await fetch('/api/correction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sentence, userId: this.state.currentUser?.uid || null }),
+        signal: controller.signal
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || ('HTTP_' + res.status));
+      if (data.error) throw new Error(data.error);
+
+      this.setState(prevState => {
+        const list = (prevState.msgs[tutorId] || []).map(message => {
+          if (message.id !== messageId) return message;
+          const next = { ...message, correctionPending: false, correctionError: '' };
+          if (data.has_error && data.wrong_span && data.fixed) {
+            next.fix = {
+              wrong: String(data.wrong_span).trim(),
+              right: String(data.fixed).trim(),
+              note: [
+                String(data.explanation_en || data.explanation_ko || '').trim(),
+                String(data.explanation_ko || data.explanation_en || '').trim()
+              ]
+            };
+          }
+          return next;
+        });
+        return { msgs: { ...prevState.msgs, [tutorId]: list } };
+      });
+    } catch (err) {
+      console.warn('[Correction API Error]', err);
+      this.setState(prevState => ({
+        msgs: {
+          ...prevState.msgs,
+          [tutorId]: (prevState.msgs[tutorId] || []).map(message => message.id === messageId
+            ? { ...message, correctionPending: false, correctionError: err?.name === 'AbortError' ? 'TIMEOUT' : (err?.message || 'ERROR') }
+            : message)
+        }
+      }));
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
   sendText(text){
     text=(text||'').trim(); if(!text) return;
     const targetTutorId=this.state.tutorId;
     const targetTutor=TUTORS.find(t=>t.id===targetTutorId);
     const msgId='msg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-    const userMsg={id:msgId, from:'me', text, time:nowHM(), pending:true};
+    const userMsg={id:msgId, from:'me', text, time:nowHM(), pending:true, correctionPending:true, correctionError:''};
 
     this.recordActivity({
       type: 'chat',
@@ -4789,7 +6150,7 @@ class Component extends DCLogic {
       },
       draft:'',
       typing:prevState.tutorId===targetTutorId?true:prevState.typing
-    }));
+    }), () => this.requestInlineCorrection(targetTutorId, msgId, text));
 
     // Development Mock 모드 (?mock=true 또는 localStorage.getItem('hn_mock') === 'true')
     const isMock = typeof window!=='undefined' && (
@@ -4812,13 +6173,15 @@ class Component extends DCLogic {
         });
         this.setState(prevState=>{
           const list=(prevState.msgs[targetTutorId]||[]).map(m=>m.id===msgId?{...m,pending:false}:m);
-          list.push({from:'t', text:r.text, tr:r.tr, time:nowHM()});
+          list.push({id:'msg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), from:'t', text:r.text, tr:r.tr, time:nowHM()});
           const stillPending=list.some(m=>m.pending);
           return {
             msgs:{...prevState.msgs, [targetTutorId]:list},
             typing:prevState.tutorId===targetTutorId?stillPending:prevState.typing,
             ri:prevState.ri+1
           };
+        }, () => {
+          if (this.state.trAll && this.state.tutorId === targetTutorId) this.translateMissingChatMessages(targetTutorId);
         });
       },1600);
       return;
@@ -4865,6 +6228,7 @@ class Component extends DCLogic {
           const prevList = prevState.msgs[targetTutorId]||[];
           const updated = prevList.map(m=>m.id===msgId?{...m,pending:false}:m);
           updated.push({
+            id:'msg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
             from:'t',
             text:data.reply.trim(),
             tr:typeof data.translation==='string'?data.translation:'',
@@ -4875,6 +6239,8 @@ class Component extends DCLogic {
             msgs:{...prevState.msgs, [targetTutorId]:updated},
             typing:prevState.tutorId===targetTutorId?stillPending:prevState.typing
           };
+        }, () => {
+          if (this.state.trAll && this.state.tutorId === targetTutorId) this.translateMissingChatMessages(targetTutorId);
         });
       })
       .catch(err=>{
@@ -5150,7 +6516,8 @@ class Component extends DCLogic {
     const navDef=[
       {label:L?'학습':'LEARN', items:[['home',L?'오늘의 학습':'Today','오',''],['tutors',L?'커리큘럼':'Curriculum','커',''],['chat',L?'튜터 채팅':'Chat','대','']]},
       {label:L?'4대 영역 연습':'PRACTICE', items:[['listening',L?'듣기 연습':'Listening','듣',''],['reading',L?'읽기 독해':'Reading','읽',''],['writing',L?'쓰기 조합':'Writing','쓰',''],['speaking',L?'말하기 코치':'Speaking','말',''],['conversation',L?'실시간 회화':'Conversation','회','']]},
-      {label:L?'나의 기록':'YOU', items:[['record',L?'학습 기록':'My progress','기',''],['about',L?'서비스 소개':'About us','소','']]}
+      {label:L?'나의 기록':'YOU', items:[['record',L?'학습 기록':'My progress','기',''],['about',L?'서비스 소개':'About us','소','']]},
+      ...(s.isAdmin ? [{label:L?'화상 수업 매칭':'LIVE VIDEO CLASS', items:[['videoclass',L?'1:1 화상수업':'1:1 Live Class','화','👑']]}] : [])
     ];
     const mk=([k,l,g,tag])=>{
       const a=page===k;
@@ -5162,11 +6529,26 @@ class Component extends DCLogic {
     const msgList=s.msgs[s.tutorId]||[];
     const msgs=msgList.map((m,i)=>{
       const prev=msgList[i-1], first=!prev||prev.from!==m.from||!!m.date;
-      const trOpen=s.trAll||!!s.trOpen[s.tutorId+i];
+      const trKey=s.tutorId+i;
+      const trOpen=s.trAll||!!s.trOpen[trKey];
+      const wantsTranslation=m.from==='t'&&trOpen;
+      const translationLoading=!!(s.chatTransLoading&&s.chatTransTutorId===s.tutorId);
+      const fixNotes=Array.isArray(m.fix?.note)?m.fix.note:[];
+      const fixNoteKo=fixNotes[1]||fixNotes[0]||'';
+      const fixNoteEn=fixNotes[0]||'';
       return {...m, isTutor:m.from==='t', isMe:m.from==='me', hasDate:!!m.date, dateLabel:m.date?fmtDate(m.date,L):'', timeLabel:fmtTime(m.time,L), first, mt:first&&i>0?'8px':'0', avOp:first?1:0,
         rad:m.from==='t'?(first?'4px 14px 14px 14px':'14px'):(first?'14px 4px 14px 14px':'14px'),
-        showTr:m.from==='t'&&trOpen, pending:!!m.pending, hasFix:!!m.fix&&(P.inlineCorrections ?? true), fixWrong:m.fix?.wrong, fixRight:m.fix?.right, fixNote:m.fix?.note[L],
-        toggleTr:()=>this.setState({trOpen:{...s.trOpen,[s.tutorId+i]:!s.trOpen[s.tutorId+i]}})};
+        showTr:!!(wantsTranslation&&m.tr), showTrLoading:!!(wantsTranslation&&!m.tr&&translationLoading), trLoadingLabel:L?'영어 번역 중…':'Translating…',
+        pending:!!m.pending, fixLoading:!!m.correctionPending, fixLoadingLabel:L?'문장 확인 중…':'Checking your sentence…',
+        hasFixError:!!m.correctionError, fixErrorLabel:L?'문장 교정을 불러오지 못했어요.':'Could not check this sentence.',
+        hasFix:!!m.fix&&(P.inlineCorrections ?? true), fixWrong:m.fix?.wrong, fixRight:m.fix?.right,
+        fixNoteKo, fixNoteEn, showFixNoteEn:!!(s.trAll&&fixNoteEn&&fixNoteEn!==fixNoteKo),
+        toggleTr:()=>{
+          const next=!s.trOpen[trKey];
+          this.setState({trOpen:{...s.trOpen,[trKey]:next},chatTranslationError:''},()=>{
+            if(next&&!m.tr) this.translateMissingChatMessages(s.tutorId);
+          });
+        }};
     });
     const lastDate=l=>{let d=TODAY;for(const m of l) if(m.date) d=m.date; return d;};
     const chatList=TUTORS.map(tu=>{const l=s.msgs[tu.id], last=l[l.length-1];return {...tz(tu), open:()=>this.selectTutor(tu.id), last:last.text, time:listDate(lastDate(l),last.time,L), unread:s.unread[tu.id]||0, hasUnread:!!s.unread[tu.id], bg:tu.id===s.tutorId?'var(--chip)':'var(--card)'};});
@@ -5675,8 +7057,147 @@ class Component extends DCLogic {
       enBg:L?'transparent':'var(--card)', enFg:L?'var(--faint)':'var(--ink)', koBg:L?'var(--card)':'transparent', koFg:L?'var(--ink)':'var(--faint)',
       aboutNavC:page==='about'?'var(--ink)':'var(--sub)', aboutNavW:page==='about'?'700':'400',
       pAdmin:page==='admin',
+      pVideoClass:page==='videoclass',
       isAdmin: !!s.isAdmin,
+      vcTabTutors: (s.vcTab || 'tutors') === 'tutors',
+      vcTabSessions: s.vcTab === 'mySessions',
+      vcTabAdmin: s.vcTab === 'admin',
+      setVcTabTutors: () => { this.setState({ vcTab: 'tutors' }); this.loadVideoClassData(); },
+      setVcTabSessions: () => { this.setState({ vcTab: 'mySessions' }); this.loadVideoClassData(); },
+      setVcTabAdmin: () => { this.setState({ vcTab: 'admin' }); this.loadVideoClassData(); },
+      refreshVideoClass: () => this.loadVideoClassData(),
+      vcTutors: (s.vcTutors && s.vcTutors.length > 0) ? s.vcTutors.map(t => ({
+        ...t,
+        openVideo: () => this.openVideoModal(t),
+        openArrange: () => this.openArrangeModal(t),
+        specialtyList: (t.specialties || []).slice(0, 3)
+      })) : [],
+      hasVcTutors: !!(s.vcTutors && s.vcTutors.length > 0),
+      noVcTutors: !(s.vcTutors && s.vcTutors.length > 0),
+      vcBookings: (s.vcBookings || []).map(b => {
+        const isScheduled = b.status === 'SCHEDULED';
+        const isLive = b.status === 'LIVE';
+        const isCompleted = b.status === 'COMPLETED';
+        const slotDate = new Date(b.slotTime);
+        const nowMs = Date.now();
+        const diffMs = slotDate.getTime() - nowMs;
+        const diffMins = Math.round(diffMs / 60000);
+        const canEnterMeet = isLive || (isScheduled && diffMins <= 10 && diffMins >= -60);
+        let countdownLabel = '';
+        if (isCompleted) countdownLabel = '수업 완료';
+        else if (isLive) countdownLabel = '🔴 실시간 수업 진행 중';
+        else if (diffMins > 0) {
+          const hours = Math.floor(diffMins / 60);
+          const mins = diffMins % 60;
+          countdownLabel = hours > 0 ? `수업 시작까지 ${hours}시간 ${mins}분` : `수업 시작까지 ${mins}분`;
+        } else {
+          countdownLabel = '수업 진행 시간';
+        }
+        return {
+          ...b,
+          isScheduled,
+          isLive,
+          isCompleted,
+          canEnterMeet,
+          countdownLabel,
+          formattedTime: slotDate.toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' }),
+          kstTimeLabel: `${slotDate.getUTCHours() + 9}:00 KST`,
+          enterMeet: () => window.open(b.googleMeetUrl, '_blank'),
+          copyMeet: () => { navigator.clipboard?.writeText(b.googleMeetUrl); alert('회의 링크가 복사되었습니다:\n' + b.googleMeetUrl); },
+          makeLive: () => this.simulateBookingStatus(b.id, 'LIVE'),
+          makeCompleted: () => this.simulateBookingStatus(b.id, 'COMPLETED'),
+          openFeedbackTutor: () => this.openFeedbackModal(b, 'tutor'),
+          openFeedbackStudent: () => this.openFeedbackModal(b, 'student'),
+          openFeedbackView: () => this.openFeedbackModal(b, 'view'),
+          hasTutorFb: !!(b.feedback && b.feedback.tutor),
+          hasStudentFb: !!(b.feedback && b.feedback.student)
+        };
+      }),
+      scheduledBookingsCount: (s.vcBookings || []).filter(b => b.status === 'SCHEDULED' || b.status === 'LIVE').length,
+      completedBookingsCount: (s.vcBookings || []).filter(b => b.status === 'COMPLETED').length,
+      vcLoading: !!s.vcLoading,
+      // 예약 모달 바인딩
+      vcArrangeModalOpen: !!s.vcArrangeModalOpen,
+      closeArrangeModal: () => this.closeArrangeModal(),
+      submitBooking: () => this.submitBooking(),
+      vcSelectedTutor: s.vcSelectedTutor,
+      vcSelectedDuration: s.vcSelectedDuration || 50,
+      setDuration30: () => this.setState({ vcSelectedDuration: 30 }),
+      setDuration50: () => this.setState({ vcSelectedDuration: 50 }),
+      vcDuration30Active: (s.vcSelectedDuration || 50) === 30,
+      vcDuration50Active: (s.vcSelectedDuration || 50) === 50,
+      vcTimezone: s.vcTimezone || 'Asia/Seoul',
+      vcSelectedDate: s.vcSelectedDate || new Date().toISOString().split('T')[0],
+      onVcDateChange: (e) => { this.setState({ vcSelectedDate: e.target.value }); if(s.vcSelectedTutor) this.loadTutorSlots(s.vcSelectedTutor.id, e.target.value); },
+      vcTutorSlots: (s.vcTutorSlots || []).map(slot => ({
+        ...slot,
+        isSelected: s.vcSelectedSlot && s.vcSelectedSlot.slotTime === slot.slotTime,
+        select: () => { if (!slot.isBooked) this.setState({ vcSelectedSlot: slot }); }
+      })),
+      vcSlotsLoading: !!s.vcSlotsLoading,
+      hasSelectedSlot: !!s.vcSelectedSlot,
+      vcSelectedSlotLabel: s.vcSelectedSlot ? `${s.vcSelectedSlot.clientFormattedTime} (${s.vcSelectedSlot.kstTime} KST)` : '선택 안 됨',
+      vcStudentName: s.vcStudentName || 'Sarah Jenkins',
+      onVcStudentName: (e) => this.setState({ vcStudentName: e.target.value }),
+      vcBookingNote: s.vcBookingNote || '',
+      onVcBookingNote: (e) => this.setState({ vcBookingNote: e.target.value }),
+      // 영상 재생 모달 바인딩
+      vcVideoModalOpen: !!s.vcVideoModalOpen,
+      closeVideoModal: () => this.closeVideoModal(),
+      vcPlayingVideoUrl: s.vcPlayingVideoUrl || '',
+      vcPlayingVideoTitle: s.vcPlayingVideoTitle || '튜터 소개 영상',
+      // 피드백 모달 바인딩
+      vcFeedbackTutorModalOpen: !!s.vcFeedbackTutorModalOpen,
+      closeFeedbackTutorModal: () => this.setState({ vcFeedbackTutorModalOpen: false }),
+      submitTutorFeedback: () => this.submitTutorFeedback(),
+      vcTutorFbSummary: s.vcTutorFbSummary || '',
+      onVcTutorFbSummary: (e) => this.setState({ vcTutorFbSummary: e.target.value }),
+      vcTutorFbKeyExp1: s.vcTutorFbKeyExp1 || '',
+      onVcTutorFbKeyExp1: (e) => this.setState({ vcTutorFbKeyExp1: e.target.value }),
+      vcTutorFbKeyExp2: s.vcTutorFbKeyExp2 || '',
+      onVcTutorFbKeyExp2: (e) => this.setState({ vcTutorFbKeyExp2: e.target.value }),
+      vcTutorFbKeyExp3: s.vcTutorFbKeyExp3 || '',
+      onVcTutorFbKeyExp3: (e) => this.setState({ vcTutorFbKeyExp3: e.target.value }),
+      vcTutorFbCorrections: s.vcTutorFbCorrections || '',
+      onVcTutorFbCorrections: (e) => this.setState({ vcTutorFbCorrections: e.target.value }),
+      vcTutorFbEncouragement: s.vcTutorFbEncouragement || '',
+      onVcTutorFbEncouragement: (e) => this.setState({ vcTutorFbEncouragement: e.target.value }),
+      // 학생 리뷰 모달 바인딩
+      vcFeedbackStudentModalOpen: !!s.vcFeedbackStudentModalOpen,
+      closeFeedbackStudentModal: () => this.setState({ vcFeedbackStudentModalOpen: false }),
+      submitStudentFeedback: () => this.submitStudentFeedback(),
+      vcStudentFbRating: s.vcStudentFbRating || 5,
+      setVcRating: (r) => this.setState({ vcStudentFbRating: r }),
+      vcStudentFbComment: s.vcStudentFbComment || '',
+      onVcStudentFbComment: (e) => this.setState({ vcStudentFbComment: e.target.value }),
+      vcStudentFbRecommend: !!s.vcStudentFbRecommend,
+      toggleVcRecommend: () => this.setState({ vcStudentFbRecommend: !s.vcStudentFbRecommend }),
+      // 피드백 열람 모달 바인딩
+      vcFeedbackViewModalOpen: !!s.vcFeedbackViewModalOpen,
+      closeFeedbackViewModal: () => this.setState({ vcFeedbackViewModalOpen: false }),
+      activeFbBooking: s.vcActiveFeedbackBooking,
+      activeFbTutor: s.vcActiveFeedbackBooking?.feedback?.tutor,
+      activeFbStudent: s.vcActiveFeedbackBooking?.feedback?.student,
+      // 튜터 어드민 폼 바인딩
+      vcAdminTutorName: s.vcAdminTutorName || '',
+      onVcAdminName: (e) => this.setState({ vcAdminTutorName: e.target.value }),
+      vcAdminTutorShort: s.vcAdminTutorShort || '',
+      onVcAdminShort: (e) => this.setState({ vcAdminTutorShort: e.target.value }),
+      vcAdminTutorBio: s.vcAdminTutorBio || '',
+      onVcAdminBio: (e) => this.setState({ vcAdminTutorBio: e.target.value }),
+      vcAdminBioCount: (s.vcAdminTutorBio || '').trim().length,
+      vcAdminBioValid: (s.vcAdminTutorBio || '').trim().length >= 50,
+      vcAdminTutorVideo: s.vcAdminTutorVideo || '',
+      onVcAdminVideo: (e) => this.setState({ vcAdminTutorVideo: e.target.value }),
+      vcAdminTutorSpecialties: s.vcAdminTutorSpecialties || '',
+      onVcAdminSpecialties: (e) => this.setState({ vcAdminTutorSpecialties: e.target.value }),
+      vcAdminTutorLanguages: s.vcAdminTutorLanguages || '',
+      onVcAdminLanguages: (e) => this.setState({ vcAdminTutorLanguages: e.target.value }),
+      submitTutorProfile: () => this.submitTutorProfile(),
       goAdmin: () => this.goAdmin(),
+      vcModalOpen: !!s.vcModalOpen,
+      goVideoClass: () => this.goVideoClass(),
+      closeVideoClassModal: () => this.closeVideoClassModal(),
       adminLoading: !!s.adminLoading,
       refreshAdminData: () => this.loadAdminDashboard(),
       adminSearchQuery: s.adminSearch || '',
@@ -5698,7 +7219,9 @@ class Component extends DCLogic {
       plan, week, lastJiwooTime:fmtTime(jl[jl.length-1].time,L),
       filters, tutorList,
       chatH:wide?'calc(100vh - 69px)':'calc(100vh - 122px)', chatList, tutor, msgs, msgRef:this.msgRef, typing:s.typing, typingDots,
-      trLabel:s.trAll?(L?'영어 번역 숨기기':'Hide English'):(L?'영어 번역 보기':'Show English'), trBtnBg:s.trAll?'var(--tbubble)':'transparent', toggleAllTr:()=>this.setState({trAll:!s.trAll}),
+      trLabel:s.chatTransLoading&&s.chatTransTutorId===s.tutorId?(L?'번역 중…':'Translating…'):s.trAll?(L?'영어 번역 숨기기':'Hide English'):(L?'영어 번역 보기':'Show English'),
+      trBtnBg:s.trAll?'var(--tbubble)':'transparent', toggleAllTr:()=>this.toggleChatTranslations(),
+      chatTranslationError:s.chatTranslationError, hasChatTranslationError:!!s.chatTranslationError,
       quick:QUICK.map(([q,en])=>({text:q,en:L?'':en,send:()=>this.sendText(q)})),
       draft:s.draft, onDraft:e=>this.setState({draft:e.target.value}), onKey:e=>{if(e.key==='Enter'&&!e.nativeEvent.isComposing){e.preventDefault();this.sendText(s.draft);}}, send:()=>this.sendText(s.draft),
       sendBg:s.draft.trim()?'#F2C94C':'var(--chip)', sendFg:s.draft.trim()?'#1C1F1E':'var(--faint)',

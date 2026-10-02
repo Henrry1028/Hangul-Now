@@ -175,10 +175,32 @@ export async function generateContent({ kind, level = "beginner", userId = null,
   return { ...data, level };
 }
 
-// ── 회화 전사 번역 (영어 번역 보기 토글용) ────────────────
-export async function translateLines(lines = []) {
-  const items = lines.map((t, i) => ({ i, t }));
-  if (!items.length) return [];
+// ── 회화·채팅 번역 (영어 번역 보기 토글용) ───────────────
+// 한 요청을 작은 묶음으로 나누어 긴 대화도 모델 출력 한도에 걸리지 않게 한다.
+// 문장 수뿐 아니라 글자 수도 제한해 유난히 긴 한 문장이 다른 번역을 밀어내지 않게 한다.
+const TRANSLATION_BATCH_LINES = 20;
+const TRANSLATION_BATCH_CHARS = 5000;
+
+function translationBatches(items) {
+  const batches = [];
+  let batch = [];
+  let chars = 0;
+  for (const item of items) {
+    const itemChars = item.t.length;
+    if (batch.length && (batch.length >= TRANSLATION_BATCH_LINES || chars + itemChars > TRANSLATION_BATCH_CHARS)) {
+      batches.push(batch);
+      batch = [];
+      chars = 0;
+    }
+    batch.push(item);
+    chars += itemChars;
+  }
+  if (batch.length) batches.push(batch);
+  return batches;
+}
+
+async function translateBatch(items) {
+  const totalChars = items.reduce((sum, item) => sum + item.t.length, 0);
   const data = await askJson(`아래 한국어 문장들을 자연스러운 영어로 번역하라.
 학습자가 원문과 대조해 볼 수 있도록 문장 단위로 충실하게 옮긴다. 의역보다 원문의 뜻과 말투를 살린다.
 
@@ -186,7 +208,36 @@ ${items.map((x) => `${x.i}. ${x.t}`).join("\n")}
 
 반드시 아래 JSON 형식으로만 답하라.
 {"translations":[{"i":0,"en":"영어 번역"}]}
-i는 위 번호를 그대로 쓰고, 모든 문장을 빠짐없이 포함하라.`, { maxOutputTokens: Math.min(2400, 300 + items.length * 70) });
-  const map = new Map((data.translations || []).map((x) => [Number(x.i), x.en]));
-  return items.map((x) => map.get(x.i) || "");
+i는 위 번호를 그대로 쓰고, 모든 문장을 빠짐없이 포함하라.`, {
+    maxOutputTokens: Math.min(4096, Math.max(800, 300 + Math.ceil(totalChars * 1.5)))
+  });
+  return new Map(
+    (Array.isArray(data?.translations) ? data.translations : [])
+      .map((x) => [Number(x?.i), String(x?.en || "").trim()])
+      .filter(([i, en]) => Number.isInteger(i) && en)
+  );
+}
+
+export async function translateLines(lines = []) {
+  const items = lines.map((text, i) => ({ i, t: String(text || "").trim() }));
+  if (!items.length) return [];
+
+  const translated = new Map();
+  for (const batch of translationBatches(items.filter((item) => item.t))) {
+    const batchMap = await translateBatch(batch);
+    batchMap.forEach((value, key) => translated.set(key, value));
+
+    // 모델이 드물게 일부 번호를 생략하면 그 문장들만 한 번 더 요청한다.
+    const missing = batch.filter((item) => !translated.has(item.i));
+    if (missing.length) {
+      const retryMap = await translateBatch(missing);
+      retryMap.forEach((value, key) => translated.set(key, value));
+    }
+  }
+
+  const result = items.map((item) => item.t ? (translated.get(item.i) || "") : "");
+  if (items.some((item) => item.t && !result[item.i])) {
+    throw new Error("일부 문장의 영어 번역이 누락되었습니다. 다시 시도해 주세요.");
+  }
+  return result;
 }

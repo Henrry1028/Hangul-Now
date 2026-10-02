@@ -45,6 +45,30 @@ const TUTOR_PERSONAS = {
 // 분석·첨삭·평가에 쓰는 모델 (환경변수로 덮어쓸 수 있음)
 const ANALYSIS_MODEL = process.env.GEMINI_ANALYSIS_MODEL || "gemini-3.8-flash";
 
+// Gemini 채팅 이력은 user로 시작하고 역할이 번갈아야 한다.
+// 화면에서 최근 N개만 잘라 보내면 첫 항목이 tutor(model)가 되거나,
+// 사용자가 연속으로 보낸 메시지 때문에 같은 역할이 이어질 수 있어 여기서 정규화한다.
+export function normalizeTutorHistory(history = []) {
+  const normalized = [];
+  for (const item of Array.isArray(history) ? history : []) {
+    const role = item?.role === "user" ? "user" : "model";
+    const content = String(item?.content || "").trim();
+    if (!content) continue;
+    if (!normalized.length && role !== "user") continue;
+
+    const previous = normalized[normalized.length - 1];
+    if (previous?.role === role) {
+      previous.content += `\n${content}`;
+    } else {
+      normalized.push({ role, content });
+    }
+  }
+
+  // 곧 sendMessage()로 새 user 메시지를 추가하므로 이력은 model 응답으로 끝나야 한다.
+  if (normalized[normalized.length - 1]?.role === "user") normalized.pop();
+  return normalized;
+}
+
 /**
  * 1. AI 튜터 실시간 대화 응답 생성
  */
@@ -63,13 +87,13 @@ export async function generateTutorChat({ tutorId = "jiwoo", message, history = 
 
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-3.8-flash",
+      model: process.env.GEMINI_DIALOGUE_MODEL || "gemini-3.8-flash",
       systemInstruction: persona.systemInstruction
     });
 
     const chat = model.startChat({
-      history: history.map(item => ({
-        role: item.role === "user" ? "user" : "model",
+      history: normalizeTutorHistory(history).map(item => ({
+        role: item.role,
         parts: [{ text: item.content }]
       }))
     });
