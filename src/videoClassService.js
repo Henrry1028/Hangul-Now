@@ -4,7 +4,7 @@
 // ============================================================
 
 import express from 'express';
-import { authenticateUser } from './authMiddleware.js';
+import { authenticateUser, authenticateOptionalUser } from './authMiddleware.js';
 import { isEffectiveAdmin } from './adminPolicy.js';
 
 // HangulNow Effective Admin 인가 가드 미들웨어
@@ -360,7 +360,7 @@ router.get('/tutors/:id/slots', (req, res) => {
 });
 
 // POST /api/v1/bookings: 수업 예약 신청 및 Google Meet 세션 생성 트리거
-router.post('/bookings', (req, res) => {
+router.post('/bookings', authenticateOptionalUser, (req, res) => {
   try {
     const { tutorId, slotTime, duration = 50, studentName, studentEmail, timezone = 'Asia/Seoul', note = '' } = req.body;
 
@@ -401,8 +401,8 @@ router.post('/bookings', (req, res) => {
       tutorPhoto: tutor.photoURL,
       studentName: studentName || '학습자 (Learner)',
       studentEmail: studentEmail || 'learner@hangulnow.com',
-      // Note: Booking API에 Firebase ID token 인증이 도입되기 전까지는 임의의 client body studentUid를 신뢰하지 않음
-      studentUid: null,
+      // Note: Firebase ID token 인증이 확인된 경우 req.user.uid를 사용하며, Guest 예약의 경우 null 설정 (임의의 body.studentUid는 신뢰하지 않음)
+      studentUid: req.user?.uid || null,
       slotTime: new Date(slotTime).toISOString(),
       duration: Number(duration) || 50,
       clientTimezone: timezone,

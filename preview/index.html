@@ -4331,9 +4331,26 @@ class Component extends DCLogic {
       return;
     }
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      const currentUser =
+        typeof firebase !== 'undefined' && firebase.auth
+          ? firebase.auth().currentUser
+          : null;
+
+      if (currentUser) {
+        try {
+          const token = await currentUser.getIdToken();
+          headers['Authorization'] = `Bearer ${token}`;
+        } catch (tokenErr) {
+          console.error('[VideoClass] Failed to retrieve auth token:', tokenErr);
+          alert('로그인 인증 토큰을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+          return;
+        }
+      }
+
       const res = await fetch('/api/v1/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           tutorId: vcSelectedTutor.id,
           slotTime: vcSelectedSlot.slotTime,
