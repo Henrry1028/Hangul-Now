@@ -448,13 +448,30 @@ router.get('/bookings', authenticateUser, requireEffectiveAdmin, (req, res) => {
   }
 });
 
-// GET /api/v1/bookings/:id: 예약 상세 정보 및 Meet 링크 조회
-router.get('/bookings/:id', (req, res) => {
+// GET /api/v1/bookings/:id: 예약 상세 정보 및 Meet 링크 조회 (Participant or Admin 전용)
+router.get('/bookings/:id', authenticateUser, (req, res) => {
   try {
     const booking = bookings.find(b => b.id === req.params.id);
     if (!booking) {
       return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
     }
+
+    // 1. 관리자 권한 확인 (Single source: isEffectiveAdmin)
+    const isAdmin = isEffectiveAdmin(req.user);
+
+    // 2. 예약 학생 소유권 확인 (verified studentUid 기준)
+    const isStudent = Boolean(booking.studentUid) && booking.studentUid === req.user.uid;
+
+    // 3. 예약 튜터 소유권 확인 (직접 tutorUid 또는 서버 검증 튜터 프로필 매핑 기준)
+    const tutorProfile = findTutorByUid(req.user.uid);
+    const isTutor = (Boolean(booking.tutorUid) && booking.tutorUid === req.user.uid) ||
+                    Boolean(tutorProfile && tutorProfile.id === booking.tutorId);
+
+    // 권한이 없는 경우 리소스 존재 여부 노출을 방지하기 위해 404 Not Found 반환
+    if (!isAdmin && !isStudent && !isTutor) {
+      return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
+    }
+
     res.json({ success: true, booking });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
