@@ -240,3 +240,51 @@ Initial state:
 Purpose:
 
 Source-first audit before migrating AI-generated Reading content.
+
+---
+
+## P1M — Reading AI Generation Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`MEDIUM/HIGH`
+
+Selected strategy:
+
+`OPTION B`
+
+Findings:
+
+- Legacy entry points are the `새로 생성` / `New material` button and the shared beginner/intermediate/advanced segmented control.
+- The client sends `POST /api/content/generate` with `{ kind: "reading", level, userId, seenTopics }` and JSON content headers.
+- The Reading response contains `topic`, `title`, `subtitle`, `paragraphs`, `glossary`, `questions`, `grammar`, and the server adds `level`.
+- Generated paragraphs contain `{ text, en, words }`; the legacy client splits `text` by the listed words to create selectable glossary spans.
+- Generated glossary items contain `{ word, pos, en, ex }` and map directly to the existing glossary card with the generated word as its base form.
+- Generated grammar items contain `{ form, ko, example }` and fit the existing grammar card independently of Quiz.
+- Generated Quiz questions are only consumed by the Quiz renderer and `recordActivity`; passage, translation, glossary, and grammar do not depend on Quiz state.
+- AI generation itself does not mutate XP/activity logs. Successful Reading Quiz answers do.
+- AI generation does mutate learned-topic history: signed-in requests are recorded server-side, and the legacy client also records the topic locally and posts `/api/learning/record`; guest mode records only `hn-learned` localStorage.
+- The current React sandbox has no auth state, so P1N can preserve its actual guest contract with `userId: null` and local `seenTopics`; authenticated parity remains coupled to the later global auth shell.
+- The legacy generator blocks repeated requests with shared `genLoading`, retries one network failure after 250 ms, and exposes `새 자료를 만들지 못했어요: <message>` on failure.
+- It has no generation AbortController and does not cancel generation on page leave; P1N should not introduce new behavior beyond preventing stale React state updates.
+- Successful Reading generation resets answers, selected word, and translation visibility. P1N needs only the selected-word and translation resets because Quiz is excluded.
+- Level changes immediately trigger a new Reading generation except when the selected level is unchanged.
+- The legacy full-passage TTS deliberately constructs text from static `PARAS`, even after generation. Preserve this quirk.
+- The existing Vite `/api` proxy and platform APIs are sufficient; no backend change or new dependency is required.
+- Existing responsive layout can accept the controls in the header with the same wrapping behavior used by the legacy page.
+
+Excluded from P1N:
+
+- generated Quiz UI,
+- Reading Quiz answers,
+- XP/activity log mutation,
+- authenticated Firebase identity integration,
+- backend contract or security changes.
+
+Next exact milestone:
+
+`P1N READING AI GENERATION MIGRATION`

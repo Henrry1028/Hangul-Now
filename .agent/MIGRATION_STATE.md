@@ -74,6 +74,7 @@ React/Vite sandbox:
 - Static grammar — COMPLETE
 - Reading responsive parity — COMPLETE
 - Reading TTS — COMPLETE
+- Reading AI generation audit and migration strategy — COMPLETE
 
 ---
 
@@ -132,37 +133,43 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P1M`
+`P1N`
 
 Name:
 
-`READING AI GENERATION AUDIT + MIGRATION PLAN`
+`READING AI GENERATION MIGRATION`
 
 Status:
 
 `NOT_STARTED`
 
-Risk expectation:
+Selected strategy:
 
-`MEDIUM/HIGH`
+`OPTION B`
 
-Reason:
+Bounded scope:
 
-AI generation is coupled to generated passage, translation, glossary, grammar, possible quiz data, and potentially history/state behavior.
+- add Reading generation and shared level controls,
+- preserve `/api/content/generate` request/response behavior,
+- render generated title, subtitle, paragraphs, translations, glossary, and grammar,
+- preserve guest learned-topic tracking through `hn-learned`,
+- reset Reading selection/translation state after successful generation,
+- preserve the legacy quirk that full-passage TTS continues to read the static passage,
+- exclude generated Quiz rendering and all Quiz XP/activity mutation from this milestone.
 
 Next required action:
 
-Perform source-first READ-ONLY audit of Reading AI generation before implementation.
+Implement the bounded P1N scope in the React/Vite sandbox and validate success, failure, repeat-action, responsive, and regression paths.
 
 ---
 
 ## 4. Remaining Reading Work
 
-- AI generation — NOT_STARTED
-- generated passage integration — NOT_STARTED
-- generated translation integration — NOT_STARTED
-- generated glossary integration — NOT_STARTED
-- generated grammar integration — NOT_STARTED
+- AI generation — AUDIT_COMPLETE
+- generated passage integration — NOT_STARTED (P1N)
+- generated translation integration — NOT_STARTED (P1N)
+- generated glossary integration — NOT_STARTED (P1N)
+- generated grammar integration — NOT_STARTED (P1N)
 - Quiz interaction — NOT_STARTED
 - XP/activity/history mutation — NOT_STARTED
 - learning history integration — NOT_STARTED
