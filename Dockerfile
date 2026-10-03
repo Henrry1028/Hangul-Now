@@ -1,5 +1,5 @@
 # Google Cloud Run 및 컨테이너 배포를 위한 공식 경량 Node.js 20 베이스 이미지
-FROM node:20-slim
+FROM node:22-slim
 
 # 작업 디렉터리 설정
 WORKDIR /app
@@ -18,4 +18,4 @@ ENV NODE_ENV=production
 EXPOSE 8080
 
 # 서버 시작 명령어
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
