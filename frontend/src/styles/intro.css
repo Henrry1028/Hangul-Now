@@ -1,0 +1,152 @@
+/* HangulNow Intro Design Tokens */
+:root {
+  --bg: #F5F2EB;
+  --bg2: #FBF9F4;
+  --card: #fff;
+  --line: #E4DFD4;
+  --line2: #EEEAE1;
+  --line3: #D3CDBF;
+  --chip: #F1EDE4;
+  --seg: #EAE5DA;
+  --ink: #1C1F1E;
+  --ink2: #3A3935;
+  --sub: #66645D;
+  --faint: #8A877E;
+  --accent: #23493F;
+  --accent-ink: #23493F;
+  --accent-soft: #E3ECE6;
+  --hot: #C8502A;
+  --hot-soft: #F7E4DA;
+  --solid: #1C1F1E;
+  --on-solid: #F5F2EB;
+  --chat: #BFD0DC;
+  --chat-ink: #3E4C55;
+  --bubble: #FAE27C;
+  --tbubble: #fff;
+  --hi: #F7E9B8;
+  --gold: #C9A24A;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #121413;
+  --bg2: #171A18;
+  --card: #1C201E;
+  --line: #2C312E;
+  --line2: #252A27;
+  --line3: #3A403C;
+  --chip: #262B28;
+  --seg: #262B28;
+  --ink: #ECE8DF;
+  --ink2: #CFCBC1;
+  --sub: #A5A197;
+  --faint: #85817A;
+  --accent: #2E6154;
+  --accent-ink: #8CC3AE;
+  --accent-soft: #1E3530;
+  --hot: #E27A52;
+  --hot-soft: #3A2620;
+  --solid: #ECE8DF;
+  --on-solid: #121413;
+  --chat: #1D2A31;
+  --chat-ink: #9DB0BC;
+  --bubble: #EBD166;
+  --tbubble: #2B3338;
+  --hi: #4A4020;
+  --gold: #D8B35A;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Pretendard', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background .2s;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button, textarea, input {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* === 훈이 & 정이 3D 캐릭터 입체화 및 부유 그림자 효과 === */
+img[src*="캐릭터_"], img[src*="캐릭터-"] {
+  filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.22)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.14)) !important;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
+  user-select: none;
+}
+img[src*="캐릭터_"], img[src*="캐릭터-"]:hover {
+  transform: translateY(-5px) scale(1.03);
+  filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.28)) drop-shadow(0 10px 18px rgba(0, 0, 0, 0.18)) !important;
+}
+
+/* 훈이 (14초 한 바퀴): 왼쪽 차 → 오른쪽 연필 → 제자리 좌우 흔들기(책) → 두루마리 → 사라졌다 왼쪽에서 다시 등장 */
+@keyframes hunWalk { 0%, 16.6% { left: 0; } 16.7%, 99.9% { left: calc(100% - 150px); } 100% { left: 0; } }
+@keyframes hunSway { 0%, 100% { transform: translateX(calc(-50% - 5px)) rotate(-5deg); } 50% { transform: translateX(calc(-50% + 5px)) rotate(5deg); } }
+@keyframes hunIdle { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-3px); } }
+@keyframes pTea { 0% { opacity: 0; } 2.5%, 14% { opacity: 1; } 16.5%, 100% { opacity: 0; } }
+@keyframes pPencil { 0%, 16.7% { opacity: 0; } 19.2%, 42.4% { opacity: 1; } 44.9%, 100% { opacity: 0; } }
+@keyframes pSway { 0%, 42.4% { opacity: 0; } 44.9%, 71.9% { opacity: 1; } 74.5%, 100% { opacity: 0; } }
+@keyframes pScroll { 0%, 71.9% { opacity: 0; } 74.5%, 96.4% { opacity: 1; } 98.9%, 100% { opacity: 0; } }
+
+.hun-walk {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 150px;
+  height: 150px;
+  z-index: 2;
+  pointer-events: none;
+  animation: hunWalk 14s linear infinite;
+}
+
+.hun-pose {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 150px;
+  width: auto;
+  opacity: 0;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 14px 20px rgba(0, 0, 0, .22));
+  user-select: none;
+}
+
+.hun-pose.tea {
+  animation: pTea 14s linear infinite, hunIdle 2.4s ease-in-out infinite;
+}
+
+.hun-pose.pencil {
+  animation: pPencil 14s linear infinite, hunIdle 1.6s ease-in-out infinite;
+}
+
+.hun-pose.sway {
+  transform-origin: 50% 100%;
+  animation: pSway 14s linear infinite, hunSway 1.3s ease-in-out infinite;
+}
+
+.hun-pose.scroll {
+  animation: pScroll 14s linear infinite, hunIdle 2s ease-in-out infinite;
+}
+
+.mock-body {
+  transition: opacity .35s ease, transform .35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hun-walk, .hun-pose {
+    animation: none;
+  }
+  .hun-pose.pencil {
+    opacity: 1;
+  }
+  .mock-body {
+    transition: none;
+  }
+}

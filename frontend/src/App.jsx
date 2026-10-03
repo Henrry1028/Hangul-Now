@@ -1,12 +1,13 @@
 import React from 'react';
+import IntroPage from './pages/IntroPage.jsx';
+import './styles/intro.css';
 
 function App() {
-  return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>HangulNow Migration Sandbox</h1>
-      <p>React/Vite scaffold is running.</p>
-    </div>
-  );
+  const handleNavigate = (target) => {
+    console.info('[migration:navigate]', target);
+  };
+
+  return <IntroPage lang="ko" onNavigate={handleNavigate} />;
 }
 
 export default App;
