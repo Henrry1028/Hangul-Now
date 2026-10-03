@@ -4,6 +4,19 @@
 // ============================================================
 
 import express from 'express';
+import { authenticateUser } from './authMiddleware.js';
+import { isEffectiveAdmin } from './adminPolicy.js';
+
+// HangulNow Effective Admin 인가 가드 미들웨어
+const requireEffectiveAdmin = (req, res, next) => {
+  if (!req.user || !isEffectiveAdmin(req.user)) {
+    return res.status(403).json({
+      success: false,
+      error: '관리자 권한이 필요한 서비스입니다.'
+    });
+  }
+  next();
+};
 
 const router = express.Router();
 
@@ -415,8 +428,8 @@ router.post('/bookings', (req, res) => {
   }
 });
 
-// GET /api/v1/bookings: 수업 예약 목록 조회
-router.get('/bookings', (req, res) => {
+// GET /api/v1/bookings: 수업 예약 목록 조회 (Effective Admin 전용)
+router.get('/bookings', authenticateUser, requireEffectiveAdmin, (req, res) => {
   try {
     const { studentEmail, tutorId, status } = req.query;
     let list = [...bookings];

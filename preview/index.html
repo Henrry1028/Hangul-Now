@@ -4255,9 +4255,20 @@ class Component extends DCLogic {
   loadVideoClassData = async () => {
     this.setState({ vcLoading: true });
     try {
+      let token = '';
+      if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+        token = await firebase.auth().currentUser.getIdToken();
+      }
+
+      const bookingsPromise = token
+        ? fetch('/api/v1/bookings', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }).then(r => r.json()).catch(() => null)
+        : Promise.resolve({ success: false, bookings: [] });
+
       const [tutorsRes, bookingsRes] = await Promise.all([
         fetch('/api/v1/tutors').then(r => r.json()).catch(() => null),
-        fetch('/api/v1/bookings').then(r => r.json()).catch(() => null)
+        bookingsPromise
       ]);
       const updates = { vcLoading: false };
       if (tutorsRes && tutorsRes.success) updates.vcTutors = tutorsRes.tutors;
