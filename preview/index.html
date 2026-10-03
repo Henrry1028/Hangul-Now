@@ -3423,12 +3423,16 @@ x-dc { display: flex !important; flex-direction: column !important; height: 100%
                       <button sc-camel-on-click="{{ b.openFeedbackView }}" style="border:1px solid var(--accent);background:rgba(35,73,63,0.08);color:var(--accent);padding:9px 15px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer">
                         📋 피드백 리포트 열람
                       </button>
-                      <button sc-camel-on-click="{{ b.openFeedbackTutor }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer">
-                        ✍️ 튜터 리포트 작성
-                      </button>
-                      <button sc-camel-on-click="{{ b.openFeedbackStudent }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer">
-                        ⭐ 학생 리뷰 작성
-                      </button>
+                      <sc-if value="{{ b.canWriteTutorFeedback }}" hint-placeholder-val="{{ false }}">
+                        <button sc-camel-on-click="{{ b.openFeedbackTutor }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer">
+                          ✍️ 튜터 리포트 작성
+                        </button>
+                      </sc-if>
+                      <sc-if value="{{ b.canWriteStudentFeedback }}" hint-placeholder-val="{{ false }}">
+                        <button sc-camel-on-click="{{ b.openFeedbackStudent }}" style="border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer">
+                          ⭐ 학생 리뷰 작성
+                        </button>
+                      </sc-if>
                     </div>
                   </sc-if>
 
@@ -4215,6 +4219,7 @@ class Component extends DCLogic {
     vcTutors: [],
     vcBookings: [],
     vcLoading: false,
+    vcEffectiveAdmin: false,
     vcSelectedTutor: null,
     vcArrangeModalOpen: false,
     vcVideoModalOpen: false,
@@ -4279,18 +4284,25 @@ class Component extends DCLogic {
         }
       }
 
+      let isEffectiveAdmin = false;
       const fetchBookings = async () => {
         if (!token) return { success: false, bookings: [] };
         const headers = { 'Authorization': `Bearer ${token}` };
         if (this.state.isAdmin) {
           const res = await fetch('/api/v1/bookings', { headers }).catch(() => null);
+          if (res && res.status === 200) {
+            isEffectiveAdmin = true;
+            return res.json().catch(() => null);
+          }
           if (res && res.status === 403) {
             // Role mismatch: Admin 권한이 아닐 경우 my-bookings로 fallback
+            isEffectiveAdmin = false;
             const fallbackRes = await fetch('/api/v1/my-bookings', { headers }).catch(() => null);
             return fallbackRes ? fallbackRes.json().catch(() => null) : null;
           }
           return res ? res.json().catch(() => null) : null;
         }
+        isEffectiveAdmin = false;
         const res = await fetch('/api/v1/my-bookings', { headers }).catch(() => null);
         return res ? res.json().catch(() => null) : null;
       };
@@ -4301,7 +4313,7 @@ class Component extends DCLogic {
         fetch('/api/v1/tutors').then(r => r.json()).catch(() => null),
         bookingsPromise
       ]);
-      const updates = { vcLoading: false };
+      const updates = { vcLoading: false, vcEffectiveAdmin: isEffectiveAdmin };
       if (tutorsRes && tutorsRes.success) updates.vcTutors = tutorsRes.tutors;
       if (bookingsRes && bookingsRes.success) updates.vcBookings = bookingsRes.bookings;
       this.setState(updates);
@@ -7230,12 +7242,23 @@ class Component extends DCLogic {
         } else {
           countdownLabel = '수업 진행 시간';
         }
+        const isAdmin = Boolean(s.vcEffectiveAdmin);
+        const isStudent = Boolean(b.viewerAccess && b.viewerAccess.student);
+        const isTutor = Boolean(b.viewerAccess && b.viewerAccess.tutor);
+        const canTransition = (isAdmin || isTutor) && (isScheduled || isLive);
+        const canWriteTutorFeedback = isCompleted && (isAdmin || isTutor);
+        const canWriteStudentFeedback = isCompleted && isStudent;
+        const canViewFeedback = isCompleted;
+
         return {
           ...b,
           isScheduled,
           isLive,
           isCompleted,
-          canTransition: isScheduled || isLive,
+          canTransition,
+          canWriteTutorFeedback,
+          canWriteStudentFeedback,
+          canViewFeedback,
           canEnterMeet,
           countdownLabel,
           formattedTime: slotDate.toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' }),

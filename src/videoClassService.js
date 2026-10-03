@@ -492,13 +492,22 @@ router.get('/my-bookings', authenticateUser, (req, res) => {
 
     // Student 소유 예약 (booking.studentUid === userUid)
     // 또는 Tutor 담당 예약 (booking.tutorUid === userUid 또는 booking.tutorId === tutorProfile.id)
-    // 단일 filter 조건으로 혼합 역할(Mixed Role) 지원 및 중복 없이 매칭
-    const matchedBookings = bookings.filter(b => {
-      const isStudentBooking = Boolean(b.studentUid) && b.studentUid === userUid;
-      const isTutorBooking = (Boolean(b.tutorUid) && b.tutorUid === userUid) ||
-                            (Boolean(tutorId) && b.tutorId === tutorId);
-      return isStudentBooking || isTutorBooking;
-    });
+    // 단일 loop 매칭으로 혼합 역할(Mixed Role) 지원, 중복 방지 및 viewerAccess 메타데이터 부여
+    const matchedBookings = [];
+    for (const b of bookings) {
+      const isStudent = Boolean(b.studentUid) && b.studentUid === userUid;
+      const isTutor = (Boolean(b.tutorUid) && b.tutorUid === userUid) ||
+                      (Boolean(tutorId) && b.tutorId === tutorId);
+      if (isStudent || isTutor) {
+        matchedBookings.push({
+          ...b,
+          viewerAccess: {
+            student: isStudent,
+            tutor: isTutor
+          }
+        });
+      }
+    }
 
     res.json({
       success: true,
