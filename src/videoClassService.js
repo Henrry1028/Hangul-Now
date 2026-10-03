@@ -201,8 +201,8 @@ router.get('/tutors', (req, res) => {
       );
     }
 
-    // Public API 보안: 내부 식별자인 tutorUid는 일반 사용자 응답에서 제외(omit)
-    const publicList = list.map(({ tutorUid, ...publicTutor }) => publicTutor);
+    // Public API 보안 및 개인정보 보호: 내부 식별자인 tutorUid 및 email은 퍼블릭 응답에서 제외(omit)
+    const publicList = list.map(({ tutorUid, email, ...publicTutor }) => publicTutor);
 
     res.json({
       success: true,
