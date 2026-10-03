@@ -31,6 +31,8 @@ export function isValidVideoUrl(url) {
 const INITIAL_TUTORS = [
   {
     id: 'jiwoo',
+    tutorUid: null,
+    email: 'jiwoo.kim@hangulnow.com',
     name: '김지우 (Jiwoo Kim)',
     shortIntro: '따뜻하고 편안한 분위기의 일상 한국어 회화 전문 튜터',
     bio: '안녕하세요! 한국어 표준어 원어민 튜터 김지우입니다. 서울에서 태어나 한국어 교육을 전공하였으며, 외국인 학습자들이 실제 한국인들이 친구나 동료와 나누는 자연스러운 한국어 억양과 실용 표현을 쉽고 재미있게 익힐 수 있도록 1:1 맞춤형 화상 수업을 이끌어 드립니다.',
@@ -48,6 +50,8 @@ const INITIAL_TUTORS = [
   },
   {
     id: 'minho',
+    tutorUid: null,
+    email: 'minho.park@hangulnow.com',
     name: '박민호 (Minho Park)',
     shortIntro: '비즈니스 한국어 및 직장 문화, 면접 대비 전문 튜터',
     bio: '반갑습니다! 한국 대기업 해외영업팀 7년 경력을 바탕으로 비즈니스 이메일, 회의 표현, 프레젠테이션, 한국 직장 내 존칭어 및 격식체 회화를 체계적으로 지도하는 박민호 튜터입니다. 실전 비즈니스 한국어가 필요한 학습자에게 최적화된 수업을 제공합니다.',
@@ -65,6 +69,8 @@ const INITIAL_TUTORS = [
   },
   {
     id: 'seoyeon',
+    tutorUid: null,
+    email: 'seoyeon.lee@hangulnow.com',
     name: '이서연 (Seoyeon Lee)',
     shortIntro: 'TOPIK 전문 대비 및 정밀 문법·글쓰기 코칭 튜터',
     bio: '국어국문학 석사 및 한국어교원자격증 1급을 보유한 전문 강사 이서연입니다. TOPIK 1~6급 완벽 대비, 헷갈리기 쉬운 문법 어미 교정, 쓰기 논술 첨삭을 정밀하게 진행합니다. 탄탄한 기본기부터 고급 한국어 구사력까지 단계별로 확실하게 향상시켜 드립니다.',
@@ -181,7 +187,20 @@ router.get('/tutors', (req, res) => {
 // POST /api/v1/tutors/profile: 튜터 프로필 및 소개 영상 등록/수정
 router.post('/tutors/profile', (req, res) => {
   try {
-    const { id, name, shortIntro, bio, videoUrl, specialties, languages, pricePerSession, availableDays, timeSlotsKST } = req.body;
+    const {
+      id,
+      tutorUid,
+      email,
+      name,
+      shortIntro,
+      bio,
+      videoUrl,
+      specialties,
+      languages,
+      pricePerSession,
+      availableDays,
+      timeSlotsKST
+    } = req.body;
 
     // 검증 규칙 1: 소개 텍스트는 최소 50자 이상 필수
     if (!bio || bio.trim().length < 50) {
@@ -212,8 +231,27 @@ router.post('/tutors/profile', (req, res) => {
     const tutorId = id || `tutor_${Date.now()}`;
     const existingIndex = tutors.findIndex(t => t.id === tutorId);
 
+    // Tutor Identity Trust Boundary:
+    // 관리자(req.adminUser)가 프로필을 등록/수정하더라도 관리자의 Firebase UID를 튜터 UID로 자동 fallback하지 않음.
+    // 명시적으로 전달된 candidate UID가 있는 경우에만 수용하며, 기존 튜터의 경우 기존 tutorUid를 안전하게 보존함.
+    let resolvedTutorUid = null;
+    if (typeof tutorUid === 'string' && tutorUid.trim().length > 0) {
+      resolvedTutorUid = tutorUid.trim();
+    } else if (existingIndex >= 0 && tutors[existingIndex].tutorUid) {
+      resolvedTutorUid = tutors[existingIndex].tutorUid;
+    }
+
+    let resolvedEmail = null;
+    if (typeof email === 'string' && email.trim().length > 0) {
+      resolvedEmail = email.trim();
+    } else if (existingIndex >= 0 && tutors[existingIndex].email) {
+      resolvedEmail = tutors[existingIndex].email;
+    }
+
     const tutorObj = {
       id: tutorId,
+      tutorUid: resolvedTutorUid,
+      email: resolvedEmail,
       name: name || '새 한국어 튜터',
       shortIntro: shortIntro || '1:1 맞춤형 한국어 화상 수업 전문 튜터',
       bio: bio.trim(),
@@ -345,10 +383,13 @@ router.post('/bookings', (req, res) => {
     const newBooking = {
       id: `booking_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       tutorId,
+      tutorUid: tutor.tutorUid || null,
       tutorName: tutor.name,
       tutorPhoto: tutor.photoURL,
       studentName: studentName || '학습자 (Learner)',
       studentEmail: studentEmail || 'learner@hangulnow.com',
+      // Note: Booking API에 Firebase ID token 인증이 도입되기 전까지는 임의의 client body studentUid를 신뢰하지 않음
+      studentUid: null,
       slotTime: new Date(slotTime).toISOString(),
       duration: Number(duration) || 50,
       clientTimezone: timezone,
@@ -510,5 +551,20 @@ router.post('/bookings/:id/feedback/student', (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// ------------------------------------------------------------
+// 4. 튜터 식별 및 소유권 확인 헬퍼 함수
+// (주의: 메모리에 등록된 tutorUid 일치 여부를 조회하는 헬퍼이며,
+//  Firebase Auth 상의 실제 계정 유효성 검증은 호출 측 토큰 검증 단계에 의존함)
+// ------------------------------------------------------------
+export function findTutorByUid(uid) {
+  if (!uid) return null;
+  return tutors.find(t => t.tutorUid === uid) || null;
+}
+
+export function findTutorById(id) {
+  if (!id) return null;
+  return tutors.find(t => t.id === id) || null;
+}
 
 export default router;

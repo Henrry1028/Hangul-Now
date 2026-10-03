@@ -41,6 +41,7 @@ import { usageMeter } from "./src/usage-meter.mjs";
 import { db, auth, storage, isInitialized as isFirebaseReady } from "./src/firebase.js";
 import { getLocalAudioReview, getTutorAudioReviewJob, startTutorAudioReview } from "./src/tutorSession.js";
 import videoClassRouter from "./src/videoClassService.js";
+import { isEmailAdmin } from "./src/adminPolicy.js";
 
 dotenv.config();
 
@@ -773,16 +774,7 @@ app.get("/api/session/list", async (req, res) => {
 // ============================================================
 // 10-1. 관리자 콘솔 (Admin Console) API — Firebase 연동
 // ============================================================
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
-  .split(",")
-  .map(e => e.trim().toLowerCase())
-  .filter(Boolean);
 
-const isEmailAdmin = (email) => {
-  if (!email) return false;
-  const normalized = email.toLowerCase().trim();
-  return ADMIN_EMAILS.includes(normalized);
-};
 
 // 관리자 인증 미들웨어
 const requireAdmin = async (req, res, next) => {
