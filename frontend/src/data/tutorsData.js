@@ -95,7 +95,8 @@ export const TUTORS_TEXT = {
     tutorsH1: 'Who would you like to talk to?',
     tutorsP: 'Pick a tutor and a chat room opens right away. You can switch any time.',
     filterAll: 'All',
-    myTutorBadge: 'My Tutor ✓',
+    // Legacy 템플릿(L1596)은 언어와 무관하게 한국어 문구를 하드코딩하므로 그대로 보존
+    myTutorBadge: '내 전담 튜터 ✓',
     onlinePrefix: 'Online now · ',
     offlinePrefix: 'Replies within hours · ',
     btnSelected: 'Selected ✓',
