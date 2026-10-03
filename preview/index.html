@@ -4506,10 +4506,32 @@ class Component extends DCLogic {
   submitStudentFeedback = async () => {
     const { vcActiveFeedbackBooking, vcStudentFbRating, vcStudentFbComment, vcStudentFbRecommend } = this.state;
     if (!vcActiveFeedbackBooking) return;
+
+    const currentUser =
+      typeof firebase !== 'undefined' && firebase.auth
+        ? firebase.auth().currentUser
+        : null;
+
+    if (!currentUser) {
+      alert('수업 리뷰를 등록하려면 로그인이 필요합니다.');
+      return;
+    }
+
+    let token = '';
+    try {
+      token = await currentUser.getIdToken();
+    } catch (tokenErr) {
+      console.error('[VideoClass] Failed to retrieve auth token for student feedback:', tokenErr);
+      alert('인증 토큰을 가져오지 못했습니다. 다시 시도해 주세요.');
+      return;
+    }
     try {
       const res = await fetch(`/api/v1/bookings/${vcActiveFeedbackBooking.id}/feedback/student`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           rating: vcStudentFbRating,
           comment: vcStudentFbComment,

@@ -645,15 +645,21 @@ router.post('/bookings/:id/feedback/tutor', authenticateUser, (req, res) => {
   }
 });
 
-// POST /api/v1/bookings/:id/feedback/student: 학생 전용 튜터 리뷰/별점 등록
-router.post('/bookings/:id/feedback/student', (req, res) => {
+// POST /api/v1/bookings/:id/feedback/student: 학생 전용 튜터 리뷰/별점 등록 (Booking Student 전용)
+router.post('/bookings/:id/feedback/student', authenticateUser, (req, res) => {
   try {
     const booking = bookings.find(b => b.id === req.params.id);
     if (!booking) {
       return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
     }
 
-    // 검증 규칙 3: 수업 종료 상태(COMPLETED) 세션에 대해서만 리뷰 등록 가능
+    // 1. 학생 본인 인가 검증 (Admin, Tutor, 제3자, 비매핑 레거시 학생은 404 정보 은닉 차단)
+    const isStudent = Boolean(booking.studentUid) && booking.studentUid === req.user.uid;
+    if (!isStudent) {
+      return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
+    }
+
+    // 2. 수업 종료 상태(COMPLETED) 세션에 대해서만 리뷰 등록/수정 가능
     if (booking.status !== 'COMPLETED') {
       return res.status(400).json({
         success: false,
@@ -661,19 +667,84 @@ router.post('/bookings/:id/feedback/student', (req, res) => {
       });
     }
 
-    const { rating, comment, recommend = true } = req.body;
-    const numRating = Number(rating);
-    if (isNaN(numRating) || numRating < 1 || numRating > 5) {
+    // 3. Payload 필드별 타입 검증 및 무결성 보장 (Mass Assignment 방지)
+    const { rating, comment, recommend } = req.body;
+
+    // rating: 1 ~ 5 사이의 정수만 허용
+    const rawRating = typeof rating === 'string' ? rating.trim() : rating;
+    const numRating = Number(rawRating);
+    if (
+      !Number.isInteger(numRating) ||
+      numRating < 1 ||
+      numRating > 5 ||
+      (typeof rawRating === 'string' && !/^[1-5]$/.test(rawRating))
+    ) {
       return res.status(400).json({
         success: false,
-        error: '별점은 1점부터 5점 사이로 선택해야 합니다.'
+        error: '별점은 1점부터 5점 사이의 정수로 선택해야 합니다.'
       });
+    }
+
+    // comment: 선택 입력 (입력 시 문자열 필수)
+    let resolvedComment = '';
+    if (comment !== undefined && comment !== null) {
+      if (typeof comment !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: '리뷰 내용은 문자열이어야 합니다.'
+        });
+      }
+      resolvedComment = comment.trim();
+    }
+
+    // recommend: boolean 필수 (문자열 'true'/'false' 지원)
+    let resolvedRecommend = true;
+    if (recommend !== undefined && recommend !== null) {
+      if (typeof recommend === 'boolean') {
+        resolvedRecommend = recommend;
+      } else if (recommend === 'true' || recommend === 'false') {
+        resolvedRecommend = recommend === 'true';
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: '추천 여부는 boolean 값이어야 합니다.'
+        });
+      }
+    }
+
+    // 4. 튜터 평점(rating) 및 리뷰 수(reviewCount) 통계 무결성 갱신
+    const tutor = findTutorById(booking.tutorId);
+    const existingStudentFeedback = booking.feedback?.student;
+    const isExistingReview = Boolean(existingStudentFeedback && typeof existingStudentFeedback.rating === 'number');
+
+    if (tutor) {
+      if (!isExistingReview) {
+        // 첫 리뷰 등록: reviewCount + 1, 새 가중평균 산출
+        const oldCount = typeof tutor.reviewCount === 'number' && !isNaN(tutor.reviewCount) ? tutor.reviewCount : 0;
+        const oldAverage = typeof tutor.rating === 'number' && !isNaN(tutor.rating) ? tutor.rating : 0;
+        const newCount = oldCount + 1;
+        const newAverage = oldCount === 0 ? numRating : Number(((oldAverage * oldCount + numRating) / newCount).toFixed(2));
+        tutor.reviewCount = newCount;
+        tutor.rating = newAverage;
+      } else {
+        // 기존 리뷰 수정: reviewCount 불변, 이전 별점 차감 후 새 별점 반영
+        const oldStudentRating = existingStudentFeedback.rating;
+        const oldCount = typeof tutor.reviewCount === 'number' && !isNaN(tutor.reviewCount) && tutor.reviewCount > 0 ? tutor.reviewCount : 1;
+        const oldAverage = typeof tutor.rating === 'number' && !isNaN(tutor.rating) ? tutor.rating : oldStudentRating;
+        const newAverage = Number(((oldAverage * oldCount - oldStudentRating + numRating) / oldCount).toFixed(2));
+        tutor.rating = newAverage;
+      }
+    }
+
+    // 5. Feedback 구조 초기화 및 학생 리뷰 저장/갱신
+    if (!booking.feedback) {
+      booking.feedback = { tutor: null, student: null };
     }
 
     booking.feedback.student = {
       rating: numRating,
-      comment: comment ? comment.trim() : '',
-      recommend: !!recommend,
+      comment: resolvedComment,
+      recommend: resolvedRecommend,
       submittedAt: new Date().toISOString()
     };
 
