@@ -288,3 +288,68 @@ Excluded from P1N:
 Next exact milestone:
 
 `P1N READING AI GENERATION MIGRATION`
+
+---
+
+## P1N — Reading AI Generation Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`01e84258129f7c614cc3ecf065ebab210c6b414f`
+
+Commit message:
+
+`refactor: migrate reading ai generation slice to React sandbox`
+
+Included:
+
+- Reading `새로 생성` / `New material` action,
+- beginner/intermediate/advanced controls,
+- `/api/content/generate` Reading contract,
+- one network retry,
+- loading and error UI,
+- guest `hn-learned` topic persistence,
+- generated title, subtitle, paragraphs, translations, glossary, and grammar,
+- generated word selection/save/TTS compatibility,
+- selection and translation reset after generation,
+- static full-passage TTS legacy quirk preservation.
+
+Validation:
+
+- Node 20 standard `npm run build` PASS with Vite 5.4.21 and 40 modules,
+- live Gemini Reading generation through Vite proxy PASS in 4.6 seconds,
+- generated response rendering PASS,
+- all three level payloads PASS,
+- same-level no-op PASS,
+- repeated-action blocking PASS,
+- one network retry PASS,
+- HTTP 503 and API error UI PASS,
+- guest learned-topic persistence PASS,
+- static full-passage TTS payload PASS,
+- desktop 1440x900 PASS,
+- mobile 390x844 PASS,
+- 520/521 TTS breakpoint PASS,
+- Intro/About/Tutors/Reading regression PASS,
+- no runtime exceptions or Vite overlay,
+- known `favicon.ico` 404 only.
+
+Host toolchain note:
+
+- Host Node 24 transforms all modules but exits silently during Vite 5 minification.
+- Host unminified build and direct esbuild JS/CSS minification pass.
+- Existing Node 20 verification image completes the standard minified build.
+
+Excluded:
+
+- generated Quiz UI,
+- Reading Quiz answer state,
+- XP/activity mutation,
+- Firebase/auth shell integration.
+
+Next planned milestone:
+
+`P1O READING QUIZ + ACTIVITY/HISTORY AUDIT`

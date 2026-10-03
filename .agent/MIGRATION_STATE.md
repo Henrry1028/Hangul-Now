@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`11e18eff4c1897e72f28f26b6b657a4e96456e14`
+`01e84258129f7c614cc3ecf065ebab210c6b414f`
 
 Checkpoint commit:
 
-`refactor: migrate reading tts slice to React sandbox`
+`refactor: migrate reading ai generation slice to React sandbox`
 
 Repository HEAD rule:
 
@@ -75,6 +75,7 @@ React/Vite sandbox:
 - Reading responsive parity — COMPLETE
 - Reading TTS — COMPLETE
 - Reading AI generation audit and migration strategy — COMPLETE
+- Reading AI controls and generated passage/translation/glossary/grammar — COMPLETE
 
 ---
 
@@ -82,7 +83,7 @@ React/Vite sandbox:
 
 Milestone:
 
-`P1L READING TTS SLICE MIGRATION`
+`P1N READING AI GENERATION MIGRATION`
 
 Status:
 
@@ -90,11 +91,11 @@ Status:
 
 Commit:
 
-`11e18eff4c1897e72f28f26b6b657a4e96456e14`
+`01e84258129f7c614cc3ecf065ebab210c6b414f`
 
 Commit message:
 
-`refactor: migrate reading tts slice to React sandbox`
+`refactor: migrate reading ai generation slice to React sandbox`
 
 Runtime acceptance:
 
@@ -102,20 +103,19 @@ Runtime acceptance:
 
 Verified:
 
-- build PASS,
-- full passage TTS PASS,
-- word base-form TTS PASS,
-- example Korean-only TTS PASS,
-- all tutor IDs propagated,
-- same-target cancellation PASS,
-- different-target cancellation PASS,
-- loading-target switch PASS,
-- speechSynthesis fallback path PASS,
-- unmount cleanup PASS,
-- tutor-change cleanup PASS,
+- Node 20 standard production build PASS,
+- live `/api/content/generate` through Vite proxy PASS,
+- generated title, subtitle, paragraphs, translations, glossary, and grammar PASS,
+- beginner/intermediate/advanced request payloads PASS,
+- same-level no-op and repeated-action blocking PASS,
+- one network retry PASS,
+- HTTP/API error UI PASS,
+- guest `hn-learned` persistence PASS,
+- selection/translation reset PASS,
+- static full-passage TTS legacy quirk PASS,
 - desktop PASS,
 - mobile PASS,
-- i18n behavior PASS,
+- 520/521 TTS regression PASS,
 - Intro/About/Tutors/Reading regression PASS,
 - legacy isolation PASS.
 
@@ -123,9 +123,15 @@ Known out-of-scope issue:
 
 - `favicon.ico` 404
 
+Host toolchain note:
+
+- Host Node `v24.11.1` exits silently during Vite 5 minification after transforming all modules.
+- Unminified host build and direct esbuild JS/CSS minification pass.
+- The repository's existing Node 20 verification image completes the standard minified build.
+
 Known legacy quirk preserved:
 
-- generated Reading full-passage TTS may continue to read static `PARAS`.
+- generated Reading full-passage TTS continues to read static `PARAS`.
 
 ---
 
@@ -133,43 +139,37 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P1N`
+`P1O`
 
 Name:
 
-`READING AI GENERATION MIGRATION`
+`READING QUIZ + ACTIVITY/HISTORY AUDIT`
 
 Status:
 
 `NOT_STARTED`
 
-Selected strategy:
+Risk expectation:
 
-`OPTION B`
+`MEDIUM/HIGH`
 
-Bounded scope:
+Reason:
 
-- add Reading generation and shared level controls,
-- preserve `/api/content/generate` request/response behavior,
-- render generated title, subtitle, paragraphs, translations, glossary, and grammar,
-- preserve guest learned-topic tracking through `hn-learned`,
-- reset Reading selection/translation state after successful generation,
-- preserve the legacy quirk that full-passage TTS continues to read the static passage,
-- exclude generated Quiz rendering and all Quiz XP/activity mutation from this milestone.
+Reading Quiz selection mutates shared activity logs, XP, study dates, and time totals that later Home/Record migration will consume.
 
 Next required action:
 
-Implement the bounded P1N scope in the React/Vite sandbox and validate success, failure, repeat-action, responsive, and regression paths.
+Perform source-first audit of static/generated Reading Quiz behavior and shared activity/history persistence before implementation.
 
 ---
 
 ## 4. Remaining Reading Work
 
-- AI generation — AUDIT_COMPLETE
-- generated passage integration — NOT_STARTED (P1N)
-- generated translation integration — NOT_STARTED (P1N)
-- generated glossary integration — NOT_STARTED (P1N)
-- generated grammar integration — NOT_STARTED (P1N)
+- AI generation — COMPLETE
+- generated passage integration — COMPLETE
+- generated translation integration — COMPLETE
+- generated glossary integration — COMPLETE
+- generated grammar integration — COMPLETE
 - Quiz interaction — NOT_STARTED
 - XP/activity/history mutation — NOT_STARTED
 - learning history integration — NOT_STARTED
