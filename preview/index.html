@@ -4262,15 +4262,33 @@ class Component extends DCLogic {
     this.setState({ vcLoading: true });
     try {
       let token = '';
-      if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
-        token = await firebase.auth().currentUser.getIdToken();
+      const authUser = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+      if (authUser) {
+        token = await authUser.getIdToken();
+        if (!token) {
+          console.warn('[VideoClass] Failed to retrieve ID token for authenticated user. Aborting booking request.');
+          this.setState({ vcLoading: false });
+          return;
+        }
       }
 
-      const bookingsPromise = token
-        ? fetch('/api/v1/bookings', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }).then(r => r.json()).catch(() => null)
-        : Promise.resolve({ success: false, bookings: [] });
+      const fetchBookings = async () => {
+        if (!token) return { success: false, bookings: [] };
+        const headers = { 'Authorization': `Bearer ${token}` };
+        if (this.state.isAdmin) {
+          const res = await fetch('/api/v1/bookings', { headers }).catch(() => null);
+          if (res && res.status === 403) {
+            // Role mismatch: Admin 권한이 아닐 경우 my-bookings로 fallback
+            const fallbackRes = await fetch('/api/v1/my-bookings', { headers }).catch(() => null);
+            return fallbackRes ? fallbackRes.json().catch(() => null) : null;
+          }
+          return res ? res.json().catch(() => null) : null;
+        }
+        const res = await fetch('/api/v1/my-bookings', { headers }).catch(() => null);
+        return res ? res.json().catch(() => null) : null;
+      };
+
+      const bookingsPromise = fetchBookings();
 
       const [tutorsRes, bookingsRes] = await Promise.all([
         fetch('/api/v1/tutors').then(r => r.json()).catch(() => null),

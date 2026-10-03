@@ -441,6 +441,33 @@ router.post('/bookings', authenticateOptionalUser, (req, res) => {
   }
 });
 
+// GET /api/v1/my-bookings: 로그인 사용자의 예약 목록 조회 (Student 본인 예약 + Tutor 본인 담당 예약)
+router.get('/my-bookings', authenticateUser, (req, res) => {
+  try {
+    const userUid = req.user.uid;
+    const tutorProfile = findTutorByUid(userUid);
+    const tutorId = tutorProfile?.id;
+
+    // Student 소유 예약 (booking.studentUid === userUid)
+    // 또는 Tutor 담당 예약 (booking.tutorUid === userUid 또는 booking.tutorId === tutorProfile.id)
+    // 단일 filter 조건으로 혼합 역할(Mixed Role) 지원 및 중복 없이 매칭
+    const matchedBookings = bookings.filter(b => {
+      const isStudentBooking = Boolean(b.studentUid) && b.studentUid === userUid;
+      const isTutorBooking = (Boolean(b.tutorUid) && b.tutorUid === userUid) ||
+                            (Boolean(tutorId) && b.tutorId === tutorId);
+      return isStudentBooking || isTutorBooking;
+    });
+
+    res.json({
+      success: true,
+      count: matchedBookings.length,
+      bookings: matchedBookings
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // GET /api/v1/bookings: 수업 예약 목록 조회 (Effective Admin 전용)
 router.get('/bookings', authenticateUser, requireEffectiveAdmin, (req, res) => {
   try {
