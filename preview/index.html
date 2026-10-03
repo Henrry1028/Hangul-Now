@@ -4455,9 +4455,16 @@ class Component extends DCLogic {
       return;
     }
     try {
+      let token = '';
+      if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+        token = await firebase.auth().currentUser.getIdToken();
+      }
       const res = await fetch('/api/v1/tutors/profile', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           name: vcAdminTutorName || '새 튜터',
           shortIntro: vcAdminTutorShort,

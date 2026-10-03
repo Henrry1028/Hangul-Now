@@ -1023,6 +1023,7 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
 // ============================================================
 // 10. 1:1 화상 한국어 수업 매칭 플랫폼 API (PRD v1)
 // ============================================================
+app.post("/api/v1/tutors/profile", requireAdmin);
 app.use("/api/v1", videoClassRouter);
 
 app.get("*", (req, res) => {
