@@ -13,6 +13,51 @@ const FULL_READING_TEXT = DEFAULT_READING_PARAGRAPHS
   .map((paragraph) => paragraph.map((segment) => (typeof segment === 'string' ? segment : segment[0])).join(''))
   .join(' ');
 
+const LEARNED_STORAGE_KEY = 'hn-learned';
+const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
+
+function loadLearnedTopics(type) {
+  try {
+    return JSON.parse(window.localStorage.getItem(LEARNED_STORAGE_KEY) || '{}')[type] || {};
+  } catch {
+    return {};
+  }
+}
+
+function recordLearnedTopic(type, key, label) {
+  if (!key) return;
+  try {
+    const all = JSON.parse(window.localStorage.getItem(LEARNED_STORAGE_KEY) || '{}');
+    const learned = all[type] || {};
+    const previous = learned[key];
+    learned[key] = {
+      label: label || previous?.label || key,
+      firstAt: previous?.firstAt || Date.now(),
+      lastAt: Date.now(),
+      count: (previous?.count || 0) + 1
+    };
+    all[type] = learned;
+    window.localStorage.setItem(LEARNED_STORAGE_KEY, JSON.stringify(all));
+  } catch {
+    // Match the legacy client: storage failures do not block generated material.
+  }
+}
+
+function splitGeneratedParagraph(text, words) {
+  const source = String(text || '');
+  const candidates = (Array.isArray(words) ? words : [])
+    .filter((word) => word && source.includes(word))
+    .sort((a, b) => b.length - a.length);
+  if (!candidates.length) return [source];
+
+  const escapedWords = candidates.map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const wordPattern = new RegExp(`(${escapedWords.join('|')})`);
+  return source
+    .split(wordPattern)
+    .filter(Boolean)
+    .map((part) => (candidates.includes(part) ? [part] : part));
+}
+
 function SpeakerIcon({ size = 17, full = false }) {
   return (
     <svg
@@ -39,18 +84,45 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
   const [saved, setSaved] = useState({});
   const [speechStatus, setSpeechStatus] = useState('idle');
   const [speechKey, setSpeechKey] = useState('');
+  const [studyLevel, setStudyLevel] = useState('beginner');
+  const [generatedReading, setGeneratedReading] = useState(null);
+  const [generationLoading, setGenerationLoading] = useState(false);
+  const [generationError, setGenerationError] = useState('');
 
   const requestRef = useRef(null);
   const audioRef = useRef(null);
   const objectUrlRef = useRef(null);
   const activeKeyRef = useRef('');
   const speechStatusRef = useRef('idle');
+  const generationLoadingRef = useRef(false);
   const mountedRef = useRef(true);
   const previousTutorIdRef = useRef(selectedTutorId);
 
   const L = lang === 'ko' ? 1 : 0;
   const t = READING_TEXT[lang] || READING_TEXT.ko;
-  const selectedWord = selectedWordKey ? DEFAULT_READING_GLOSSARY[selectedWordKey] : null;
+  const generatedParagraphs = generatedReading?.paragraphs?.length ? generatedReading.paragraphs : null;
+  const readingParagraphs = generatedParagraphs
+    ? generatedParagraphs.map((paragraph) => splitGeneratedParagraph(paragraph.text, paragraph.words))
+    : DEFAULT_READING_PARAGRAPHS;
+  const readingTranslations = generatedParagraphs
+    ? generatedParagraphs.map((paragraph) => paragraph.en || '')
+    : DEFAULT_READING_TRANSLATIONS;
+  const readingGlossary = generatedReading?.glossary?.length
+    ? Object.fromEntries(generatedReading.glossary.map((item) => [item.word, {
+      base: item.word,
+      pos: [item.pos || '', item.pos || ''],
+      en: item.en || '',
+      ex: item.ex || ''
+    }]))
+    : DEFAULT_READING_GLOSSARY;
+  const readingGrammar = generatedReading?.grammar?.length
+    ? generatedReading.grammar.map((item) => ({
+      form: item.form,
+      explanation: [item.ko || '', item.ko || ''],
+      example: item.example || ''
+    }))
+    : DEFAULT_READING_GRAMMAR;
+  const selectedWord = selectedWordKey ? readingGlossary[selectedWordKey] : null;
   const selectedTutor = TUTORS.find((tutor) => tutor.id === selectedTutorId) || TUTORS[0];
 
   const updateSpeechState = useCallback((status, key) => {
@@ -189,6 +261,65 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
     }
   }, [selectedTutorId, stopTutorSpeech]);
 
+  const generateReadingMaterial = useCallback(async (level) => {
+    const nextLevel = level || 'beginner';
+    if (generationLoadingRef.current) return;
+
+    generationLoadingRef.current = true;
+    setGenerationLoading(true);
+    setGenerationError('');
+
+    try {
+      const seenTopics = Object.values(loadLearnedTopics('reading'))
+        .map((item) => item?.label)
+        .filter(Boolean);
+      const payload = JSON.stringify({
+        kind: 'reading',
+        level: nextLevel,
+        userId: null,
+        seenTopics
+      });
+      const request = () => fetch('/api/content/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      });
+
+      let response;
+      try {
+        response = await request();
+      } catch {
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+        response = await request();
+      }
+
+      if (!response.ok) throw new Error(`서버 응답 ${response.status}`);
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      if (data.topic) {
+        recordLearnedTopic('reading', `${nextLevel}:${data.topic}`, data.topic);
+      }
+      if (!mountedRef.current) return;
+
+      setGeneratedReading(data);
+      setSelectedWordKey(null);
+      setShowTranslation(false);
+    } catch (error) {
+      if (mountedRef.current) {
+        setGenerationError(`새 자료를 만들지 못했어요: ${error?.message || error}`);
+      }
+    } finally {
+      generationLoadingRef.current = false;
+      if (mountedRef.current) setGenerationLoading(false);
+    }
+  }, []);
+
+  const handleStudyLevel = (level) => {
+    if (studyLevel === level) return;
+    setStudyLevel(level);
+    generateReadingMaterial(level);
+  };
+
   const toggleSavedWord = () => {
     if (!selectedWordKey) return;
     setSaved((current) => ({
@@ -228,10 +359,50 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
       <div className="reading-header">
         <div className="reading-title-block">
           <span className="reading-eyebrow">{t.eyebrow}</span>
-          <h1>{DEFAULT_READING_TITLE}</h1>
-          <span className="reading-subtitle">{t.subtitle}</span>
+          <h1>{generatedReading?.title || DEFAULT_READING_TITLE}</h1>
+          <span className="reading-subtitle">{generatedReading?.subtitle || t.subtitle}</span>
+        </div>
+        <div className="reading-generation-controls">
+          {!generationLoading && (
+            <button
+              type="button"
+              className="reading-generate-button"
+              onClick={() => generateReadingMaterial(studyLevel)}
+            >
+              {lang === 'ko' ? '새로 생성' : 'New material'}
+            </button>
+          )}
+          {generationLoading && (
+            <span className="reading-generation-loading">
+              {lang === 'ko' ? '만드는 중…' : 'Generating…'}
+            </span>
+          )}
+          <div className="reading-level-selector">
+            {STUDY_LEVELS.map((level) => {
+              const levelLabel = {
+                beginner: lang === 'ko' ? '초급' : 'Beginner',
+                intermediate: lang === 'ko' ? '중급' : 'Intermediate',
+                advanced: lang === 'ko' ? '고급' : 'Advanced'
+              }[level];
+              return (
+                <button
+                  type="button"
+                  key={level}
+                  aria-pressed={studyLevel === level}
+                  className={studyLevel === level ? 'is-active' : ''}
+                  onClick={() => handleStudyLevel(level)}
+                >
+                  {levelLabel}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
+
+      {generationError && (
+        <div className="reading-generation-error" role="alert">{generationError}</div>
+      )}
 
       <div className="reading-content-grid">
         <div className="reading-passage-card">
@@ -261,7 +432,7 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
             </div>
           </div>
 
-          {DEFAULT_READING_PARAGRAPHS.map((paragraph, paragraphIndex) => (
+          {readingParagraphs.map((paragraph, paragraphIndex) => (
             <div className="reading-paragraph-block" key={`paragraph-${paragraphIndex}`}>
               <p className="reading-paragraph">
                 {paragraph.map((segment, segmentIndex) => {
@@ -287,7 +458,7 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
               </p>
               {showTranslation && (
                 <p className="reading-translation">
-                  {DEFAULT_READING_TRANSLATIONS[paragraphIndex]}
+                  {readingTranslations[paragraphIndex] || ''}
                 </p>
               )}
             </div>
@@ -341,7 +512,7 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
 
           <div className="reading-grammar-card">
             <span className="reading-grammar-heading">{t.grammarHeading}</span>
-            {DEFAULT_READING_GRAMMAR.map((grammar) => (
+            {readingGrammar.map((grammar) => (
               <span className="reading-grammar-item" key={grammar.form}>
                 <b>{grammar.form}</b> — {grammar.explanation[L]}{' '}
                 <span>{grammar.example}</span>

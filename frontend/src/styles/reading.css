@@ -39,6 +39,64 @@
   font-size: 14px;
 }
 
+.reading-generation-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reading-generate-button {
+  border: 1px solid var(--line3);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.reading-generation-loading {
+  color: var(--hot);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reading-level-selector {
+  display: flex;
+  padding: 4px;
+  background: var(--seg);
+  border-radius: 12px;
+}
+
+.reading-level-selector button {
+  border: 0;
+  background: transparent;
+  color: var(--ink2);
+  border-radius: 9px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reading-level-selector button.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.reading-generation-error {
+  border: 1px solid var(--hot);
+  background: var(--hot-soft);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+}
+
 .reading-content-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));

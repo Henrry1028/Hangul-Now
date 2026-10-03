@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`NOT_STARTED`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
@@ -24,6 +24,7 @@ Expected branch:
 
 Expected repository state:
 
+- baseline HEAD `f32395a4c891d0644e30e3cc33a0c410b6805040`,
 - clean after the P1M audit metadata checkpoint,
 - checkpoint `11e18eff4c1897e72f28f26b6b657a4e96456e14` remains an ancestor,
 - remote ahead remains zero.
@@ -81,15 +82,15 @@ Implement the bounded P1M `OPTION B` strategy in the React/Vite Reading page whi
 
 ## Progress Checklist
 
-- [ ] Git state reverified
-- [ ] Status set to IN_PROGRESS
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Browser/runtime success path PASS
-- [ ] Browser/runtime error and retry paths PASS
-- [ ] Responsive parity PASS
-- [ ] Regression PASS
-- [ ] Diff review PASS
+- [x] Git state reverified
+- [x] Status set to IN_PROGRESS
+- [x] Implementation complete
+- [x] Build PASS
+- [x] Browser/runtime success path PASS
+- [x] Browser/runtime error and retry paths PASS
+- [x] Responsive parity PASS
+- [x] Regression PASS
+- [x] Diff review PASS
 - [ ] Commit created
 - [ ] Remote divergence checked
 - [ ] Push complete
@@ -97,4 +98,20 @@ Implement the bounded P1M `OPTION B` strategy in the React/Vite Reading page whi
 
 ## Exact Next Action
 
-Reverify Git after committing the P1M audit checkpoint, then mark P1N `IN_PROGRESS` and implement the bounded Reading AI generation scope in `frontend/src/pages/ReadingPage.jsx` and `frontend/src/styles/reading.css`.
+Commit the bounded P1N files, fetch and verify divergence, push, then record the completed code checkpoint and select P1O.
+
+## Validation Checkpoint
+
+- Standard `npm run build` PASS under the repository's existing Node 20 verification image (`vite v5.4.21`, 40 modules).
+- Host Node `v24.11.1` transforms all modules but exits silently during Vite 5 minification; unminified host build and direct esbuild JS/CSS minification PASS, so this is recorded as a host-toolchain issue rather than a source failure.
+- Live `/api/content/generate` through the Vite proxy PASS in 4.6 seconds with real generated title, paragraphs, translations, glossary, and grammar.
+- Mocked beginner/intermediate/advanced payloads PASS with `userId: null` and expected `seenTopics`.
+- Same-level no-op, repeated-action blocking, one network retry, HTTP 503 error, and API error response PASS.
+- Generated selection and translation reset PASS.
+- Guest `hn-learned` topic persistence PASS.
+- Generated glossary, save model compatibility, word/example model, and grammar rendering PASS.
+- Static full-passage TTS quirk PASS after generation.
+- Desktop 1440x900 and mobile 390x844 PASS with no horizontal overflow.
+- 520/521 speech-label breakpoint PASS.
+- Intro, About, Tutors, and Reading smoke regression PASS.
+- No Vite error overlay or runtime exception; only the known `favicon.ico` 404 remains.
