@@ -478,8 +478,8 @@ router.get('/bookings/:id', authenticateUser, (req, res) => {
   }
 });
 
-// POST /api/v1/bookings/:id/status: 수업 세션 상태 변경 (SCHEDULED -> LIVE -> COMPLETED)
-router.post('/bookings/:id/status', (req, res) => {
+// POST /api/v1/bookings/:id/status: 수업 세션 상태 변경 (Tutor or Admin 전용, State Machine 적용)
+router.post('/bookings/:id/status', authenticateUser, (req, res) => {
   try {
     const { status } = req.body;
     const booking = bookings.find(b => b.id === req.params.id);
@@ -487,8 +487,43 @@ router.post('/bookings/:id/status', (req, res) => {
       return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
     }
 
+    // 1. 관리자 및 담당 튜터 인가 검증 (Student, Guest, 비참여자는 404 은닉 차단)
+    const isAdmin = isEffectiveAdmin(req.user);
+    const tutorProfile = findTutorByUid(req.user.uid);
+    const isTutor = (Boolean(booking.tutorUid) && booking.tutorUid === req.user.uid) ||
+                    Boolean(tutorProfile && tutorProfile.id === booking.tutorId);
+
+    if (!isAdmin && !isTutor) {
+      return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
+    }
+
+    // 2. 요청 상태값 Enum 검증
     if (!['SCHEDULED', 'LIVE', 'COMPLETED', 'CANCELLED'].includes(status)) {
       return res.status(400).json({ success: false, error: '유효하지 않은 상태값입니다.' });
+    }
+
+    // 3. 동일 상태 전이 (Idempotent 200 반환)
+    if (booking.status === status) {
+      return res.json({
+        success: true,
+        message: `수업 상태가 ${status}(으)로 유지되었습니다.`,
+        booking
+      });
+    }
+
+    // 4. State Machine 상태 전이 유효성 검증
+    const VALID_STATUS_TRANSITIONS = {
+      SCHEDULED: new Set(['LIVE', 'CANCELLED']),
+      LIVE: new Set(['COMPLETED', 'CANCELLED']),
+      COMPLETED: new Set(),
+      CANCELLED: new Set()
+    };
+
+    if (!VALID_STATUS_TRANSITIONS[booking.status] || !VALID_STATUS_TRANSITIONS[booking.status].has(status)) {
+      return res.status(400).json({
+        success: false,
+        error: '현재 상태에서는 요청하신 상태로 변경할 수 없습니다.'
+      });
     }
 
     booking.status = status;

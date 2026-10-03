@@ -3432,12 +3432,18 @@ x-dc { display: flex !important; flex-direction: column !important; height: 100%
                     </div>
                   </sc-if>
 
-                  <!-- 세션 상태 시뮬레이션 버튼 (테스트 편의용) -->
-                  <div style="display:flex;gap:6px;align-items:center">
-                    <span style="font-size:11px;color:var(--faint)">상태 변경:</span>
-                    <button sc-camel-on-click="{{ b.makeLive }}" style="border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">LIVE</button>
-                    <button sc-camel-on-click="{{ b.makeCompleted }}" style="border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">COMPLETED</button>
-                  </div>
+                  <!-- 세션 상태 시뮬레이션 버튼 (테스트 편의용: SCHEDULED -> LIVE, LIVE -> COMPLETED) -->
+                  <sc-if value="{{ b.canTransition }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;gap:6px;align-items:center">
+                      <span style="font-size:11px;color:var(--faint)">상태 변경:</span>
+                      <sc-if value="{{ b.isScheduled }}" hint-placeholder-val="{{ true }}">
+                        <button sc-camel-on-click="{{ b.makeLive }}" style="border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">LIVE</button>
+                      </sc-if>
+                      <sc-if value="{{ b.isLive }}" hint-placeholder-val="{{ false }}">
+                        <button sc-camel-on-click="{{ b.makeCompleted }}" style="border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">COMPLETED</button>
+                      </sc-if>
+                    </div>
+                  </sc-if>
 
                 </div>
 
@@ -4376,17 +4382,42 @@ class Component extends DCLogic {
 
   simulateBookingStatus = async (bookingId, nextStatus) => {
     try {
+      const currentUser =
+        typeof firebase !== 'undefined' && firebase.auth
+          ? firebase.auth().currentUser
+          : null;
+
+      if (!currentUser) {
+        alert('수업 상태를 변경하려면 로그인이 필요합니다.');
+        return;
+      }
+
+      let token = '';
+      try {
+        token = await currentUser.getIdToken();
+      } catch (tokenErr) {
+        console.error('[VideoClass] Failed to retrieve auth token:', tokenErr);
+        alert('인증 토큰을 가져오지 못했습니다. 다시 시도해 주세요.');
+        return;
+      }
+
       const res = await fetch(`/api/v1/bookings/${bookingId}/status`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ status: nextStatus })
       });
       const data = await res.json();
       if (data && data.success) {
         this.loadVideoClassData();
+      } else {
+        alert(data.error || '상태 변경에 실패했습니다.');
       }
     } catch (e) {
       console.warn('Status simulation error:', e);
+      alert('서버 통신 오류가 발생했습니다.');
     }
   };
 
@@ -7133,6 +7164,7 @@ class Component extends DCLogic {
           isScheduled,
           isLive,
           isCompleted,
+          canTransition: isScheduled || isLive,
           canEnterMeet,
           countdownLabel,
           formattedTime: slotDate.toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' }),
