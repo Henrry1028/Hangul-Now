@@ -18,6 +18,19 @@ const requireEffectiveAdmin = (req, res, next) => {
   next();
 };
 
+// HangulNow Booking Tutor 소유권 확인 로컬 헬퍼 함수
+// (직접 tutorUid 일치 또는 등록된 튜터 프로필 매핑 기준)
+function isBookingTutor(user, booking) {
+  if (!user || !booking) return false;
+
+  if (booking.tutorUid && booking.tutorUid === user.uid) {
+    return true;
+  }
+
+  const tutorProfile = findTutorByUid(user.uid);
+  return Boolean(tutorProfile && tutorProfile.id === booking.tutorId);
+}
+
 const router = express.Router();
 
 // ------------------------------------------------------------
@@ -462,10 +475,8 @@ router.get('/bookings/:id', authenticateUser, (req, res) => {
     // 2. 예약 학생 소유권 확인 (verified studentUid 기준)
     const isStudent = Boolean(booking.studentUid) && booking.studentUid === req.user.uid;
 
-    // 3. 예약 튜터 소유권 확인 (직접 tutorUid 또는 서버 검증 튜터 프로필 매핑 기준)
-    const tutorProfile = findTutorByUid(req.user.uid);
-    const isTutor = (Boolean(booking.tutorUid) && booking.tutorUid === req.user.uid) ||
-                    Boolean(tutorProfile && tutorProfile.id === booking.tutorId);
+    // 3. 예약 튜터 소유권 확인 (로컬 헬퍼 함수 isBookingTutor 활용)
+    const isTutor = isBookingTutor(req.user, booking);
 
     // 권한이 없는 경우 리소스 존재 여부 노출을 방지하기 위해 404 Not Found 반환
     if (!isAdmin && !isStudent && !isTutor) {
@@ -489,9 +500,7 @@ router.post('/bookings/:id/status', authenticateUser, (req, res) => {
 
     // 1. 관리자 및 담당 튜터 인가 검증 (Student, Guest, 비참여자는 404 은닉 차단)
     const isAdmin = isEffectiveAdmin(req.user);
-    const tutorProfile = findTutorByUid(req.user.uid);
-    const isTutor = (Boolean(booking.tutorUid) && booking.tutorUid === req.user.uid) ||
-                    Boolean(tutorProfile && tutorProfile.id === booking.tutorId);
+    const isTutor = isBookingTutor(req.user, booking);
 
     if (!isAdmin && !isTutor) {
       return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
@@ -533,15 +542,23 @@ router.post('/bookings/:id/status', authenticateUser, (req, res) => {
   }
 });
 
-// POST /api/v1/bookings/:id/feedback/tutor: 튜터 전용 학습 리포트 피드백 등록
-router.post('/bookings/:id/feedback/tutor', (req, res) => {
+// POST /api/v1/bookings/:id/feedback/tutor: 튜터 전용 학습 리포트 피드백 등록 (Tutor or Admin 전용)
+router.post('/bookings/:id/feedback/tutor', authenticateUser, (req, res) => {
   try {
     const booking = bookings.find(b => b.id === req.params.id);
     if (!booking) {
       return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
     }
 
-    // 검증 규칙 3: 수업 종료 상태(COMPLETED) 세션에 대해서만 피드백 등록 가능
+    // 1. 관리자 및 담당 튜터 인가 검증 (Student, Guest, 비참여자는 404 은닉 차단)
+    const isAdmin = isEffectiveAdmin(req.user);
+    const isTutor = isBookingTutor(req.user, booking);
+
+    if (!isAdmin && !isTutor) {
+      return res.status(404).json({ success: false, error: '예약 내역을 찾을 수 없습니다.' });
+    }
+
+    // 2. 수업 종료 상태(COMPLETED) 세션에 대해서만 피드백 등록/수정 가능
     if (booking.status !== 'COMPLETED') {
       return res.status(400).json({
         success: false,
@@ -549,19 +566,72 @@ router.post('/bookings/:id/feedback/tutor', (req, res) => {
       });
     }
 
+    // 3. Payload 필드별 타입 검증 및 무결성 보장 (Mass Assignment 방지)
     const { summary, keyExpressions, corrections, encouragement } = req.body;
-    if (!summary || !corrections) {
+
+    if (typeof summary !== 'string' || summary.trim() === '') {
       return res.status(400).json({
         success: false,
-        error: '수업 요약과 발음/문법 교정 노트는 필수 입력 항목입니다.'
+        error: '수업 요약은 필수 입력 항목입니다.'
       });
+    }
+
+    if (typeof corrections !== 'string' || corrections.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        error: '발음/문법 교정 노트는 필수 입력 항목입니다.'
+      });
+    }
+
+    let resolvedKeyExpressions = [];
+    if (keyExpressions !== undefined && keyExpressions !== null) {
+      if (Array.isArray(keyExpressions)) {
+        for (const item of keyExpressions) {
+          if (typeof item !== 'string') {
+            return res.status(400).json({
+              success: false,
+              error: '주요 표현 목록의 항목은 문자열이어야 합니다.'
+            });
+          }
+        }
+        resolvedKeyExpressions = keyExpressions
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+      } else if (typeof keyExpressions === 'string') {
+        const trimmed = keyExpressions.trim();
+        resolvedKeyExpressions = trimmed.length > 0 ? [trimmed] : [];
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: '주요 표현 항목은 문자열 또는 문자열 배열이어야 합니다.'
+        });
+      }
+    }
+
+    let resolvedEncouragement = '수고 많으셨습니다!';
+    if (encouragement !== undefined && encouragement !== null) {
+      if (typeof encouragement !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: '격려의 한마디는 문자열이어야 합니다.'
+        });
+      }
+      const trimmedEnc = encouragement.trim();
+      if (trimmedEnc.length > 0) {
+        resolvedEncouragement = trimmedEnc;
+      }
+    }
+
+    // 4. Feedback 구조 초기화 및 튜터 리포트 저장/갱신
+    if (!booking.feedback) {
+      booking.feedback = { tutor: null, student: null };
     }
 
     booking.feedback.tutor = {
       summary: summary.trim(),
-      keyExpressions: Array.isArray(keyExpressions) ? keyExpressions : [keyExpressions].filter(Boolean),
+      keyExpressions: resolvedKeyExpressions,
       corrections: corrections.trim(),
-      encouragement: encouragement ? encouragement.trim() : '수고 많으셨습니다!',
+      encouragement: resolvedEncouragement,
       submittedAt: new Date().toISOString()
     };
 

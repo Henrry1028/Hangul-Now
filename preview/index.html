@@ -4456,11 +4456,33 @@ class Component extends DCLogic {
       alert('수업 요약과 교정 노트를 작성해 주세요.');
       return;
     }
+    const currentUser =
+      typeof firebase !== 'undefined' && firebase.auth
+        ? firebase.auth().currentUser
+        : null;
+
+    if (!currentUser) {
+      alert('튜터 학습 리포트를 등록하려면 로그인이 필요합니다.');
+      return;
+    }
+
+    let token = '';
+    try {
+      token = await currentUser.getIdToken();
+    } catch (tokenErr) {
+      console.error('[VideoClass] Failed to retrieve auth token for tutor feedback:', tokenErr);
+      alert('인증 토큰을 가져오지 못했습니다. 다시 시도해 주세요.');
+      return;
+    }
+
     const keyExpressions = [vcTutorFbKeyExp1, vcTutorFbKeyExp2, vcTutorFbKeyExp3].filter(Boolean);
     try {
       const res = await fetch(`/api/v1/bookings/${vcActiveFeedbackBooking.id}/feedback/tutor`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           summary: vcTutorFbSummary,
           keyExpressions,
