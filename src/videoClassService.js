@@ -6,6 +6,7 @@
 import express from 'express';
 import { authenticateUser, authenticateOptionalUser } from './authMiddleware.js';
 import { isEffectiveAdmin } from './adminPolicy.js';
+import { auth } from './firebase.js';
 
 // HangulNow Effective Admin 인가 가드 미들웨어
 const requireEffectiveAdmin = (req, res, next) => {
@@ -200,18 +201,21 @@ router.get('/tutors', (req, res) => {
       );
     }
 
+    // Public API 보안: 내부 식별자인 tutorUid는 일반 사용자 응답에서 제외(omit)
+    const publicList = list.map(({ tutorUid, ...publicTutor }) => publicTutor);
+
     res.json({
       success: true,
-      count: list.length,
-      tutors: list
+      count: publicList.length,
+      tutors: publicList
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// POST /api/v1/tutors/profile: 튜터 프로필 및 소개 영상 등록/수정
-router.post('/tutors/profile', (req, res) => {
+// POST /api/v1/tutors/profile: 튜터 프로필 및 소개 영상 등록/수정 (Firebase UID 검증 및 바인딩 강화)
+router.post('/tutors/profile', async (req, res) => {
   try {
     const {
       id,
@@ -257,13 +261,51 @@ router.post('/tutors/profile', (req, res) => {
     const tutorId = id || `tutor_${Date.now()}`;
     const existingIndex = tutors.findIndex(t => t.id === tutorId);
 
-    // Tutor Identity Trust Boundary:
-    // 관리자(req.adminUser)가 프로필을 등록/수정하더라도 관리자의 Firebase UID를 튜터 UID로 자동 fallback하지 않음.
-    // 명시적으로 전달된 candidate UID가 있는 경우에만 수용하며, 기존 튜터의 경우 기존 tutorUid를 안전하게 보존함.
+    // tutorUid 타입 검증: string이 아니면서 제공된 경우(number, object, array 등) 400 Bad Request
+    if (tutorUid !== undefined && tutorUid !== null && typeof tutorUid !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: '튜터 Firebase UID는 문자열 형식이어야 합니다.'
+      });
+    }
+
+    // Tutor Identity Trust Boundary & Firebase UID Binding Hardening
     let resolvedTutorUid = null;
-    if (typeof tutorUid === 'string' && tutorUid.trim().length > 0) {
-      resolvedTutorUid = tutorUid.trim();
+    const hasCandidateUid = typeof tutorUid === 'string' && tutorUid.trim().length > 0;
+
+    if (hasCandidateUid) {
+      const candidateUid = tutorUid.trim();
+
+      // Firebase Admin Auth 서비스 가용성 확인
+      if (!auth) {
+        return res.status(503).json({
+          success: false,
+          error: '인증 서비스를 사용할 수 없어 튜터 UID를 검증할 수 없습니다.'
+        });
+      }
+
+      // 1. Firebase Auth에 실제 존재하는 사용자 UID인지 확인
+      try {
+        await auth.getUser(candidateUid);
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          error: '존재하지 않는 Firebase 사용자 UID입니다.'
+        });
+      }
+
+      // 2. 다른 튜터 프로필과의 중복 매핑 방지 (Uniqueness: 409 Conflict)
+      const conflictTutor = tutors.find(t => t.id !== tutorId && t.tutorUid === candidateUid);
+      if (conflictTutor) {
+        return res.status(409).json({
+          success: false,
+          error: `해당 Firebase UID는 이미 다른 튜터(${conflictTutor.name})에게 매핑되어 있습니다.`
+        });
+      }
+
+      resolvedTutorUid = candidateUid;
     } else if (existingIndex >= 0 && tutors[existingIndex].tutorUid) {
+      // 기존 튜터 수정 시 tutorUid가 생략/미제공되었거나 빈 문자열인 경우 기존 mapping 보존
       resolvedTutorUid = tutors[existingIndex].tutorUid;
     }
 
