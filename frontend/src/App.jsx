@@ -39,7 +39,7 @@ function App() {
         />
       )}
       {currentPage === 'reading' && (
-        <ReadingPage lang="ko" />
+        <ReadingPage lang="ko" selectedTutorId={selectedTutorId} />
       )}
     </>
   );

@@ -73,6 +73,45 @@
   color: var(--faint);
 }
 
+.reading-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reading-speech-button {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--accent-ink);
+  border-radius: 999px;
+  min-height: 38px;
+  padding: 8px 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+
+.reading-speech-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+
+.reading-speech-button:focus-visible {
+  outline: 3px solid rgba(35, 73, 63, .22);
+  outline-offset: 2px;
+}
+
+.reading-speech-button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 .reading-translation-toggle {
   border: 1px solid var(--line3);
   background: var(--card);
@@ -155,6 +194,13 @@
   font: 700 32px 'Gowun Batang', serif;
 }
 
+.reading-glossary-word-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .reading-word-meaning {
   font-size: 16px;
 }
@@ -174,7 +220,7 @@
   flex-wrap: wrap;
 }
 
-.reading-glossary-actions button {
+.reading-save-button {
   border: 0;
   background: #F5F2EB;
   color: #23493F;
@@ -183,6 +229,26 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.reading-word-speech-button,
+.reading-example-speech-button {
+  min-height: 34px;
+  padding: 6px 10px;
+  background: transparent;
+  border-color: rgba(245, 242, 235, .3);
+  color: #F5F2EB;
+}
+
+.reading-word-speech-button.is-active,
+.reading-example-speech-button.is-active {
+  background: rgba(245, 242, 235, .3);
+  border-color: rgba(245, 242, 235, .5);
+  color: #F5F2EB;
+}
+
+.reading-example-speech-button {
+  font-size: 11px;
 }
 
 .reading-empty-card {
@@ -248,6 +314,18 @@
 
   .reading-aside {
     position: static;
+  }
+}
+
+@media (max-width: 520px) {
+  .reading-speech-button .reading-speech-label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reading-speech-button {
+    transition: none;
   }
 }
 
