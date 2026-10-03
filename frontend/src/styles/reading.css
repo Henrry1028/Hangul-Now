@@ -1,0 +1,259 @@
+.reading-screen {
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.reading-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.reading-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reading-eyebrow {
+  font: 500 12px 'IBM Plex Mono', monospace;
+  color: var(--hot);
+  letter-spacing: .1em;
+}
+
+.reading-title-block h1 {
+  margin: 0;
+  font: 500 clamp(30px, 3.4vw, 40px) / 1.15 'Newsreader', 'Gowun Batang', serif;
+  letter-spacing: -.02em;
+}
+
+.reading-subtitle {
+  color: var(--sub);
+  font-size: 14px;
+}
+
+.reading-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 28px;
+  align-items: start;
+}
+
+.reading-passage-card {
+  grid-column: span 2;
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: clamp(24px, 4vw, 44px);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.reading-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line2);
+  padding-bottom: 14px;
+}
+
+.reading-toolbar > span {
+  font-size: 13.5px;
+  color: var(--faint);
+}
+
+.reading-translation-toggle {
+  border: 1px solid var(--line3);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.reading-translation-toggle.is-active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.reading-paragraph-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reading-paragraph {
+  margin: 0;
+  font: 400 19px / 2 'Gowun Batang', serif;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.reading-word {
+  border-bottom: 2px solid var(--gold);
+  background: transparent;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.reading-word.is-selected {
+  background: var(--hi);
+}
+
+.reading-word.is-saved {
+  border-bottom-color: var(--accent-ink);
+}
+
+.reading-translation {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--line3);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--sub);
+  text-wrap: pretty;
+}
+
+.reading-aside {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reading-glossary-card {
+  background: #23493F;
+  color: #F5F2EB;
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reading-pos {
+  font-size: 12px;
+  color: #A9C1B6;
+}
+
+.reading-word-base {
+  font: 700 32px 'Gowun Batang', serif;
+}
+
+.reading-word-meaning {
+  font-size: 16px;
+}
+
+.reading-word-example {
+  font-size: 14px;
+  color: #DCE5E0;
+  border-top: 1px solid rgba(245, 242, 235, .18);
+  padding-top: 10px;
+  line-height: 1.55;
+}
+
+.reading-glossary-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reading-glossary-actions button {
+  border: 0;
+  background: #F5F2EB;
+  color: #23493F;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reading-empty-card {
+  border: 1.5px dashed var(--line3);
+  border-radius: 18px;
+  padding: 18px 18px 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.reading-empty-card img {
+  width: 96px;
+  flex: none;
+  margin-bottom: -6px;
+}
+
+.reading-empty-card span {
+  color: var(--sub);
+  font-size: 14px;
+  line-height: 1.55;
+  padding-bottom: 18px;
+}
+
+.reading-grammar-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reading-grammar-heading {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.reading-grammar-item {
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.reading-grammar-item b {
+  font-family: 'Gowun Batang', serif;
+}
+
+.reading-grammar-item > span {
+  color: var(--faint);
+}
+
+@media (max-width: 659px) {
+  .reading-content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reading-passage-card,
+  .reading-aside {
+    grid-column: 1;
+  }
+
+  .reading-aside {
+    position: static;
+  }
+}
+
+@media (min-width: 860px) {
+  .reading-screen {
+    padding: clamp(12px, 1.6vh, 20px) clamp(16px, 2vw, 32px);
+    gap: clamp(10px, 1.4vh, 18px);
+  }
+}

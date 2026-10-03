@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import IntroPage from './pages/IntroPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import TutorsPage from './pages/TutorsPage.jsx';
+import ReadingPage from './pages/ReadingPage.jsx';
 import './styles/intro.css';
+import './styles/reading.css';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('intro');
@@ -10,7 +12,7 @@ function App() {
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
-    if (target === 'intro' || target === 'about' || target === 'tutors') {
+    if (target === 'intro' || target === 'about' || target === 'tutors' || target === 'reading') {
       setCurrentPage(target);
     }
   };
@@ -35,6 +37,9 @@ function App() {
           onSelectTutor={handleSelectTutor}
           onNavigate={handleNavigate}
         />
+      )}
+      {currentPage === 'reading' && (
+        <ReadingPage lang="ko" />
       )}
     </>
   );
