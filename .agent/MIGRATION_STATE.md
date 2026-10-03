@@ -76,6 +76,7 @@ React/Vite sandbox:
 - Reading TTS — COMPLETE
 - Reading AI generation audit and migration strategy — COMPLETE
 - Reading AI controls and generated passage/translation/glossary/grammar — COMPLETE
+- Reading Quiz and activity/history audit — COMPLETE
 
 ---
 
@@ -139,27 +140,32 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P1O`
+`P1P`
 
 Name:
 
-`READING QUIZ + ACTIVITY/HISTORY AUDIT`
+`READING QUIZ + ACTIVITY PERSISTENCE MIGRATION`
 
 Status:
 
 `NOT_STARTED`
 
-Risk expectation:
+Selected strategy:
 
-`MEDIUM/HIGH`
+`QUIZ UI + APP-OWNED LEGACY ACTIVITY STATE`
 
-Reason:
+Bounded scope:
 
-Reading Quiz selection mutates shared activity logs, XP, study dates, and time totals that later Home/Record migration will consume.
+- add static and generated Reading Quiz rendering,
+- preserve session-local answer selection and generation reset,
+- preserve repeat-answer activity/XP awards,
+- keep `activityLogs`, `userXp`, `studyDates`, and `userTotalMins` in `App.jsx`,
+- preserve legacy `hn-activity-logs`, `hn-study-dates`, and `hn-user-xp` storage contracts,
+- exclude Home/Record UI migration and backend/auth changes.
 
 Next required action:
 
-Perform source-first audit of static/generated Reading Quiz behavior and shared activity/history persistence before implementation.
+Implement and validate the bounded P1P Quiz and activity persistence scope.
 
 ---
 
@@ -170,7 +176,7 @@ Perform source-first audit of static/generated Reading Quiz behavior and shared 
 - generated translation integration — COMPLETE
 - generated glossary integration — COMPLETE
 - generated grammar integration — COMPLETE
-- Quiz interaction — NOT_STARTED
+- Quiz interaction — AUDIT_COMPLETE
 - XP/activity/history mutation — NOT_STARTED
 - learning history integration — NOT_STARTED
 

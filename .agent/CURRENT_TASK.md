@@ -4,11 +4,11 @@
 
 Milestone ID:
 
-`P1O`
+`P1P`
 
 Milestone Name:
 
-`READING QUIZ + ACTIVITY/HISTORY AUDIT`
+`READING QUIZ + ACTIVITY PERSISTENCE MIGRATION`
 
 Status:
 
@@ -24,64 +24,73 @@ Expected branch:
 
 Expected repository state:
 
-- clean after the P1N completion metadata checkpoint,
-- P1N code checkpoint is an ancestor of HEAD,
+- clean after the P1O audit metadata checkpoint,
+- P1N code checkpoint remains an ancestor,
 - remote ahead is zero.
 
 ---
 
 ## Objective
 
-Audit the legacy Reading Quiz and its shared activity, XP, study-date, duration, and learning-history coupling. Define the smallest parity-safe React migration scope.
+Migrate static/generated Reading Quiz parity and the exact local activity persistence it triggers, while leaving Home/Record presentation and backend/auth out of scope.
 
-This milestone is initially READ-ONLY.
+## Included Scope
 
-## Required Audit Areas
+- static Reading questions,
+- generated Reading questions,
+- session answer state,
+- correct/incorrect selected-option styling,
+- generation reset,
+- repeat-answer award quirk,
+- App-owned activity logs, XP, study dates, and session minutes,
+- legacy seed logs and 150-entry cap,
+- `hn-activity-logs`, `hn-study-dates`, and `hn-user-xp`.
 
-- static Reading question model,
-- generated Reading question model,
-- exact Quiz UI and feedback states,
-- answer state and repeated-answer behavior,
-- Korean/English question and option behavior,
-- `recordActivity` payloads,
-- `hn-activity-logs`, `hn-study-dates`, and `hn-user-xp`,
-- `userTotalMins` mutation,
-- Home/Record/shared-state coupling,
-- signed-in versus guest behavior,
-- backend/Firebase coupling,
-- generated-material reset behavior,
-- responsive behavior,
-- current React compatibility,
-- whether activity persistence can be migrated before Home/Record consumers.
+## Explicitly Excluded
 
-## Key Questions
+- Home UI,
+- Record UI,
+- weekly chart recalculation,
+- backend activity endpoint,
+- Firebase/auth sync,
+- learned-topic changes,
+- Quiz redesign or new feedback.
 
-1. Can Reading Quiz UI and local persistence migrate independently of Home/Record UI?
-2. Must shared activity helpers move to `App.jsx` now, or can a bounded storage-compatible helper preserve future integration?
-3. Does answering again intentionally award/log activity again?
-4. Does Quiz affect learned-topic history beyond generation?
-5. Is backend or auth work required?
-6. What is the exact next implementation scope?
+## Required Validation
+
+- build,
+- static two-question rendering,
+- generated-question replacement,
+- correct and incorrect styling,
+- repeat-answer activity/XP behavior,
+- answer change behavior,
+- generation answer reset,
+- exact activity payload,
+- legacy seed log behavior,
+- 150-entry cap,
+- XP/date/log persistence across reload,
+- session-only minutes behavior,
+- Korean/English label behavior,
+- desktop 1440px,
+- mobile 390px,
+- Intro/About/Tutors/Reading regression,
+- no unexpected console/page errors.
 
 ## Progress Checklist
 
-- [ ] Handoff/Git state verified
-- [ ] Static Quiz source audited
-- [ ] Generated Quiz source audited
-- [ ] Answer/feedback behavior audited
-- [ ] Activity payload audited
-- [ ] XP/date/time persistence audited
-- [ ] Home/Record coupling audited
-- [ ] Auth/backend coupling audited
-- [ ] Reset/lifecycle audited
-- [ ] i18n audited
-- [ ] responsive behavior audited
-- [ ] React compatibility assessed
-- [ ] risk classification complete
-- [ ] strategy selected
-- [ ] exact next implementation milestone defined
-- [ ] final Git state verified
+- [ ] Git state reverified
+- [ ] Status set to IN_PROGRESS
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Browser/runtime behavior PASS
+- [ ] Persistence/reload PASS
+- [ ] Responsive parity PASS
+- [ ] Regression PASS
+- [ ] Diff review PASS
+- [ ] Commit created
+- [ ] Push complete
+- [ ] Post-push divergence `0 0`
 
 ## Exact Next Action
 
-Commit and push the P1N completion metadata, then reverify Git and begin the P1O source-first audit from the legacy Quiz renderer and `recordActivity` implementation.
+Commit and push the P1O audit metadata, then reverify Git and implement P1P in the smallest shared-state-compatible set of React files.

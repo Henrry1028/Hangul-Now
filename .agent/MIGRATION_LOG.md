@@ -353,3 +353,41 @@ Excluded:
 Next planned milestone:
 
 `P1O READING QUIZ + ACTIVITY/HISTORY AUDIT`
+
+---
+
+## P1O — Reading Quiz + Activity/History Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`MEDIUM/HIGH`
+
+Selected strategy:
+
+`QUIZ UI + APP-OWNED LEGACY ACTIVITY STATE`
+
+Findings:
+
+- Static and generated Reading questions share `{ q, en, opts, a }`; generated questions replace the two static defaults when present.
+- The Quiz appears inside the passage card after all paragraphs and always renders the Korean question, its English line, and Korean options.
+- Answer state is session-local in `rAns`; a successful new generation resets all Reading answers.
+- Only the selected option changes border/background: green for correct, red for incorrect. Reading Quiz has no separate mark or feedback text and does not reveal the correct option after a wrong choice.
+- Every option click records activity, including repeated clicks and changing an answer. Correct awards 20 XP; incorrect awards 10 XP. This repeat-award behavior is a preserved legacy quirk.
+- Activity entries use type `reading`, module `독해 퀴즈`, icon `📖`, a Korean title/detail, and tag `정답 +20XP` or `독해` regardless of interface language.
+- `recordActivity` prepends a log, caps the list at 150, adds the current local date, increments XP, and adds two session minutes.
+- Logs, dates, and XP persist in `hn-activity-logs`, `hn-study-dates`, and `hn-user-xp`.
+- `userTotalMins` is intentionally not persisted by the legacy app; it resets to the seeded 2538 minutes on reload.
+- When stored logs are absent or empty, six legacy seed activity rows are loaded and the first real event is prepended to them.
+- Activity state is local for signed-in and guest users alike. Reading Quiz does not call Firebase, `/api/learning/record`, or any backend endpoint.
+- Reading Quiz does not mutate learned-topic history; only Reading generation does.
+- Record consumes activity logs, XP, study dates, and session minutes. Its weekly bar dataset remains static and is not recomputed from Quiz logs.
+- The current React `App.jsx` is the correct owner for cross-page session state. A bounded legacy-compatible activity helper can initialize and persist data without migrating Home/Record UI yet.
+- The existing passage card and responsive flex wrapping can host the Quiz with no new dependency.
+
+Next exact milestone:
+
+`P1P READING QUIZ + ACTIVITY PERSISTENCE MIGRATION`
