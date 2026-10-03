@@ -781,57 +781,48 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
 const isEmailAdmin = (email) => {
   if (!email) return false;
   const normalized = email.toLowerCase().trim();
-  if (ADMIN_EMAILS.length > 0) {
-    return ADMIN_EMAILS.includes(normalized);
-  }
-  return normalized.includes("admin") || normalized.startsWith("hopep");
+  return ADMIN_EMAILS.includes(normalized);
 };
 
 // 관리자 인증 미들웨어
-const verifyAdmin = async (req, res, next) => {
+const requireAdmin = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  const queryAdmin = req.query.adminKey || req.headers["x-admin-key"];
+  const token = typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7).trim()
+    : "";
 
-  if (token && auth) {
-    try {
-      const decoded = await auth.verifyIdToken(token);
-      req.adminUser = decoded;
-      if (isEmailAdmin(decoded.email)) {
-        return next();
-      }
-      return res.status(403).json({ error: "관리자 권한이 없는 계정입니다." });
-    } catch (err) {
-      console.warn("[Admin Auth] Token verification failed:", err.message);
+  if (!token) {
+    return res.status(401).json({ isAdmin: false, error: "관리자 인증 토큰이 필요합니다." });
+  }
+
+  if (!auth) {
+    return res.status(503).json({ isAdmin: false, error: "관리자 인증 서비스를 사용할 수 없습니다." });
+  }
+
+  try {
+    const decoded = await auth.verifyIdToken(token, true);
+    if (decoded.admin !== true && !isEmailAdmin(decoded.email)) {
+      return res.status(403).json({ isAdmin: false, error: "관리자 권한이 없는 계정입니다." });
     }
-  }
 
-  // 로컬 개발 환경 또는 mock 허용
-  if (process.env.NODE_ENV !== "production" || queryAdmin === "hangul-now-admin-pass") {
+    req.adminUser = {
+      uid: decoded.uid,
+      email: decoded.email ?? null
+    };
     return next();
+  } catch (err) {
+    console.warn("[Admin Auth] Token verification failed:", err.message);
+    return res.status(401).json({ isAdmin: false, error: "유효한 관리자 인증 토큰이 필요합니다." });
   }
-
-  return res.status(401).json({ error: "관리자 인증 토큰이 필요합니다." });
 };
 
 // 1) 관리자 권한 확인 경량 API
-app.post("/api/admin/check", async (req, res) => {
-  const { idToken, email } = req.body || {};
-  let userEmail = email;
-  if (idToken && auth) {
-    try {
-      const decoded = await auth.verifyIdToken(idToken);
-      userEmail = decoded.email || userEmail;
-    } catch (e) {
-      // ignore
-    }
-  }
-  const admin = isEmailAdmin(userEmail);
-  res.json({ isAdmin: admin, email: userEmail });
+app.post("/api/admin/check", requireAdmin, (req, res) => {
+  res.json({ isAdmin: true });
 });
 
 // 2) 관리자 대시보드 통계 및 전체 회원 데이터 API
-app.get("/api/admin/dashboard", verifyAdmin, async (req, res) => {
+app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
   try {
     let authUsers = [];
     let firestoreUsers = new Map();
