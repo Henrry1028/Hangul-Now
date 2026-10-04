@@ -806,3 +806,34 @@ Phase 4 (Home, Writing, Listening, Record): COMPLETE.
 Next milestone:
 
 `P3A SPEAKING AUDIT` (Phase 5 high-coupling domains: Speaking, Chat, Conversation)
+
+---
+
+## P3A — Speaking Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`MEDIUM` (TTS, AI generation, shared globals). Recording uses no microphone in legacy, only a simulated state machine.
+
+Source map (`preview/index.html`):
+
+- template 2145-2175 (`08 Speaking`), CSS keyframes `pulse` (59), `.speaking-screen` global `max-width:1400px !important` (118), and the >=860px override `max-width:920px !important` (484),
+- data `SENTS` (3918+), labels 3974 / 4042 (the label object defines `sEyebrow` twice; the later `SPEAKING · SHADOWING` / `말하기 · 따라 말하기` wins),
+- render 6940-6944 (`SENTS_SRC` from `genSpeaking.sentences` with fixed score 88; syllables with weak indices marked red once done),
+- bindings 7485-7505: `sIdxLabel` uses static `SENTS.length` even for generated material (quirk); `toggleRec` idle/done → rec → done, and done records activity `발음 코칭` +25 XP; `nextSent`; `speakNative` → `playTutorSpeech(sent.text, 'speaking-native:{tutor}:{text}')`,
+- `playTutorSpeech`/`stopTutorSpeech`/`speakWithDeviceVoice` 6416-6497 (`/api/tts` `{text, tutorId}` → device voice with per-tutor rate/pitch on failure; same key toggles stop),
+- shared: `studyLevel`, `trOn`/`toggleTranslation` (a single global function that fetches missing Listening/Conversation translations no matter which page triggers it), `generateMaterial('speaking')` → `{genSpeaking, sIdx:0, rec:'idle'}`, `tipFrom` = `{tutor} 튜터의 팁`.
+
+Strategy (P3B):
+
+- `SpeakingPage.jsx`, `speakingData.js` (verbatim `SENTS` + labels + initial state), `speaking.css`, and an App `speaking` route with App-owned `speakingState`.
+- Move `toggleTranslation` out of ListeningPage into a shared App hook (`useTranslationToggle`) so Speaking and Listening invoke the same legacy function.
+- Tutor TTS in a small `useTutorSpeech` hook, a 1:1 port of the legacy tutor speech used by Speaking. Reading keeps its verified P1 implementation; consolidation is a post-migration cleanup.
+
+Next milestone:
+
+`P3B SPEAKING MIGRATION`

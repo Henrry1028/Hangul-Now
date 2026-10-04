@@ -174,19 +174,17 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P3A`
+`P3B`
 
 Name:
 
-`SPEAKING AUDIT`
+`SPEAKING MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
-Next required action:
-
-Source-first audit of legacy Speaking (`08 Speaking`, preview/index.html ~2145-2176): microphone/recording lifecycle, pronunciation scoring APIs, TTS, generation, translation/studyLevel sharing, activity coupling.
+Scope: see MIGRATION_LOG P3A and CURRENT_TASK.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 

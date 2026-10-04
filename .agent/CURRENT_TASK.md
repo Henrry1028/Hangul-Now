@@ -4,15 +4,15 @@
 
 Milestone ID:
 
-`P3A`
+`P3B`
 
 Milestone Name:
 
-`SPEAKING AUDIT`
+`SPEAKING MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
@@ -22,35 +22,36 @@ Expected branch:
 
 `migration/react-vite-modular`
 
-Expected repository state:
-
-- P2H `7e947f0` is an ancestor,
-- only `.agent/*` metadata after it,
-- remote ahead is zero.
-
 ---
 
 ## Objective
 
-Source-first audit of legacy Speaking before implementation.
+Migrate Speaking with parity, plus the shared translation toggle hook. Strategy is in MIGRATION_LOG P3A.
 
-## Audit Questions
+## Expected Files
 
-- template (`08 Speaking`, preview/index.html ~2145-2176) and CSS,
-- recording lifecycle (getUserMedia/MediaRecorder?), scoring (simulated vs API),
-- TTS (native sentence), generation (`kind: speaking`), shared `studyLevel`/`trOn`,
-- activity/XP coupling,
-- slices.
+- `frontend/src/data/speakingData.js`, `frontend/src/pages/SpeakingPage.jsx`, `frontend/src/styles/speaking.css` (new)
+- `frontend/src/hooks/useTranslationToggle.js`, `frontend/src/hooks/useTutorSpeech.js` (new)
+- `frontend/src/pages/ListeningPage.jsx` (uses the shared toggle)
+- `frontend/src/App.jsx`
+
+## Required Validation
+
+- build, 390/1440 parity vs legacy (idle and done states),
+- record toggle/next/activity XP, native TTS request + fallback, generation (mocked), translation toggle from Speaking (incl. Listening-need fetch), Listening regression,
+- regression, no console/page errors.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [ ] Legacy Speaking source located
-- [ ] Coupling mapped
-- [ ] Bounded slices defined
-- [ ] Audit recorded in MIGRATION_LOG
-- [ ] Audit metadata committed and pushed
+- [x] Audit complete (P3A)
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Behavior PASS
+- [ ] Parity PASS
+- [ ] Regression PASS
+- [ ] Commit/push
 
 ## Exact Next Action
 
-Read the Speaking template and its handlers.
+Generate speakingData.js, then hooks, SpeakingPage.jsx, and App wiring.
