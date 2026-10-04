@@ -175,7 +175,7 @@ All three received source-first audits and browser/runtime validation.
 
 Status:
 
-`LAYOUT + NAVIGATION COMPLETE` (`45ac5d2`)
+`COMPLETE` (layout/navigation `45ac5d2`, auth/profile `a5d3d20`)
 
 Completed:
 
@@ -186,12 +186,9 @@ Completed:
 - shell-dependent Writing/Chat sizing cleanup,
 - Reading App-owned state parity.
 
-Remaining in Phase 6:
+Auth + profile/onboarding + identity propagation: `COMPLETE` (`a5d3d20`)
 
-- auth,
-- admin,
-- profile/onboarding,
-- signed-in identity propagation.
+Phase 6 status: `COMPLETE`. The admin UI flag is App state; the Admin page/route moves to Phase 7.
 
 Expected work:
 
@@ -207,7 +204,7 @@ Expected work:
 
 Status:
 
-`PENDING`
+`IN_PROGRESS` (P5A audit complete; P5B migration)
 
 Expected risk:
 
@@ -321,7 +318,7 @@ Do not interpret backend capability as permission to expose the feature.
 
 Current estimated migration workload completion:
 
-`78–82%`
+`84–87%`
 
 This estimate may change after audits.
 
@@ -334,8 +331,8 @@ A more useful progress model is:
 - Reading: complete
 - medium-risk domains: complete
 - high-risk domains: complete
-- global shell: layout/navigation complete; auth/profile in progress
-- admin: pending
+- global shell: complete
+- admin: auditing
 - integration/cutover: pending
 
 ---

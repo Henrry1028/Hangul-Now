@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P4C`
+`P5B`
 
 Milestone Name:
 
-`AUTH + PROFILE SHELL MIGRATION`
+`ADMIN CONSOLE MIGRATION`
 
 Status:
 
-`READY_TO_COMMIT`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
-`45ac5d2e8fd6cf08e65bf9b0300af4d00cc2eff7`
+`a5d3d20040169611492f7a8489ade4caced7e5e1`
 
 Expected branch:
 
@@ -26,55 +26,38 @@ Expected branch:
 
 ## Objective
 
-Migrate the legacy Firebase auth/profile portion of the global shell without exposing deferred Video Class functionality or weakening server-side authorization.
+Migrate the legacy read-only Admin console (`09 Admin Console`) and its admin-only entry points without exposing Video Class or changing server authorization.
 
 ## Expected Files
 
-- `frontend/index.html` (legacy Firebase compat SDK tags if still required)
-- `frontend/src/App.jsx`
-- `frontend/src/components/AppShell.jsx`
-- auth/profile hook and onboarding component/data/style files under `frontend/src/`
-- signed-in identity propagation updates in Reading learning records, Chat correction, Conversation, and report/session calls where legacy uses the verified current user
+- `frontend/src/pages/AdminPage.jsx` (new)
+- `frontend/src/App.jsx` (admin state, loader with Bearer ID token, goAdmin, deep link, route)
+- `frontend/src/components/AppShell.jsx` (header 👑 Admin pill, sidebar 관리자 콘솔 button)
+- `frontend/src/hooks/useAuthProfile.js` (only if needed for deep-link/token hooks)
 - `.agent/*` state files
 
 ## Required Validation
 
-- true-production Node 20 build,
-- identical guest shell behavior,
-- stubbed Firebase auth-state, popup→redirect fallback, logout, Firestore profile/tutor restore+merge, onboarding required/edit flows,
-- admin UI flag parity (`?admin=1` and legacy email heuristic) without exposing Video Class,
-- signed-in uid/profile propagation to all migrated consumers,
-- desktop/mobile, ko/en, light/dark parity and full migrated-domain regression,
-- no console/page errors and no auth/privacy contract regression.
+- Node 20 production build,
+- guest/non-admin: no admin entry points, no Video Class,
+- admin flag (`?admin=1` and stubbed admin email): header + sidebar entry points, page renders,
+- routed dashboard response: KPIs, table rows, search, filters, empty state, tutor counts, refresh, home button,
+- fallback (no adminData / 401): single current-user row and legacy KPI fallbacks, identical to legacy,
+- deep link `#admin` / `?page=admin` for signed-in admin,
+- real server `/api/admin/dashboard` without token still 401,
+- legacy vs sandbox desktop/mobile, light/dark comparison; full migrated-domain regression; no console/page errors.
 
 ## Progress Checklist
 
-- [x] Git state reverified
-- [x] P4C source/coupling audit complete
-- [x] Implementation complete
-- [x] Build PASS
-- [x] Auth/profile behavior PASS
-- [x] Parity PASS
-- [x] Regression PASS
-- [x] Handoff diff review (Claude Code takeover after Codex limit): 2 parity fixes applied and revalidated
+- [x] Git state verified (HEAD a5d3d20 pushed, 0 0)
+- [x] P5A source/coupling audit complete (MIGRATION_LOG P5A)
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Admin behavior PASS
+- [ ] Parity PASS
+- [ ] Regression PASS
 - [ ] Commit/push
-
-## Handoff Review Fixes (Claude Code)
-
-- Conversation history/report `meta.userName` restored to legacy `currentUser?.displayName || ''` (was nickname-first `getNickname()`, which also turned guest `''` into `'Learner'`).
-- Sidebar avatar initial restored to legacy `(displayName || email || 'U')[0].toUpperCase()` (was nickname-first).
-- Revalidated: Node 20.20.2 `NODE_ENV=production` build PASS (75 modules, 421.65 kB JS); stubbed signed-in sidebar identical in legacy/sandbox (initial, nickname, interests, hidden header login, one Firestore merge write); logout → guest shell identical; all 10 nav screens at 1440/390 with no page/console errors, no overflow, no Video Class text.
 
 ## Exact Next Action
 
-Commit the verified P4C implementation, fetch and verify remote-ahead is zero, push, then record the completed milestone (STATE/LOG/ROADMAP) and begin the P5 Admin audit.
-
-## Audit Result / Bounded Strategy
-
-- Load the same Firebase compat 10.8.1 app/auth/firestore SDKs and initialize with the existing public client configuration.
-- Add an App-level auth/profile controller that mirrors `onAuthStateChanged`, Firestore `users/{uid}` restore+merge, local `hn-profile-{uid}` fallback, popup-to-redirect login fallback, logout, profile editing, and the legacy email-based `isAdmin` UI flag.
-- Port the two-step onboarding UI and exact validation/persistence behavior. Firestore failure must retain the local profile and show the legacy warning.
-- Render the authenticated lower-sidebar identity, interest summary, logout, and profile editor; hide the header login when authenticated. Preserve the guest shell exactly.
-- Persist tutor changes to Firestore for signed-in users and propagate signed-in uid/profile to generated content, correction, learning records, Conversation start/review/report/history metadata, and lesson-interest selection.
-- Keep the Admin console page and API UI in P5. P4C owns only the admin flag/auth handoff; it must not add a dead Admin route or expose any Video Class control.
-- Validate with an injected Firebase/Firestore stub because real Google credentials are unavailable; also regression-test the unchanged guest shell.
+Commit the P4C/P5A docs, then implement AdminPage + App/AppShell admin wiring per MIGRATION_LOG P5A.

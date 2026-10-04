@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`45ac5d2e8fd6cf08e65bf9b0300af4d00cc2eff7`
+`a5d3d20040169611492f7a8489ade4caced7e5e1`
 
 Checkpoint commit:
 
-`refactor: migrate global shell to React sandbox`
+`refactor: migrate auth profile shell to React sandbox`
 
 Repository HEAD rule:
 
@@ -121,6 +121,9 @@ Phase 5 (Speaking, Chat, Conversation): COMPLETE
 ### Global shell
 
 - Shell layout + navigation (P4A audit, P4B `45ac5d2`) — COMPLETE
+- Auth + profile/onboarding + identity propagation (P4C `a5d3d20`) — COMPLETE
+
+Phase 6 (Global shell): COMPLETE
 
 ---
 
@@ -128,7 +131,7 @@ Phase 5 (Speaking, Chat, Conversation): COMPLETE
 
 Milestone:
 
-`P4B SHELL LAYOUT + NAVIGATION MIGRATION`
+`P4C AUTH + PROFILE SHELL MIGRATION`
 
 Status:
 
@@ -136,15 +139,15 @@ Status:
 
 Commit:
 
-`45ac5d2e8fd6cf08e65bf9b0300af4d00cc2eff7`
+`a5d3d20040169611492f7a8489ade4caced7e5e1`
 
 Commit message:
 
-`refactor: migrate global shell to React sandbox`
+`refactor: migrate auth profile shell to React sandbox`
 
 Runtime acceptance:
 
-`PASS` (see MIGRATION_LOG P4B)
+`PASS` (see MIGRATION_LOG P4C)
 
 ---
 
@@ -152,23 +155,23 @@ Runtime acceptance:
 
 Milestone ID:
 
-`P4C`
+`P5B`
 
 Name:
 
-`AUTH + PROFILE SHELL MIGRATION`
+`ADMIN CONSOLE MIGRATION`
 
 Status:
 
 `IN_PROGRESS`
 
-Scope: see MIGRATION_LOG P4A/P4B and CURRENT_TASK.
+Scope: see CURRENT_TASK.
 
-### Previous: P4B SHELL LAYOUT + NAVIGATION MIGRATION (COMPLETE, `45ac5d2`)
+### Previous: P4C AUTH + PROFILE SHELL MIGRATION (COMPLETE, `a5d3d20`)
 
 Next required action:
 
-Audit the full Firebase/auth/profile lifecycle and every migrated identity consumer, then implement the bounded P4C strategy. Video Class remains hidden.
+P5A audit COMPLETE (see MIGRATION_LOG). Implement the bounded P5B strategy. Video Class remains hidden.
 
 ---
 
@@ -200,7 +203,7 @@ Current expected high-level sequence:
 6. ~~Speaking~~ — COMPLETE
 7. ~~Chat~~ — COMPLETE
 8. ~~Conversation~~ — COMPLETE
-9. ~~Global Header / navigation shell~~ — layout/navigation COMPLETE; auth/profile PENDING
+9. ~~Global Header / navigation shell~~ — COMPLETE (layout/navigation + auth/profile)
 10. Admin
 11. Final parity and regression
 12. Cutover readiness
@@ -231,7 +234,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`78–82%`
+`84–87%`
 
 This is a workload estimate, not a completion guarantee.
 

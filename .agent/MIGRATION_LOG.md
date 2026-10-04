@@ -1106,7 +1106,7 @@ Next milestone:
 
 Status:
 
-`COMPLETE — IMPLEMENTATION IN_PROGRESS`
+`COMPLETE` (implementation below)
 
 Risk:
 
@@ -1128,3 +1128,80 @@ Bounded implementation strategy:
 - Wire signed-in identity/profile only into already migrated public domains and persist signed-in tutor selection.
 - Preserve the legacy client-side admin flag as state for the P5 Admin handoff. Do not add an unusable Admin page in P4C and do not expose Video Class.
 - Validate Firebase behavior through a deterministic browser-injected stub; real Google account interaction is outside autonomous test credentials.
+
+---
+
+## P4C — Auth + Profile Shell Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`a5d3d20040169611492f7a8489ade4caced7e5e1`
+
+Agent handoff:
+
+- Implemented and validated by Codex, which reached its usage limit before commit. Claude Code resumed from the dirty tree (handoff validation: branch correct, checkpoint `45ac5d2` ancestor of HEAD, later commits docs-only, remote `0 0`), reviewed the full diff against legacy source, and committed/pushed.
+
+Implementation:
+
+- `frontend/index.html` loads the same Firebase compat 10.8.1 app/auth/firestore CDN tags; `profileData.js` carries the legacy public client config, 32 nationalities, 4 genders, 12 interests, max 5, admin-email heuristic, and `hn-profile-{uid}` key.
+- `useAuthProfile` mirrors `onAuthStateChanged`, Firestore `users/{uid}` restore (tutor + profile) and last-login merge write, local-profile fallback, Firestore-failure onboarding fallback, popup→redirect login, logout, tutor persistence, and the `?admin=1`/email `isAdmin` UI flag (state only; Admin page is P5).
+- `OnboardingModal` ports the two-step onboarding with exact validation messages, ranked interests, and local-first save; Firestore failure keeps the local profile and sets the legacy (unrendered) `obNotice`.
+- `AppShell` renders the signed-in sidebar identity (photo/initial, nickname-first name, email, logout, interests, edit profile) and hides the header login when signed in; guest shell unchanged.
+- Signed-in uid propagates to content generation, `/api/learning/record`, Chat correction, and Conversation start/complete/report; nickname/nationality/interests and interest-based lesson selection feed Conversation start.
+
+Handoff review fixes (before commit):
+
+- Conversation history/report `meta.userName` restored to legacy `currentUser?.displayName || ''`.
+- Sidebar avatar initial restored to legacy `(displayName || email || 'U')[0]`.
+
+Validation:
+
+- Node 20.20.2 `npm ci --include=dev` + `NODE_ENV=production vite build` PASS: 75 modules, 421.65 kB JS (133.30 kB gzip).
+- Codex (pre-handoff): stubbed auth-state, popup→redirect fallback, logout, Firestore restore+merge, onboarding required/edit, admin flag, identity propagation, desktop/mobile/ko/en/light/dark parity and migrated-domain regression PASS.
+- Claude Code (post-fix): deterministic Firebase stub injected identically into legacy (3000) and sandbox (5173): signed-in sidebar initial/name/interests, hidden header login, one Firestore merge write — identical; logout → guest shell identical; all 10 navigable screens at 1440x900 and 390x844 with no page errors, console errors, Vite overlay, horizontal overflow, or Video Class text.
+
+Known quirks preserved:
+
+- `obNotice` is set on Firestore save failure but never rendered (legacy).
+- Signing out does not reset the admin UI flag (legacy).
+
+Next milestone:
+
+`P5A ADMIN CONSOLE AUDIT`
+
+---
+
+## P5A — Admin Console Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`MEDIUM` (downgraded from roadmap HIGH): read-only dashboard; authorization is enforced server-side (`requireAdmin`: verified Firebase ID token, `admin` claim or server email allowlist). No admin mutation exists outside deferred Video Class.
+
+Source map (`preview/index.html`):
+
+- markup 2990-3205: `09 Admin Console` (max-width 1200px): header bar (title, Firebase badge, subtitle, 🔄 새로고침 → reload, ← 학습 홈으로 → home), 4 KPI cards (total users, DAU + ratio, AI calls, AI cost USD), user table (search name/email, filters 전체/오늘 접속/신규 가입 with counts, 7 columns, row hover, Google icon, empty state), tutor distribution (jiwoo/minho/seoyeon counts, static bar widths 100/20/20%), static system/guardrail panel.
+- entry points: header 👑 Admin pill (646, admin only, before login), sidebar 👑 관리자 콘솔 (Admin) button (1163, admin only, after identity block), signed-in admin deep link `#admin` or `?page=admin` (4795).
+- controller 4638-4664: `loadAdminDashboard` (adminLoading, Bearer ID token when signed in, GET `/api/admin/dashboard`, success → adminData; failure keeps previous data), `goAdmin` (page admin + load + scroll top).
+- derivations 6946-7017: fallback single-user row from currentUser when no adminData, search/filter, status badges (online < 1h / today / earlier), relative time, join date, tutor names, level labels, XP, KPI fallbacks (142 calls, $0.048, jiwoo 2).
+- state 4211-4215: adminData/adminLoading/adminSearch/adminFilter (app-wide; persist across navigation). `adminTab` and `vcTab:'admin'` are unused/Video Class.
+
+Server (`server.js` 780-870): `requireAdmin` 401/403/503 JSON; `/api/admin/dashboard` merges Auth listUsers (≤500) and Firestore users. Unchanged.
+
+Decisions:
+
+- Port page + entry points + deep link with exact markup/derivations. `adminLoading` is tracked but not rendered (legacy).
+- Admin header/sidebar Video Class links, Video Class page, and `/api/v1/tutors/profile` admin tutor form stay hidden/unmigrated (AGENTS.md section 14).
+- Navigation reset reuses the verified P4B `handleNavigate` behavior.
+- Validate with the same Firebase stub plus a routed `/api/admin/dashboard` response, and verify the real server still returns 401 without a token.
+
+Next milestone:
+
+`P5B ADMIN CONSOLE MIGRATION`
