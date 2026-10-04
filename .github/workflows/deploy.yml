@@ -44,13 +44,12 @@ jobs:
           npm run build
 
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
-          projectId: ${{ env.PROJECT_ID }}
-          channelId: live
-        continue-on-error: true
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          echo "$GCP_SA_KEY" > "$RUNNER_TEMP/gcp-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/gcp-sa.json"
+          npx firebase-tools deploy --only hosting --project ${{ env.PROJECT_ID }} --non-interactive
 
   # ----------------------------------------------------
   # 2. 백엔드 컨테이너 빌드 및 Google Cloud Run 자동 배포
