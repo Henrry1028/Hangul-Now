@@ -43,6 +43,13 @@ jobs:
           cd frontend
           npm run build
 
+      - name: Upload Built Dist Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -50,7 +57,8 @@ jobs:
 
       - name: Deploy to Firebase Hosting
         run: |
-          npx firebase-tools deploy --only hosting --project ${{ env.PROJECT_ID }} --non-interactive
+          npx firebase-tools deploy --only hosting --project ${{ env.PROJECT_ID }} --non-interactive 2>&1 | tee deploy.log
+
 
   # ----------------------------------------------------
   # 2. 백엔드 컨테이너 빌드 및 Google Cloud Run 자동 배포
