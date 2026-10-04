@@ -524,3 +524,36 @@ Discovered (pre-existing, out of P2A scope):
 Next milestone:
 
 `P2B TUTORS DESKTOP SCREEN SPACING FIX`
+
+---
+
+## P2B — Tutors Desktop Screen Spacing Fix
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`28bd81c5ac1088f5ae3dd8089aff4906071238fe`
+
+Finding:
+
+- Legacy applies a global override to all learning screens at >=860px: padding `clamp(12px,1.6vh,20px) clamp(16px,2vw,32px)`, gap `clamp(10px,1.4vh,18px)`.
+- Reading and Home port it. Sandbox Tutors kept an inline 40px/24px.
+
+Fix:
+
+- moved the Tutors root layout into `styles/tutors.css` with the legacy media rule.
+
+Validation:
+
+- Node 20 build PASS,
+- 390px: all 49 elements identical to legacy,
+- 1440px: padding/gap/root height and every element top/height identical, with x-offsets only from the legacy sidebar shell,
+- 860px: legacy reflows inside its 605px sidebar-constrained area (shell, Phase 6),
+- Intro/About/Home/Tutors/Reading regression PASS, no errors.
+
+Next milestone:
+
+`P2C WRITING AUDIT`

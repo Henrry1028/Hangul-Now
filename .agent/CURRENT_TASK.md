@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P2B`
+`P2C`
 
 Milestone Name:
 
-`TUTORS DESKTOP SCREEN SPACING FIX`
+`WRITING AUDIT`
 
 Status:
 
-`READY_TO_COMMIT`
+`AUDITING`
 
 Baseline migration-code checkpoint:
 
-`3e125c9741eabda803d5a7c509de5336d82374e8`
+`28bd81c5ac1088f5ae3dd8089aff4906071238fe`
 
 Expected branch:
 
@@ -24,46 +24,35 @@ Expected branch:
 
 Expected repository state:
 
-- implementation baseline HEAD `e16325a` (`docs: record home milestone`),
-- P2A Home checkpoint `3e125c9` is an ancestor,
+- P2B checkpoint `28bd81c` is an ancestor,
+- only `.agent/*` metadata after it,
 - remote ahead is zero.
 
 ---
 
 ## Objective
 
-Port the legacy global >=860px screen spacing override to sandbox Tutors.
+Source-first audit of legacy Writing before any implementation.
 
-## Included Scope
+## Audit Questions
 
-- `frontend/src/styles/tutors.css` (new): `.tutors-screen` base layout + `@media (min-width: 860px)` padding/gap,
-- `TutorsPage.jsx`: replace the root inline layout style with the CSS import.
-
-## Explicitly Excluded
-
-- max-width 1400 (shell-dependent, Phase 6),
-- any other Tutors change.
-
-## Required Validation
-
-- build,
-- Tutors leaf-element comparison vs legacy at 390 (identical) and 1440 (padding/gap equal, offsets only from the sidebar shell),
-- Intro/About/Home/Tutors/Reading regression,
-- no console/page errors.
+- template (`data-screen-label="07 Writing"`, preview/index.html ~1866-2145) and writing-specific CSS (~134+ and media rules),
+- render data in `renderVals`, state fields, handlers,
+- jamo/syllable composer logic, levels, word mode, targets,
+- AI feedback / correction / generation APIs, auth/Firebase coupling,
+- activity/XP (`recordActivity`) and learned-topic coupling,
+- TTS/audio, keyboard/virtual keyboard SVG, resize/viewport behavior,
+- smallest safe implementation slices.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Status set to IN_PROGRESS
-- [x] Implementation complete
-- [x] Build PASS
-- [x] Parity PASS (390 identical; 1440 padding/gap/height/tops identical, x-offsets only from sidebar shell)
-- [x] Regression PASS
-- [x] Diff review PASS
-- [ ] Commit created
-- [ ] Push complete
-- [ ] Post-push divergence `0 0`
+- [ ] Legacy Writing source located
+- [ ] State/persistence/API/auth/audio coupling mapped
+- [ ] Bounded slices defined
+- [ ] Audit recorded in MIGRATION_LOG
+- [ ] Audit metadata committed and pushed
 
 ## Exact Next Action
 
-Create `tutors.css`, remove the inline root layout in `TutorsPage.jsx`, then build and compare.
+Read the Writing template and its renderVals data, then map handlers and APIs.

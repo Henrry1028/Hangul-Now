@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`3e125c9741eabda803d5a7c509de5336d82374e8`
+`28bd81c5ac1088f5ae3dd8089aff4906071238fe`
 
 Checkpoint commit:
 
-`refactor: migrate home page to React sandbox`
+`fix: align tutors desktop screen spacing with legacy`
 
 Repository HEAD rule:
 
@@ -86,6 +86,7 @@ React/Vite sandbox:
 ### Cross-domain fixes
 
 - Sandbox webfont parity (P1Q, `946a4cc`) — COMPLETE
+- Tutors desktop screen spacing parity (P2B, `28bd81c`) — COMPLETE
 
 ---
 
@@ -157,15 +158,21 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P2B`
+`P2C`
 
 Name:
 
-`TUTORS DESKTOP SCREEN SPACING FIX`
+`WRITING AUDIT`
 
 Status:
 
-`IN_PROGRESS`
+`AUDITING`
+
+Next required action:
+
+Source-first audit of legacy Writing (`preview/index.html` template 1866-2145, writing-screen CSS overrides 134+, render data, jamo composer, AI feedback APIs, activity/learned-topic coupling), then define the bounded Writing migration slices.
+
+### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 
 Bounded scope:
 
