@@ -1,8 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
 import { profileInterests } from '../data/profileData.js';
 import OnboardingModal from './OnboardingModal.jsx';
 import '../styles/shell.css';
+
+const MenuIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
 
 const SHELL_TEXT = {
   en: { navHow: 'How it works', navTutors: 'Curriculum', navAbout: 'About us', startFree: 'Start free', themeTitle: 'Toggle dark mode', login: 'Log in', navVideoClass: '1:1 Video', profileEdit: 'Edit profile & interests', profileInterests: 'My interests' },
@@ -36,9 +44,13 @@ function AppShell({
   sidebarCollapsed, sidebarWidth, onToggleSidebar, onSidebarWidth,
   onNavigate, onSetLang, onToggleTheme, auth, onGoAdmin, videoClassAccess, onGoVideoClass, children
 }) {
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const L = lang === 'ko' ? 1 : 0;
   const t = SHELL_TEXT[lang] || SHELL_TEXT.en;
-  const go = (target) => () => onNavigate(target);
+  const go = (target) => () => {
+    setMobileDrawerOpen(false);
+    onNavigate(target);
+  };
   const raw = TUTORS.find((tu) => tu.id === selectedTutorId) || TUTORS[0];
   const tutor = {
     ...raw,
@@ -110,13 +122,14 @@ function AppShell({
   return (
     <div className="app-root-shell" style={{ height: '100dvh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <OnboardingModal lang={lang} auth={auth} />
-      <header className="marketing-header" style={{ position: 'sticky', top: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '8px clamp(16px,3vw,36px)', borderBottom: '1px solid var(--line)', background: 'var(--bg)', flexWrap: 'wrap', flex: 'none', height: '62px', boxSizing: 'border-box' }}>
+      <header className="marketing-header" style={{ position: 'sticky', top: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '8px clamp(16px,3vw,36px)', borderBottom: '1px solid var(--line)', background: 'var(--bg)', flexWrap: 'nowrap', flex: 'none', height: '60px', boxSizing: 'border-box' }}>
         <button type="button" onClick={go('intro')} aria-label="Hangul Now home" style={{ display: 'flex', alignItems: 'center', border: 0, background: 'none', cursor: 'pointer', padding: 0 }}>
           <img className="brand-logo brand-logo--header brand-logo--light" src="/assets/logo-new.png?v=2" alt="Hangul Now" />
           <img className="brand-logo brand-logo--header brand-logo--dark" src="/assets/logo-new-dark.png?v=2" alt="Hangul Now" />
         </button>
-        <nav className="marketing-header__nav" style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '14px', flexWrap: 'wrap' }}>
-          {/* Legacy goHow scrolls the window, which never scrolls inside the shell: it only opens Intro. */}
+
+        {/* 데스크톱 전용 헤더 내비게이션 */}
+        <nav className="marketing-header__nav desktop-header-nav">
           <button type="button" onClick={go('intro')} style={{ border: 0, background: 'none', color: 'var(--sub)', fontSize: '14px', cursor: 'pointer' }}>{t.navHow}</button>
           <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'none', color: 'var(--sub)', fontSize: '14px', cursor: 'pointer' }}>{t.navTutors}</button>
           {videoClassAccess && (
@@ -130,10 +143,10 @@ function AppShell({
             <button type="button" onClick={() => onSetLang('en')} style={{ border: 0, background: L ? 'transparent' : 'var(--card)', color: L ? 'var(--faint)' : 'var(--ink)', borderRadius: '999px', padding: '5px 11px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}>EN</button>
             <button type="button" onClick={() => onSetLang('ko')} style={{ border: 0, background: L ? 'var(--card)' : 'transparent', color: L ? 'var(--ink)' : 'var(--faint)', borderRadius: '999px', padding: '5px 11px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}>한국어</button>
           </div>
-          <button type="button" onClick={onToggleTheme} title={t.themeTitle} style={{ width: '34px', height: '34px', borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={onToggleTheme} className="theme-toggle-btn" title={t.themeTitle}>
             {theme === 'dark'
-              ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
-              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>}
+              ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+              : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>}
           </button>
           {auth.isAdmin && (
             <button type="button" onClick={onGoAdmin} style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #D4AF37', background: 'rgba(212,175,55,0.15)', color: 'var(--ink)', padding: '6px 14px', borderRadius: '999px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
@@ -144,7 +157,93 @@ function AppShell({
           {!auth.currentUser && <button type="button" onClick={auth.login} style={{ border: 0, background: 'none', color: 'var(--ink)', fontSize: '14px', cursor: 'pointer' }}>{t.login}</button>}
           <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'var(--solid)', color: 'var(--on-solid)', padding: '10px 18px', borderRadius: '999px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>{t.startFree}</button>
         </nav>
+
+        {/* 모바일 전용 헤더 액션 영역 */}
+        <div className="mobile-header-actions">
+          <div style={{ display: 'flex', background: 'var(--seg)', borderRadius: '999px', padding: '2px' }}>
+            <button type="button" onClick={() => onSetLang('en')} style={{ border: 0, background: L ? 'transparent' : 'var(--card)', color: L ? 'var(--faint)' : 'var(--ink)', borderRadius: '999px', padding: '4px 8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>EN</button>
+            <button type="button" onClick={() => onSetLang('ko')} style={{ border: 0, background: L ? 'var(--card)' : 'transparent', color: L ? 'var(--ink)' : 'var(--faint)', borderRadius: '999px', padding: '4px 8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}>한국어</button>
+          </div>
+          <button type="button" onClick={onToggleTheme} className="theme-toggle-btn" title={t.themeTitle}>
+            {theme === 'dark'
+              ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+              : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>}
+          </button>
+          <button type="button" onClick={() => setMobileDrawerOpen(true)} aria-label="메뉴 열기" style={{ border: '1.5px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', width: '36px', height: '36px', borderRadius: '10px', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+            <MenuIcon />
+          </button>
+        </div>
       </header>
+
+      {/* 모바일 햄버거 슬라이드 드로어 */}
+      <div className={`mobile-drawer-overlay ${mobileDrawerOpen ? 'is-open' : ''}`} onClick={() => setMobileDrawerOpen(false)}>
+        <div className="mobile-drawer-panel" onClick={(e) => e.stopPropagation()}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
+            <span style={{ font: "700 16px 'Gowun Batang',serif", color: 'var(--ink)' }}>Hangul Now</span>
+            <button type="button" onClick={() => setMobileDrawerOpen(false)} style={{ border: 0, background: 'none', color: 'var(--ink)', fontSize: '20px', cursor: 'pointer', padding: '4px' }}>✕</button>
+          </div>
+          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflowY: 'auto' }}>
+            {/* 전담 튜터 카드 */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: '.08em', color: 'var(--accent)', textTransform: 'uppercase' }}>{L ? '내 전담 튜터' : 'MY TUTOR'}</span>
+                <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'none', color: 'var(--sub)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+                  <span>{L ? '튜터 변경' : 'Change'}</span> ↺
+                </button>
+              </div>
+              <div onClick={go('chat')} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '13px', background: tutor.color, color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '13px', fontWeight: 700, flex: 'none', position: 'relative' }}>
+                  {tutor.initial}
+                  <span style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '15px', height: '15px', borderRadius: '50%', background: tutor.genderBg, color: '#fff', fontSize: '9px', fontWeight: 700, display: 'grid', placeItems: 'center', border: '1.5px solid var(--card)' }}>{tutor.genderSymbol}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, minWidth: 0 }}>
+                  <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--ink)' }}>{tutor.name}</span>
+                  <span style={{ fontSize: '11.5px', color: 'var(--sub)' }}>{tutor.role}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 내비게이션 그룹 */}
+            {groups.map((g) => (
+              <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ font: "500 10.5px 'IBM Plex Mono',monospace", letterSpacing: '.12em', color: 'var(--faint)', padding: '0 6px 4px' }}>{g.label}</span>
+                {g.items.map(navItem).map((n) => (
+                  <button type="button" key={n.k} onClick={go(n.k)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', border: 0, background: n.active ? 'var(--accent)' : 'transparent', color: n.active ? '#F5F2EB' : 'var(--ink2)', padding: '10px 12px', borderRadius: '10px', fontSize: '14px', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all .15s ease' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ width: '26px', height: '26px', borderRadius: '6px', border: `1px solid ${n.active ? 'rgba(245,242,235,.35)' : 'var(--line3)'}`, display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none', background: 'rgba(255,255,255,0.06)' }}>{n.glyph}</span>
+                      <span style={{ fontWeight: n.active ? '600' : '500' }}>{n.label}</span>
+                    </div>
+                    {n.hasBadge && <span style={{ background: '#C25E3E', color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '10px', fontWeight: 700 }}>{unreadTotal}</span>}
+                  </button>
+                ))}
+              </div>
+            ))}
+
+            {/* 계정 및 CTA 영역 */}
+            <div style={{ marginTop: 'auto', borderTop: '1px solid var(--line)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {auth.currentUser ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px', borderRadius: '10px', background: 'var(--chip)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#D7DCE3', color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none' }}>
+                      {userInitial}
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>{userName}</span>
+                  </div>
+                  <button type="button" onClick={auth.logout} style={{ border: 0, background: 'none', color: 'var(--faint)', fontSize: '12px', cursor: 'pointer' }}>로그아웃</button>
+                </div>
+              ) : (
+                <button type="button" onClick={auth.login} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', padding: '10px 12px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>
+                  <GoogleIcon />
+                  <span>{L ? 'Google 로그인' : 'Sign in with Google'}</span>
+                </button>
+              )}
+              <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'var(--solid)', color: 'var(--on-solid)', padding: '12px 18px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', textAlign: 'center' }}>
+                {t.startFree}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="app-body-container" style={{ display: 'flex', flex: 1, minHeight: 0, height: 'calc(100dvh - 62px)', background: 'var(--bg)', position: 'relative', overflow: 'hidden' }}>
         {wide && (
@@ -234,10 +333,10 @@ function AppShell({
         )}
 
         <main ref={mainRef} className="app-main-viewport" style={{ flex: 1, minWidth: 0, height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }}>
-          {!wide && (
-            <div style={{ position: 'sticky', top: '69px', zIndex: 5, background: 'var(--bg2)', borderBottom: '1px solid var(--line)', display: 'flex', gap: '6px', overflowX: 'auto', padding: '10px 12px', alignItems: 'center' }}>
+          {!wide && page !== 'intro' && (
+            <div className="mobile-subnav-bar">
               {groups.flatMap((g) => g.items).map(navItem).map((n) => (
-                <button type="button" key={n.k} onClick={go(n.k)} style={{ flex: 'none', border: `1px solid ${n.active ? 'var(--accent)' : 'var(--line)'}`, background: n.active ? 'var(--accent)' : 'var(--card)', color: n.active ? '#F5F2EB' : 'var(--ink2)', padding: '7px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{n.label}</button>
+                <button type="button" key={n.k} onClick={go(n.k)} style={{ flex: 'none', border: `1px solid ${n.active ? 'var(--accent)' : 'var(--line)'}`, background: n.active ? 'var(--accent)' : 'var(--card)', color: n.active ? '#F5F2EB' : 'var(--ink2)', padding: '6px 12px', borderRadius: '999px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{n.label}</button>
               ))}
             </div>
           )}

@@ -57,18 +57,18 @@ function IntroPage({ lang = 'ko', onNavigate }) {
   return (
     <div data-screen-label="01 Landing">
       {/* 🌟 Hero Section */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,420px),1fr))', gap: '56px', alignItems: 'center', padding: '72px clamp(20px,5vw,64px) 88px', maxWidth: '1280px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
+      <section className="intro-hero-section">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
           <span style={{ font: "400 17px 'Gowun Batang',serif", color: 'var(--hot)' }}>{t.heroEyebrow}</span>
-          <h1 style={{ margin: 0, font: "500 clamp(44px,5.8vw,76px)/1.06 'Newsreader','Gowun Batang',serif", letterSpacing: '-.025em', textWrap: 'balance' }}>{t.heroH1}</h1>
-          <p style={{ margin: 0, maxWidth: '520px', fontSize: '18px', lineHeight: 1.65, color: 'var(--ink2)', textWrap: 'pretty' }}>{t.heroP}</p>
+          <h1 className="intro-hero-title" style={{ margin: 0, font: "500 clamp(44px,5.8vw,76px)/1.06 'Newsreader','Gowun Batang',serif", letterSpacing: '-.025em', textWrap: 'balance' }}>{t.heroH1}</h1>
+          <p style={{ margin: 0, maxWidth: '520px', fontSize: '17px', lineHeight: 1.65, color: 'var(--ink2)', textWrap: 'pretty' }}>{t.heroP}</p>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <button onClick={handleNav('tutors')} style={{ border: 0, background: 'var(--accent)', color: '#fff', padding: '16px 26px', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>{t.ctaTutor}</button>
-            <button onClick={handleNav('home')} style={{ border: '1px solid var(--ink)', background: 'transparent', color: 'var(--ink)', padding: '16px 22px', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>{t.ctaLevel}</button>
+            <button onClick={handleNav('tutors')} style={{ border: 0, background: 'var(--accent)', color: '#fff', padding: '15px 24px', borderRadius: '12px', fontSize: '15.5px', fontWeight: 600, cursor: 'pointer' }}>{t.ctaTutor}</button>
+            <button onClick={handleNav('home')} style={{ border: '1px solid var(--ink)', background: 'transparent', color: 'var(--ink)', padding: '15px 20px', borderRadius: '12px', fontSize: '15.5px', fontWeight: 600, cursor: 'pointer' }}>{t.ctaLevel}</button>
           </div>
           <span style={{ fontSize: '13.5px', color: 'var(--faint)' }}>{t.heroNote}</span>
         </div>
-        <div style={{ position: 'relative', justifySelf: 'center', width: 'min(100%,380px)', marginTop: '40px' }}>
+        <div className="intro-mock-container" style={{ position: 'relative', justifySelf: 'center', width: 'min(100%,380px)', marginTop: '40px' }}>
           <div style={{ background: 'var(--chat)', borderRadius: '30px', padding: '18px 14px 20px', boxShadow: '0 30px 60px -30px rgba(0,0,0,.35)', border: '8px solid #1C1F1E', position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 6px 14px' }}>
               <span style={{ fontSize: '15px', fontWeight: 700 }}>{t.mockName}</span>

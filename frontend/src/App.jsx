@@ -201,8 +201,14 @@ function App() {
     setSidebarWidth(width);
     if (persist) writeStorage('hn-sidebar-width', String(width));
   }, []);
-  // Legacy applyTheme: data-theme on <html>.
-  useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
+  // Legacy applyTheme: data-theme on <html> and sync meta theme-color for mobile status bar.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', theme === 'dark' ? '#121413' : '#F5F2EB');
+    }
+  }, [theme]);
   // Legacy resize listener (wide = innerWidth >= 860) and Ctrl/Cmd+B sidebar toggle.
   useEffect(() => {
     const onResize = () => setWide(isWide());
