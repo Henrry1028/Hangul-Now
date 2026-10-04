@@ -8,37 +8,38 @@ Milestone ID:
 
 Milestone Name:
 
-`PRODUCTION CUTOVER`
+`LOCAL/REPOSITORY PRODUCTION CUTOVER (no external deploy)`
 
 Status:
 
-`BLOCKED`
+`IN_PROGRESS`
 
-Blockers:
+Baseline (pre-cutover) commit:
 
-1. Real Google sign-in has not been exercised. The user must run `.agent/CUTOVER_READINESS.md` section 8B (MANUAL TEST REQUIRED).
-2. Production cutover requires explicit user approval (AGENTS.md sections 2, 10, 18).
+`3420082c7ea5294f446a02f52432012940689ed8`
 
-Baseline migration-code checkpoint:
+Authorization:
 
-`6ab4395cad21d1b0a7832a821ea5803d946fdef9`
+User reported the real Google admin auth checklist (CUTOVER_READINESS 8B) as 10/10 PASS and approved the local/repository cutover. NOT authorized: firebase deploy, Cloud Run deploy, image push, DNS, deleting preview/.
 
-Expected branch:
+## Bounded Plan
 
-`migration/react-vite-modular`
+- `server.js`: static `preview` → `frontend/dist`; SPA fallback serves `frontend/dist/index.html` for non-`/api` GETs only (unknown `/api/*` no longer returns index.html). Route/middleware order otherwise unchanged; `/api/live` WS is attached to the HTTP server upgrade path and is unaffected.
+- `firebase.json`: hosting `public` `preview` → `frontend/dist`; rewrites/ignore unchanged.
+- `Dockerfile`: Node 20 frontend build stage; runtime stage unchanged plus `COPY --from` of `frontend/dist`.
+- `.dockerignore`: exclude `frontend/node_modules` and `frontend/dist` (host artifacts must not enter the image).
+- `preview/` untouched (rollback source).
 
----
+## Progress Checklist
 
-## Completed Before This Point
-
-- P6C final pre-cutover gate: admin-only Video Class preview preserved with server-verified gating (`6ab4395`); access matrix, legacy parity, build, and 88-run regression PASS.
-- Earlier: P4C `a5d3d20`, P5B `6b9b97b`, P6A fixes `9b8f4c5`, `17df31a`, P6B `d67e4e8`.
+- [x] Git safety check (3420082, clean, 0 0)
+- [x] Edits (server.js, firebase.json, Dockerfile, .dockerignore)
+- [x] Node 20.20.2 build → frontend/dist (index-BWIOtno1.js)
+- [x] localhost:3000 cutover validation PASS
+- [x] Docker build/run validation PASS (local image, not pushed)
+- [ ] Rollback documented
+- [ ] Commit/push
 
 ## Exact Next Action
 
-None autonomous. When the user reports the 8B checklist result:
-
-- PASS → mark READY FOR PRODUCTION CUTOVER and wait for approval, then follow section 6.
-- FAIL → debug only the failing auth step (bounded `fix:`), revalidate, and re-run the checklist.
-
-Do not modify server.js static serving, firebase.json, or the Dockerfile before approval.
+Commit the cutover source change, push, then document rollback + evidence in CUTOVER_READINESS.

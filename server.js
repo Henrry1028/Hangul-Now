@@ -240,8 +240,10 @@ const getCloudTtsClient = () => {
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
-// 1. 최적화된 독립형 웹 프로토타입 UI 및 에셋 서빙
-app.use(express.static(path.join(__dirname, "preview")));
+// 1. 프론트엔드 서빙: React/Vite 프로덕션 빌드(frontend/dist)
+//    레거시 preview/는 롤백 소스로 저장소에 보존한다 (서빙하지 않음)
+const FRONTEND_DIST = path.join(__dirname, "frontend", "dist");
+app.use(express.static(FRONTEND_DIST));
 
 // ============================================================
 // 1. 시스템 및 헬스체크 API
@@ -1018,8 +1020,9 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
 app.post("/api/v1/tutors/profile", requireAdmin);
 app.use("/api/v1", videoClassRouter);
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "preview", "index.html"));
+// SPA fallback: /api 이외의 GET 요청만 index.html로 응답 (알 수 없는 /api 경로는 404 유지)
+app.get(/^(?!\/api(?:\/|$)).*/, (req, res) => {
+  res.sendFile(path.join(FRONTEND_DIST, "index.html"));
 });
 
 // ============================================================
