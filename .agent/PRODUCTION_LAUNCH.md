@@ -2,12 +2,12 @@
 
 Status:
 
-`PRODUCTION PUBLIC LAUNCH READY FOR FINAL USER CHECK`
+`PRODUCTION FIRST LAUNCH PASS` — **COMPLETE**. Production LIVE; the final user verification on the production origin passed (section 10).
 
 - **LIVE since 2026-10-04T07:42:50Z** at https://hangul-now-api-313423647793.asia-northeast3.run.app (alternate host https://hangul-now-api-onpsj3o5ta-du.a.run.app).
 - The candidate passed automated acceptance and the user's 13/13 real-Google-auth check.
 - The launch steps (section 6) were executed and post-launch public acceptance passes (section 9).
-- One short user confirmation on the real production origin remains (section 10).
+- The final user verification on the real production origin passed (section 10).
 
 Approval: the user approved the production first launch (Cloud Run direct; no Firebase Hosting deploy, no DNS/custom domain; keep staging and `preview/`).
 
@@ -176,7 +176,27 @@ All checks were run against the public URL with **no identity token**.
   - One instance start; no crash, memory, SIGTERM, or permission entries.
   - Firebase Admin initialized via the runtime SA.
 
-## 10. Final User Check (production origin)
+## 10. Final User Check (production origin) — PASS
+
+The user verified https://hangul-now-api-313423647793.asia-northeast3.run.app:
+
+- Real Google login: PASS.
+- Firebase authorized domain: PASS (no unauthorized-domain error).
+- `POST /api/admin/check`: **200 OK**.
+- Admin console: PASS.
+- Admin Video Class: PASS.
+- Logout isolation: PASS (admin and Video Class access removed).
+- Re-login: PASS (admin and Video Class restored).
+- Unexpected browser errors: NONE. Unexpected network errors: NONE.
+
+Read-only closeout verification:
+
+- Service Ready; `hangul-now-api-00001-siy` (only revision) at 100%, tag `candidate` kept, invoker `allUsers`.
+- 1 vCPU / 512 MiB / concurrency 80 / timeout 3600 / min 0 / max 1 / SA `hangul-now-api-runtime`.
+- `/` identical to `frontend/dist/index.html`; `/api/health` and `/api/v1/tutors` 200.
+- 0 5xx and 0 ERROR in the last 24 h. Staging healthy.
+
+Original checklist:
 
 Open **https://hangul-now-api-313423647793.asia-northeast3.run.app**:
 
@@ -185,7 +205,7 @@ Open **https://hangul-now-api-313423647793.asia-northeast3.run.app**:
 3. Logout (entries disappear).
 4. No unexpected console/network errors.
 
-On PASS, the status becomes `PRODUCTION FIRST LAUNCH PASS`.
+Result: PASS → `PRODUCTION FIRST LAUNCH PASS`.
 
 ## 11. Rollback Readiness
 

@@ -1416,3 +1416,39 @@ Details and the launch/rollback runbook: `.agent/PRODUCTION_LAUNCH.md`.
 - Staging, `preview/`, Firebase Hosting (undeployed), and DNS are untouched.
 
 Result: `PRODUCTION PUBLIC LAUNCH READY FOR FINAL USER CHECK` (`.agent/PRODUCTION_LAUNCH.md` section 10).
+
+---
+
+## P9 — Closed / Migration Closeout
+
+Status:
+
+`COMPLETE`. **HANGULNOW REACT + VITE MIGRATION — COMPLETE**
+
+- The user verified the public production origin (https://hangul-now-api-313423647793.asia-northeast3.run.app): real Google login PASS, no unauthorized-domain error, `POST /api/admin/check` 200, Admin console PASS, Video Class PASS, logout isolation PASS, re-login restoration PASS, no unexpected browser/network errors.
+- Read-only closeout check:
+  - Service Ready; `hangul-now-api-00001-siy` at 100%; runtime settings unchanged.
+  - Frontend identical to dist; health and tutors 200.
+  - 0 5xx and 0 ERROR in 24 h. Staging healthy.
+- No deploy, no Cloud Run/Firebase change, no application source change during closeout.
+- Preserved: staging, `preview/`, candidate tag, rollback path.
+- Not done: Firebase Hosting, custom domain.
+
+Known limitations:
+
+1. Video Class (admin preview) data is in-memory and **not durable**.
+2. Post-conversation review jobs (`reviewJobs`) live in process memory and are polled by the client.
+3. Production `max-instances=1` is intentional and temporary until mutable state is externalized.
+4. `min-instances=0`: cold starts can occur.
+5. In-memory state disappears after idle shutdown, restart, or redeploy.
+6. Cloud Run request/WebSocket timeout is 3600 s.
+7. Sessions beyond 60 minutes would need reconnect support (not implemented).
+8. Firebase Hosting is not the production frontend (not deployed).
+9. Production uses the Cloud Run URL directly.
+10. No custom domain is configured.
+11. Legacy `preview/` remains as a rollback/reference source.
+12. Staging `hangulnow-staging` remains available.
+
+Recommended next phase:
+
+`P7 POST-LAUNCH STABILITY MONITORING` (NOT STARTED).

@@ -277,7 +277,7 @@ Stop there.
 
 Status:
 
-`LOCAL/REPOSITORY CUTOVER DONE` (`6d94bad`); external deployment NOT performed (separate approval).
+`COMPLETE`: local cutover `6d94bad`; production first launch on Cloud Run direct, LIVE 2026-10-04T07:42:50Z (https://hangul-now-api-313423647793.asia-northeast3.run.app); final user verification PASS.
 
 Requires explicit user approval.
 
@@ -294,6 +294,10 @@ Do not perform this phase automatically unless the user explicitly authorizes it
 ---
 
 ### Phase 11 — Legacy Retirement
+
+Status:
+
+`NOT STARTED`. Preceded by the recommended `P7 POST-LAUNCH STABILITY MONITORING` (not started).
 
 Only after successful production cutover and stabilization.
 
@@ -346,7 +350,7 @@ A more useful progress model is:
 - global shell: complete
 - admin: complete
 - integration: complete
-- cutover: local/repository done (`6d94bad`); external deployment pending approval
+- cutover: COMPLETE — production LIVE on Cloud Run (https://hangul-now-api-313423647793.asia-northeast3.run.app)
 
 ---
 

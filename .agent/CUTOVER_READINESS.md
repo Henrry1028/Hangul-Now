@@ -2,7 +2,7 @@
 
 Status:
 
-`CUTOVER IMPLEMENTATION READY FOR DEPLOYMENT`. The local/repository cutover is done (`6d94bad`): Express and Firebase Hosting now serve `frontend/dist`, and the Docker image builds it. **No external deployment has been performed** (section 6 steps 5–6 remain).
+`COMPLETE`. The cutover is done and production is **LIVE** on Cloud Run direct since 2026-10-04T07:42:50Z (https://hangul-now-api-313423647793.asia-northeast3.run.app); final user verification PASS. Details: `.agent/STAGING_DEPLOYMENT.md` and `.agent/PRODUCTION_LAUNCH.md`. Section 6 steps 5–6 were executed as staging (P8) and the Cloud Run production launch (P9). Firebase Hosting was not used.
 
 Branch: `migration/react-vite-modular`
 

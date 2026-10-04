@@ -6,6 +6,10 @@ State status:
 
 `CONFIRMED`
 
+Final status:
+
+**HANGULNOW REACT + VITE MIGRATION — COMPLETE**. Production first launch COMPLETE. Final real Google auth, admin, and Video Class admin checks PASS. Production LIVE.
+
 Branch:
 
 `migration/react-vite-modular`
@@ -35,7 +39,7 @@ Working tree at the checkpoint:
 
 Production cutover:
 
-`LIVE (Cloud Run direct) since 2026-10-04T07:42:50Z: https://hangul-now-api-313423647793.asia-northeast3.run.app`. Earlier record: `LOCAL CUTOVER DONE (6d94bad)` — Express/Firebase Hosting/Docker serve `frontend/dist`; external deployment NOT performed (separate milestone)
+`COMPLETE — LIVE (Cloud Run direct) since 2026-10-04T07:42:50Z: https://hangul-now-api-313423647793.asia-northeast3.run.app`. Earlier record: `LOCAL CUTOVER DONE (6d94bad)` — Express/Firebase Hosting/Docker serve `frontend/dist`; external deployment NOT performed (separate milestone)
 
 Legacy source of truth:
 
@@ -166,19 +170,19 @@ Runtime acceptance:
 
 ## 3. Current Milestone
 
-Milestone ID:
+None active. **The migration is COMPLETE.**
 
-`P9`
+Last milestone:
 
-Name:
+`P9 PRODUCTION FIRST LAUNCH — CLOUD RUN DIRECT`: `COMPLETE`.
 
-`PRODUCTION FIRST LAUNCH — CLOUD RUN DIRECT`
+- LIVE since 2026-10-04T07:42:50Z at https://hangul-now-api-313423647793.asia-northeast3.run.app.
+- Revision `hangul-now-api-00001-siy` at 100%.
+- Final user verification on the production origin PASS: real Google login, no unauthorized-domain error, `POST /api/admin/check` 200, Admin console, Video Class, logout isolation, re-login restoration, no unexpected browser/network errors.
 
-Status:
+Recommended next phase:
 
-`PRODUCTION PUBLIC LAUNCH READY FOR FINAL USER CHECK`. **LIVE** since 2026-10-04T07:42:50Z at https://hangul-now-api-313423647793.asia-northeast3.run.app: revision `hangul-now-api-00001-siy` at 100%, public invoker, candidate manual auth 13/13 PASS, post-launch public acceptance PASS. One short user check on the production origin remains (`.agent/PRODUCTION_LAUNCH.md` section 10).
-
-### Previous: P8 Cloud Run staging (`hangulnow-staging`), automated + manual auth PASS
+`P7 POST-LAUNCH STABILITY MONITORING`: **NOT STARTED** (requires its own instruction).
 
 ---
 
@@ -214,8 +218,8 @@ Current expected high-level sequence:
 10. ~~Admin~~ — COMPLETE
 11. ~~Final parity and regression~~ — COMPLETE
 12. ~~Cutover readiness~~ — COMPLETE (manual real-auth PASS)
-13. Production cutover — LOCAL/REPOSITORY DONE (`6d94bad`); external deployment pending approval
-14. Legacy retirement — only after successful cutover
+13. ~~Production cutover~~ — COMPLETE: local `6d94bad`; Cloud Run direct LIVE 2026-10-04T07:42:50Z (https://hangul-now-api-313423647793.asia-northeast3.run.app)
+14. Legacy retirement — NOT STARTED (only after post-launch stability is proven)
 
 Actual sequence may change after audits.
 
@@ -241,7 +245,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`100% of parity migration code; cutover pending approval`
+`100% — migration COMPLETE; production LIVE`
 
 This is a workload estimate, not a completion guarantee.
 
