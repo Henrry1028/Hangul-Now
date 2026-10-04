@@ -4,11 +4,11 @@
 
 Milestone ID:
 
-`P2A`
+`P2B`
 
 Milestone Name:
 
-`HOME AUDIT + MIGRATION`
+`TUTORS DESKTOP SCREEN SPACING FIX`
 
 Status:
 
@@ -16,7 +16,7 @@ Status:
 
 Baseline migration-code checkpoint:
 
-`946a4ccf08dbbeff53cc18779a1d082715b5d4ac`
+`3e125c9741eabda803d5a7c509de5336d82374e8`
 
 Expected branch:
 
@@ -24,40 +24,46 @@ Expected branch:
 
 Expected repository state:
 
-- P1Q code checkpoint `946a4cc` is an ancestor,
-- only `.agent/*` metadata may be dirty or committed after it,
+- implementation baseline HEAD `e16325a` (`docs: record home milestone`),
+- P2A Home checkpoint `3e125c9` is an ancestor,
 - remote ahead is zero.
 
 ---
 
 ## Objective
 
-Source-first audit of the legacy Home screen in `preview/index.html` before any implementation.
+Port the legacy global >=860px screen spacing override to sandbox Tutors.
 
-## Audit Questions
+## Included Scope
 
-- template lines and render-method sections for Home,
-- static vs dynamic content,
-- local/App state used (activity logs, XP, study dates, minutes, learned topics, tutor, level),
-- persistence keys,
-- APIs, auth/Firebase coupling,
-- navigation targets (including deferred Video Class entries that must stay hidden),
-- responsive behavior,
-- smallest bounded P2B implementation scope.
+- `frontend/src/styles/tutors.css` (new): `.tutors-screen` base layout + `@media (min-width: 860px)` padding/gap,
+- `TutorsPage.jsx`: replace the root inline layout style with the CSS import.
+
+## Explicitly Excluded
+
+- max-width 1400 (shell-dependent, Phase 6),
+- any other Tutors change.
+
+## Required Validation
+
+- build,
+- Tutors leaf-element comparison vs legacy at 390 (identical) and 1440 (padding/gap equal, offsets only from the sidebar shell),
+- Intro/About/Home/Tutors/Reading regression,
+- no console/page errors.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Legacy Home source located (template 1438-1578, renderVals 6624-6730, labels 3958-3962/4026-4030)
-- [x] State/persistence/API/auth coupling mapped (no API/persistence reads; selectTutor → onSelectTutor+onNavigate('chat'); risk LOW → audit+migration in one milestone)
-- [x] Bounded scope defined (HomePage.jsx + homeData.js + home.css + App route)
+- [x] Status set to IN_PROGRESS
 - [x] Implementation complete
-- [x] Build PASS (Node 20 container)
-- [x] Parity PASS (390: all 72 elements identical in box+style; 1440/1180: all styles identical, offsets/wrap differ only by legacy sidebar shell)
-- [x] Navigation/regression PASS
-- [ ] Commit/push + MIGRATION_LOG record
-- [ ] Audit metadata committed and pushed
+- [x] Build PASS
+- [x] Parity PASS (390 identical; 1440 padding/gap/height/tops identical, x-offsets only from sidebar shell)
+- [x] Regression PASS
+- [x] Diff review PASS
+- [ ] Commit created
+- [ ] Push complete
+- [ ] Post-push divergence `0 0`
 
 ## Exact Next Action
 
-Build (Node 20 container), then compare Home with legacy at 1440/390 and run regression.
+Create `tutors.css`, remove the inline root layout in `TutorsPage.jsx`, then build and compare.

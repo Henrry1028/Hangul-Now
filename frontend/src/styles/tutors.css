@@ -1,0 +1,17 @@
+.tutors-screen {
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Legacy global screen override (preview/index.html, >=860px). */
+@media (min-width: 860px) {
+  .tutors-screen {
+    padding: clamp(12px, 1.6vh, 20px) clamp(16px, 2vw, 32px);
+    gap: clamp(10px, 1.4vh, 18px);
+  }
+}

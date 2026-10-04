@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TUTORS, TAGS, TUTORS_TEXT } from '../data/tutorsData.js';
+import '../styles/tutors.css';
 
 function TutorsPage({
   lang = 'ko',
@@ -66,19 +67,7 @@ function TutorsPage({
   };
 
   return (
-    <div
-      className="tutors-screen"
-      data-screen-label="03 Tutors"
-      style={{
-        maxWidth: '1120px',
-        width: '100%',
-        margin: '0 auto',
-        padding: 'clamp(20px,4vw,40px)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px'
-      }}
-    >
+    <div className="tutors-screen" data-screen-label="03 Tutors">
       {/* 헤더 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <h1
