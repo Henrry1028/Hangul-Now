@@ -52,13 +52,18 @@ function SpeakerIcon({ size = 17, full = false }) {
   );
 }
 
-function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo', onRecordActivity }) {
+function ReadingPage({
+  lang = 'ko',
+  selectedTutorId = 'jiwoo',
+  studyLevel = 'beginner',
+  onStudyLevelChange,
+  onRecordActivity
+}) {
   const [selectedWordKey, setSelectedWordKey] = useState(null);
   const [showTranslation, setShowTranslation] = useState(false);
   const [saved, setSaved] = useState({});
   const [speechStatus, setSpeechStatus] = useState('idle');
   const [speechKey, setSpeechKey] = useState('');
-  const [studyLevel, setStudyLevel] = useState('beginner');
   const [generatedReading, setGeneratedReading] = useState(null);
   const [generationLoading, setGenerationLoading] = useState(false);
   const [generationError, setGenerationError] = useState('');
@@ -295,7 +300,7 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo', onRecordActivity 
 
   const handleStudyLevel = (level) => {
     if (studyLevel === level) return;
-    setStudyLevel(level);
+    onStudyLevelChange?.(level);
     generateReadingMaterial(level);
   };
 

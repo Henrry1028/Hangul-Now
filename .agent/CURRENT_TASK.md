@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`IN_PROGRESS`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -56,12 +56,12 @@ Migrate Listening with legacy parity. Strategy is in MIGRATION_LOG P2E.
 
 - [x] Git state reverified
 - [x] Audit complete (P2E)
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Behavior PASS
-- [ ] Parity PASS
-- [ ] Regression PASS
-- [ ] Diff review PASS
+- [x] Implementation complete
+- [x] Build PASS (Node 20; Vite >500kB chunk advisory only)
+- [x] Behavior PASS (mocked scenarios identical to legacy; live /api/tts Gemini multi-speaker PASS)
+- [x] Parity PASS (390: 111/111 identical; 1440: styles/heights identical, 3rd dictation wraps from shell width)
+- [x] Regression PASS
+- [x] Diff review PASS
 - [ ] Commit created
 - [ ] Push complete
 - [ ] Post-push divergence `0 0`

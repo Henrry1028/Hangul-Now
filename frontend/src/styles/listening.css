@@ -1,0 +1,44 @@
+/* Verbatim legacy Listening styles (preview/index.html 60-68, 468-479). */
+@keyframes listeningWaveLive{0%,100%{transform:scaleY(.72);opacity:.72}50%{transform:scaleY(1.12);opacity:1}}
+.listening-player{background:linear-gradient(145deg,#071827 0%,#0A243A 54%,#0D3150 100%);color:#F4FAFF;border:1px solid rgba(96,165,250,.3);box-shadow:0 22px 55px rgba(4,25,45,.2),inset 0 1px 0 rgba(255,255,255,.08)}
+.listening-wave-shell{position:relative;isolation:isolate;overflow:hidden;border:1px solid rgba(125,211,252,.18);background:linear-gradient(180deg,rgba(56,189,248,.1),rgba(14,116,144,.035));border-radius:16px;padding:14px 16px 10px}
+.listening-wave-shell::before{content:"";position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),rgba(125,211,252,.07) 10%)}
+.listening-wave-shell::after{content:"";position:absolute;left:-12%;top:-90%;width:48%;height:240%;background:radial-gradient(circle,rgba(56,189,248,.18),transparent 66%);pointer-events:none}
+.listening-wave-bar{transform-origin:center;transition:height .2s ease,background .2s ease,opacity .2s ease,box-shadow .2s ease}
+.listening-progress-track{height:3px;background:rgba(148,210,242,.16);border-radius:999px;overflow:hidden;margin-top:10px}
+.listening-progress-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#38BDF8,#60A5FA,#A5E7FF);box-shadow:0 0 14px rgba(56,189,248,.75);transition:width .18s linear}
+.listening-control{transition:transform .15s ease,box-shadow .15s ease}.listening-control:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(56,189,248,.2)}
+
+.listening-screen {
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 860px) {
+  /* Legacy global screen override. */
+  .listening-screen {
+    padding: clamp(12px, 1.6vh, 20px) clamp(16px, 2vw, 32px);
+    gap: clamp(10px, 1.4vh, 18px);
+  }
+
+  /* ------------------------------------------------------------ */
+  /* 🌟 [05 Listening] 듣기 연습: 컴팩트 플레이어 & 문제 그리드   */
+  /* ------------------------------------------------------------ */
+  .listening-player {
+    padding: 14px 18px !important;
+    gap: 10px !important;
+    border-radius: 16px !important;
+  }
+  .listening-wave-shell {
+    padding: 8px 12px 6px !important;
+    border-radius: 12px !important;
+  }
+  .listening-wave-shell > div:first-child {
+    height: 44px !important;
+  }
+}
