@@ -945,3 +945,38 @@ Dev note: twice, Vite cached an empty CSS file after a non-atomic shell heredoc 
 Next milestone:
 
 `P3E CONVERSATION AUDIT`
+
+---
+
+## P3E — Conversation Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`HIGH`: microphone, WebSocket realtime, Web Audio PCM pipeline, AI review jobs, PDF, local history.
+
+Source map (`preview/index.html`):
+
+- template 2177-2472 (`08b Conversation`): header with mode (tutor/roleplay) + level segments, scenario chips (roleplay), level description, status bar (dot, avatar, status, sub, 10-minute timer in tutor mode, mic meter, mute, stop/start), error, `.cv-layout-grid` (transcript with turns/partials/translation; lesson-notes cards, essential expressions, audio-review status/player; roleplay critical-hint cards), and 7-day history (groups, report PDF/transcript download/delete),
+- CSS `.cv-layout-grid` 608-618, `pulse` keyframes 59, and the shared screen override,
+- labels 3975-4000 (en) and 4043-4068 (ko); initial state 4140-4160; bindings 7519-7681,
+- logic 4979-5450: `pickLessonInterest` (profile interests + `hn-learned` topic), `getConversationUserId` (`hn-guest-id`), tutor clock (600s, wrap-up message at <=60s, auto-stop at 0), `completeTutorLesson` → `/api/session/complete-and-review` (+ `pollTutorReview` on the status URL every 1s), `startConversation` (getUserMedia 16k mono → WebSocket `/api/live`, `start` message with tutor/level/mode/scenario/user/review/nickname/nationality/interests/feedbackLanguage/lessonTopic), `startMicCapture` (ScriptProcessor 4096 → Int16 PCM base64 `audio` messages + level meter; respects mute), `onLiveMessage` (ready/error/audio/card/hint/finalize/interrupted/transcript/turnComplete/closed; 2.6s debounce `flushTurn`), `playLiveAudio` (24k PCM queue), `stopConversation` (stop message, teardown, flush partials, save history, tutor-mode review job, `hn-learned` topic records, activity `실시간 회화` XP 50+5/turn), history `hn-conversations` (7-day prune, max 60), `downloadRecord` (.txt), `requestReport` → `/api/session/report` (base64 PDF download).
+- `toggleTranslation`'s Conversation branch: when turned on, it translates transcript lines missing from `cvTrans`.
+
+Findings:
+
+- A conversation keeps running when navigating to other screens; only unmount stops it. The controller therefore belongs at App level.
+- Guest defaults: nickname `Learner`, no profile interests/nationality (the onboarding/profile shell is Phase 6), `userId` = `hn-guest-id`.
+- Test strategy: inject an identical fake `getUserMedia` stream and a scripted fake `WebSocket` into both apps and compare the resulting UI/state/requests. Mock `/api/session/*`.
+
+Strategy (P3F):
+
+- `conversationData.js` (labels, scenario/level maps, initial state, history storage helpers), `ConversationPage.jsx`, `conversation.css`, and `hooks/useConversation.js` (App-level controller ported 1:1).
+- Extend `useTranslationToggle` with the `cvTrans` branch. App `conversation` route.
+
+Next milestone:
+
+`P3F CONVERSATION MIGRATION`

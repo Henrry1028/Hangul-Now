@@ -182,15 +182,19 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P3E`
+`P3F`
 
 Name:
 
-`CONVERSATION AUDIT`
+`CONVERSATION MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
+
+Scope: see MIGRATION_LOG P3E and CURRENT_TASK.
+
+### Previous: P3E CONVERSATION AUDIT (COMPLETE)
 
 Next required action:
 

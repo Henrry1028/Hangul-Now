@@ -4,15 +4,15 @@
 
 Milestone ID:
 
-`P3E`
+`P3F`
 
 Milestone Name:
 
-`CONVERSATION AUDIT`
+`CONVERSATION MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
@@ -26,26 +26,32 @@ Expected branch:
 
 ## Objective
 
-Source-first audit of legacy Conversation (Gemini Live) before implementation.
+Migrate Conversation (Gemini Live) with parity. Strategy is in MIGRATION_LOG P3E.
 
-## Audit Questions
+## Expected Files
 
-- template (`08b Conversation`, preview/index.html ~2177-2475), CSS,
-- live pipeline: mic capture, 16kHz PCM, `/api/live` websocket protocol, 24kHz playback, transcripts, hints/cards,
-- session timer (`TUTOR_SESSION_SECONDS`), wrap-up, `/api/session/complete-and-review`, `/api/session/report`, PDF/transcript download, history,
-- `cvTrans` translation branch, auth gating, Firestore,
-- testability without a microphone (fake media / mocked socket),
-- slices.
+- `frontend/src/data/conversationData.js`, `frontend/src/pages/ConversationPage.jsx`, `frontend/src/styles/conversation.css`, `frontend/src/hooks/useConversation.js` (new)
+- `frontend/src/hooks/useTranslationToggle.js` (cvTrans branch), `frontend/src/App.jsx`
+
+## Required Validation
+
+- build, idle parity 390/1440 (tutor + roleplay modes),
+- scripted fake mic + fake WebSocket session identical to legacy: start message, ready/live, transcript partials + flush, cards, hints, mute, stop → turns, history, activity, review job (mocked), report PDF (mocked), transcript download, delete,
+- translation toggle with cvTrans,
+- one live `/api/live` smoke if feasible,
+- regression, no console/page errors.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [ ] Legacy Conversation source located
-- [ ] Coupling mapped
-- [ ] Bounded slices defined
-- [ ] Audit recorded
-- [ ] Audit metadata committed and pushed
+- [x] Audit complete (P3E)
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Behavior PASS
+- [ ] Parity PASS
+- [ ] Regression PASS
+- [ ] Commit/push
 
 ## Exact Next Action
 
-Read the Conversation template and the live-session handlers (~4975-5450).
+Write conversationData.js, useConversation.js, ConversationPage.jsx, conversation.css; extend useTranslationToggle; wire App.
