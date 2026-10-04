@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`IN_PROGRESS`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -45,11 +45,11 @@ Migrate Conversation (Gemini Live) with parity. Strategy is in MIGRATION_LOG P3E
 
 - [x] Git state reverified
 - [x] Audit complete (P3E)
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Behavior PASS
-- [ ] Parity PASS
-- [ ] Regression PASS
+- [x] Implementation complete
+- [x] Build PASS (true production build: NODE_ENV=production, dev hook stripped)
+- [x] Behavior PASS (fake mic + fake WS scripted sessions identical to legacy; live /api/live PASS)
+- [x] Parity PASS (idle 390 identical tutor/roleplay; 1440 shell-width wraps only)
+- [x] Regression PASS
 - [ ] Commit/push
 
 ## Exact Next Action

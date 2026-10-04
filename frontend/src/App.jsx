@@ -9,9 +9,11 @@ import ListeningPage from './pages/ListeningPage.jsx';
 import RecordPage from './pages/RecordPage.jsx';
 import SpeakingPage from './pages/SpeakingPage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
+import ConversationPage from './pages/ConversationPage.jsx';
 import useAudioReview from './hooks/useAudioReview.js';
 import useTranslationToggle from './hooks/useTranslationToggle.js';
 import useChat from './hooks/useChat.js';
+import useConversation from './hooks/useConversation.js';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import { INITIAL_WRITING_STATE } from './data/writingData.js';
 import { INITIAL_LISTENING_STATE } from './data/listeningData.js';
@@ -51,16 +53,19 @@ function App() {
   const audioReview = useAudioReview(recordState, updateRecordState);
   const [speakingState, setSpeakingState] = useState(INITIAL_SPEAKING_STATE);
   const updateSpeakingState = useMemo(() => mergeState(setSpeakingState), []);
-  const toggleTranslation = useTranslationToggle(translationState, updateTranslationState, listeningState);
   const [chatState, setChatState] = useState(createInitialChatState);
   const updateChatState = useMemo(() => mergeState(setChatState), []);
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
-    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking' || target === 'chat') {
+    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking' || target === 'chat' || target === 'conversation') {
       setCurrentPage(target);
     }
   };
+
+  // Dev-only sandbox aid: screens without an in-page entry (reached via the legacy sidebar)
+  // can be opened in tests until the global shell is migrated. Stripped from production builds.
+  if (import.meta.env.DEV && typeof window !== 'undefined') window.__hnSandboxNavigate = handleNavigate;
 
   const handleSelectTutor = (id) => {
     console.info('[migration:selectTutor]', id);
@@ -75,6 +80,9 @@ function App() {
     setActivityState(next);
   }, []);
   const chat = useChat(chatState, updateChatState, selectedTutorId, handleRecordActivity);
+  // Legacy reviewMode is one app-wide flag (Writing's review toggle also drives Conversation).
+  const conversation = useConversation({ tutorId: selectedTutorId, lang: 'ko', reviewMode: writingState.reviewMode, recordActivity: handleRecordActivity });
+  const toggleTranslation = useTranslationToggle(translationState, updateTranslationState, listeningState, conversation.state.cvTurns);
 
   return (
     <>
@@ -162,6 +170,15 @@ function App() {
           chatState={chatState}
           chat={chat}
           onNavigate={handleNavigate}
+        />
+      )}
+      {currentPage === 'conversation' && (
+        <ConversationPage
+          lang="ko"
+          selectedTutorId={selectedTutorId}
+          conversation={conversation}
+          translationState={translationState}
+          onToggleTranslation={toggleTranslation}
         />
       )}
     </>

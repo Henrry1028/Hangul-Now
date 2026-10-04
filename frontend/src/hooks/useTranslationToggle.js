@@ -2,19 +2,23 @@ import { useRef } from 'react';
 import { DICTATIONS, LQ, SCRIPT } from '../data/listeningData.js';
 
 // Legacy toggleTranslation: one app-wide toggle (Listening, Speaking, Conversation) that,
-// when switched on, fetches English for any Listening lines that have none yet.
-// The Conversation (cvTrans) branch joins when Conversation is migrated.
-export default function useTranslationToggle(translationState, updateTranslationState, listeningState) {
+// when switched on, fetches English for Conversation transcript lines and Listening lines
+// that have none yet.
+export default function useTranslationToggle(translationState, updateTranslationState, listeningState, conversationTurns) {
   const trRef = useRef(translationState);
   trRef.current = translationState;
   const listeningRef = useRef(listeningState);
   listeningRef.current = listeningState;
+  const turnsRef = useRef(conversationTurns);
+  turnsRef.current = conversationTurns;
 
   return async () => {
     const next = !trRef.current.trOn;
     updateTranslationState({ trOn: next, translationError: '' });
     if (!next) return;
     const studyTrans = trRef.current.studyTrans || {};
+    const cvTrans = trRef.current.cvTrans || {};
+    const cvNeed = (turnsRef.current || []).map((t) => t.text).filter((text) => text && !cvTrans[text]);
     const listeningNeed = [];
     const generated = listeningRef.current.genListening;
     if (generated?.topic && !generated.topicEn && !studyTrans[generated.topic]) listeningNeed.push(generated.topic);
@@ -35,7 +39,7 @@ export default function useTranslationToggle(translationState, updateTranslation
     listeningDictations.forEach((item) => {
       if (item?.sentence && !item.en && !studyTrans[item.sentence]) listeningNeed.push(item.sentence);
     });
-    const need = [...new Set(listeningNeed)];
+    const need = [...new Set([...cvNeed, ...listeningNeed])];
     if (!need.length) return;
     updateTranslationState({ cvTransLoading: true });
     try {
@@ -46,12 +50,15 @@ export default function useTranslationToggle(translationState, updateTranslation
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP_${res.status}`);
       updateTranslationState((prev) => {
+        const cvMap = { ...(prev.cvTrans || {}) };
         const studyMap = { ...(prev.studyTrans || {}) };
         need.forEach((line, i) => {
           const translated = data.translations?.[i];
-          if (translated) studyMap[line] = translated;
+          if (!translated) return;
+          if (cvNeed.includes(line)) cvMap[line] = translated;
+          if (listeningNeed.includes(line)) studyMap[line] = translated;
         });
-        return { studyTrans: studyMap, cvTransLoading: false, translationError: '' };
+        return { cvTrans: cvMap, studyTrans: studyMap, cvTransLoading: false, translationError: '' };
       });
     } catch (err) {
       updateTranslationState({ cvTransLoading: false, translationError: `영어 번역을 불러오지 못했습니다: ${err?.message || err}` });
