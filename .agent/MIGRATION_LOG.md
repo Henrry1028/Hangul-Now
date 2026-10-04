@@ -980,3 +980,46 @@ Strategy (P3F):
 Next milestone:
 
 `P3F CONVERSATION MIGRATION`
+
+---
+
+## P3F — Conversation Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`15594c1e56b9295c85f8714d2101760a5ba3bc45`
+
+Implementation:
+
+- `ConversationPage.jsx`, `conversationData.js` (labels, constants, history storage, initial state), `conversation.css` (`.cv-layout-grid`, `pulse`, shared override), and `hooks/useConversation.js` (App-level 1:1 port of the legacy live controller, with a synchronous state ref for message handlers).
+- `useTranslationToggle` gains the Conversation `cvTrans` branch (now complete per legacy).
+- `vite.config.js`: dev proxy `ws: true` for `/api/live` (sandbox dev only).
+- Dev-only `window.__hnSandboxNavigate` (guarded by `import.meta.env.DEV`; verified absent from the production bundle) to open screens that legacy reaches only via its sidebar, until the shell is migrated.
+- Legacy app-wide `reviewMode` (Writing's toggle) is passed to Conversation.
+
+Guest-mode notes (deferred to the shell/auth milestone): nickname `Learner`, no nationality/interests (`pickLessonInterest` → null), report `userId` null, history `userName` ''.
+
+Validation:
+
+- true production build PASS (see the correction below),
+- idle parity: 390 tutor/roleplay identical (63/70 elements). 1440: 3 paragraphs wrap differently from the shell content width only,
+- scripted sessions with identical fake mic + fake `/api/live` WebSocket on both apps, all identical:
+  - tutor mode: start payload, mic audio frames, ready/live, transcript partials + 2.6s flush, lesson card, mute, cvTrans translation, stop/close, review job + polling, history record, activity (60 XP), learned topic, PDF report request/download, transcript download name, delete,
+  - roleplay: scenario payload, mode lock while connecting, hint card + English rule, no review job, activity 55 XP, scenario topic, mid-session `finalize` → review job, server `error` message state,
+- live `/api/live` through the Vite WS proxy: Gemini Live greeted "안녕하세요 Learner 님! …", and stop saved the turn,
+- regression across all 11 sandbox screens, no errors.
+
+Correction (validation accuracy):
+
+- Container builds in P1P through P3E ran `vite build` with `NODE_ENV=development` (inherited from the dev-dependency install). Those were minified builds but not true production-mode builds.
+- From P3F on, verification runs `npm ci --include=dev` and then `NODE_ENV=production vite build`. The P3F production build covers all migrated code to date and PASSES (389 kB JS, React production, dev hook stripped).
+
+Phase 5 (Speaking, Chat, Conversation): COMPLETE.
+
+Next milestone:
+
+`P4A GLOBAL SHELL AUDIT`

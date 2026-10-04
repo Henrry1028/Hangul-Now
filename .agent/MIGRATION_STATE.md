@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`423c3abec2c04881c1ee827a5834e7e446660dcc`
+`15594c1e56b9295c85f8714d2101760a5ba3bc45`
 
 Checkpoint commit:
 
-`refactor: migrate chat page to React sandbox`
+`refactor: migrate conversation page to React sandbox`
 
 Repository HEAD rule:
 
@@ -112,6 +112,12 @@ React/Vite sandbox:
 
 - Chat audit (P3C) and migration (P3D, `423c3ab`) — COMPLETE
 
+### Conversation
+
+- Conversation audit (P3E) and migration (P3F, `15594c1`) — COMPLETE
+
+Phase 5 (Speaking, Chat, Conversation): COMPLETE
+
 ---
 
 ## 2. Latest Completed Milestone
@@ -182,17 +188,19 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P3F`
+`P4A`
 
 Name:
 
-`CONVERSATION MIGRATION`
+`GLOBAL SHELL AUDIT`
 
 Status:
 
-`IN_PROGRESS`
+`AUDITING`
 
-Scope: see MIGRATION_LOG P3E and CURRENT_TASK.
+Next required action:
+
+Source-first audit of the legacy shell (`app-root-shell`, marketing header, sidebar nav, mobile nav, theme/lang toggles, Google auth + Firebase, onboarding/profile, `hn-tutor`/`hn-lang`/`hn-theme`/sidebar persistence, Ctrl+B, scroll reset, Video Class admin-only nav) and the list of shell-dependent emulations to retire (Writing/Chat heights, max-width 1400, Reading state lifting).
 
 ### Previous: P3E CONVERSATION AUDIT (COMPLETE)
 
@@ -240,7 +248,7 @@ Current expected high-level sequence:
 5. ~~Record~~ — COMPLETE
 6. ~~Speaking~~ — COMPLETE
 7. ~~Chat~~ — COMPLETE
-8. Conversation
+8. ~~Conversation~~ — COMPLETE
 9. Global Header / navigation shell
 10. Admin
 11. Final parity and regression
@@ -272,7 +280,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`60–65%`
+`70–75%`
 
 This is a workload estimate, not a completion guarantee.
 

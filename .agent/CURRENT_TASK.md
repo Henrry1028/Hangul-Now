@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P3F`
+`P4A`
 
 Milestone Name:
 
-`CONVERSATION MIGRATION`
+`GLOBAL SHELL AUDIT`
 
 Status:
 
-`READY_TO_COMMIT`
+`AUDITING`
 
 Baseline migration-code checkpoint:
 
-`423c3abec2c04881c1ee827a5834e7e446660dcc`
+`15594c1e56b9295c85f8714d2101760a5ba3bc45`
 
 Expected branch:
 
@@ -26,32 +26,28 @@ Expected branch:
 
 ## Objective
 
-Migrate Conversation (Gemini Live) with parity. Strategy is in MIGRATION_LOG P3E.
+Source-first audit of the legacy global shell before implementation.
 
-## Expected Files
+## Audit Questions
 
-- `frontend/src/data/conversationData.js`, `frontend/src/pages/ConversationPage.jsx`, `frontend/src/styles/conversation.css`, `frontend/src/hooks/useConversation.js` (new)
-- `frontend/src/hooks/useTranslationToggle.js` (cvTrans branch), `frontend/src/App.jsx`
-
-## Required Validation
-
-- build, idle parity 390/1440 (tutor + roleplay modes),
-- scripted fake mic + fake WebSocket session identical to legacy: start message, ready/live, transcript partials + flush, cards, hints, mute, stop → turns, history, activity, review job (mocked), report PDF (mocked), transcript download, delete,
-- translation toggle with cvTrans,
-- one live `/api/live` smoke if feasible,
-- regression, no console/page errors.
+- shell markup (`app-root-shell`, `marketing-header`, sidebar, mobile nav, main viewport) and CSS (fit-to-screen rules 105-131, sidebar),
+- which screens render inside vs outside the shell (Intro/About full-page?),
+- navigation (`go`, nav groups, active state, unread badge, scroll reset), Ctrl+B sidebar toggle, resizable sidebar (`hn-sidebar-*`),
+- language/theme toggles (`hn-lang`, `hn-theme`, `data-theme`),
+- Google auth (Firebase), user card, logout, onboarding/profile (nickname/nationality/gender/interests), Firestore sync, `hn-tutor`,
+- Video Class nav (admin-only) — must stay hidden for general users,
+- shell-dependent emulations to retire: Writing/Chat heights, `max-width:1400px`, Reading/genError state lifting, studyLevel/translation sharing (already App-level),
+- build config: production Express static switch is out of scope (cutover).
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Audit complete (P3E)
-- [x] Implementation complete
-- [x] Build PASS (true production build: NODE_ENV=production, dev hook stripped)
-- [x] Behavior PASS (fake mic + fake WS scripted sessions identical to legacy; live /api/live PASS)
-- [x] Parity PASS (idle 390 identical tutor/roleplay; 1440 shell-width wraps only)
-- [x] Regression PASS
-- [ ] Commit/push
+- [ ] Legacy shell source located
+- [ ] Coupling mapped (auth/Firebase/profile/persistence)
+- [ ] Bounded slices defined
+- [ ] Audit recorded
+- [ ] Audit metadata committed and pushed
 
 ## Exact Next Action
 
-Write conversationData.js, useConversation.js, ConversationPage.jsx, conversation.css; extend useTranslationToggle; wire App.
+Read the shell markup after the `<helmet>` block (~620-1190) and the auth/profile handlers.
