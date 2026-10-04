@@ -6,6 +6,7 @@ import {
   DEFAULT_READING_QUESTIONS,
   DEFAULT_READING_TITLE,
   DEFAULT_READING_TRANSLATIONS,
+  INITIAL_READING_STATE,
   READING_TEXT
 } from '../data/readingData.js';
 import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
@@ -57,24 +58,40 @@ function ReadingPage({
   selectedTutorId = 'jiwoo',
   studyLevel = 'beginner',
   onStudyLevelChange,
+  readingState,
+  onReadingStateChange,
   onRecordActivity
 }) {
-  const [selectedWordKey, setSelectedWordKey] = useState(null);
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [saved, setSaved] = useState({});
+  const [localReadingState, setLocalReadingState] = useState(INITIAL_READING_STATE);
   const [speechStatus, setSpeechStatus] = useState('idle');
   const [speechKey, setSpeechKey] = useState('');
-  const [generatedReading, setGeneratedReading] = useState(null);
-  const [generationLoading, setGenerationLoading] = useState(false);
-  const [generationError, setGenerationError] = useState('');
-  const [quizAnswers, setQuizAnswers] = useState({});
+  const state = readingState || localReadingState;
+  const {
+    selectedWordKey,
+    showTranslation,
+    saved,
+    generatedReading,
+    generationLoading,
+    generationError,
+    quizAnswers
+  } = state;
+  const updateReadingState = useCallback((patch) => {
+    if (onReadingStateChange) {
+      onReadingStateChange(patch);
+      return;
+    }
+    setLocalReadingState((current) => ({
+      ...current,
+      ...(typeof patch === 'function' ? patch(current) : patch)
+    }));
+  }, [onReadingStateChange]);
 
   const requestRef = useRef(null);
   const audioRef = useRef(null);
   const objectUrlRef = useRef(null);
   const activeKeyRef = useRef('');
   const speechStatusRef = useRef('idle');
-  const generationLoadingRef = useRef(false);
+  const generationLoadingRef = useRef(generationLoading);
   const mountedRef = useRef(true);
   const previousTutorIdRef = useRef(selectedTutorId);
 
@@ -238,6 +255,10 @@ function ReadingPage({
   }, [stopTutorSpeech]);
 
   useEffect(() => {
+    generationLoadingRef.current = generationLoading;
+  }, [generationLoading]);
+
+  useEffect(() => {
     if (previousTutorIdRef.current !== selectedTutorId) {
       previousTutorIdRef.current = selectedTutorId;
       stopTutorSpeech();
@@ -249,8 +270,7 @@ function ReadingPage({
     if (generationLoadingRef.current) return;
 
     generationLoadingRef.current = true;
-    setGenerationLoading(true);
-    setGenerationError('');
+    updateReadingState({ generationLoading: true, generationError: '' });
 
     try {
       const seenTopics = Object.values(loadLearnedTopics('reading'))
@@ -282,21 +302,19 @@ function ReadingPage({
       if (data.topic) {
         recordLearnedTopic('reading', `${nextLevel}:${data.topic}`, data.topic);
       }
-      if (!mountedRef.current) return;
-
-      setGeneratedReading(data);
-      setSelectedWordKey(null);
-      setShowTranslation(false);
-      setQuizAnswers({});
+      updateReadingState({
+        generatedReading: data,
+        selectedWordKey: null,
+        showTranslation: false,
+        quizAnswers: {}
+      });
     } catch (error) {
-      if (mountedRef.current) {
-        setGenerationError(`새 자료를 만들지 못했어요: ${error?.message || error}`);
-      }
+      updateReadingState({ generationError: `새 자료를 만들지 못했어요: ${error?.message || error}` });
     } finally {
       generationLoadingRef.current = false;
-      if (mountedRef.current) setGenerationLoading(false);
+      updateReadingState({ generationLoading: false });
     }
-  }, []);
+  }, [updateReadingState]);
 
   const handleStudyLevel = (level) => {
     if (studyLevel === level) return;
@@ -306,15 +324,19 @@ function ReadingPage({
 
   const toggleSavedWord = () => {
     if (!selectedWordKey) return;
-    setSaved((current) => ({
-      ...current,
-      [selectedWordKey]: !current[selectedWordKey]
+    updateReadingState((current) => ({
+      saved: {
+        ...current.saved,
+        [selectedWordKey]: !current.saved[selectedWordKey]
+      }
     }));
   };
 
   const answerQuizQuestion = (question, questionIndex, option, optionIndex) => {
     const isCorrect = optionIndex === question.a;
-    setQuizAnswers((current) => ({ ...current, [questionIndex]: optionIndex }));
+    updateReadingState((current) => ({
+      quizAnswers: { ...current.quizAnswers, [questionIndex]: optionIndex }
+    }));
     onRecordActivity?.({
       type: 'reading',
       module: '독해 퀴즈',
@@ -422,7 +444,7 @@ function ReadingPage({
               <button
                 type="button"
                 aria-pressed={showTranslation}
-                onClick={() => setShowTranslation((current) => !current)}
+                onClick={() => updateReadingState((current) => ({ showTranslation: !current.showTranslation }))}
                 className={showTranslation ? 'reading-translation-toggle is-active' : 'reading-translation-toggle'}
               >
                 {showTranslation ? t.translationHide : t.translationShow}
@@ -435,7 +457,7 @@ function ReadingPage({
               <p className="reading-paragraph">
                 {paragraph.map((segment, segmentIndex) => {
                   if (typeof segment === 'string') {
-                    return <span key={`text-${paragraphIndex}-${segmentIndex}`}>{segment}</span>;
+                    return <span key={`text-${paragraphIndex}-${segmentIndex}`} style={{ borderRadius: '3px' }}>{segment}</span>;
                   }
 
                   const word = segment[0];
@@ -447,7 +469,7 @@ function ReadingPage({
                     <span
                       key={`word-${paragraphIndex}-${segmentIndex}-${word}`}
                       className={classNames.join(' ')}
-                      onClick={() => setSelectedWordKey(word)}
+                      onClick={() => updateReadingState({ selectedWordKey: word })}
                     >
                       {word}
                     </span>
@@ -535,7 +557,8 @@ function ReadingPage({
           ) : (
             <div className="reading-empty-card">
               <img src="/assets/캐릭터_훈이.png" alt="" />
-              <span>{t.empty}</span>
+              {/* Legacy dynamicT.rEmpty names the selected tutor. */}
+              <span>{L ? `밑줄 친 단어를 눌러 보세요. ${selectedTutor.ko} 튜터가 뜻과 예문을 보여 줄게요.` : `Tap any underlined word — ${selectedTutor.en} will show its meaning and an example here.`}</span>
             </div>
           )}
 

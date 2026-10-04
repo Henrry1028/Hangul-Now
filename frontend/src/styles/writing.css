@@ -350,10 +350,4 @@
     flex: none !important;
   }
   .writing-keyboard-footer span { font-size: 9.5px !important; }
-
-  /* Sandbox shell emulation: legacy resolves height:100% against its main viewport
-     (100vh minus the 60px header). Revisit when the global shell is migrated. */
-  .writing-screen {
-    height: calc(100vh - 60px) !important;
-  }
 }

@@ -1,18 +1,17 @@
 /* Legacy typing-dots keyframes (preview/index.html 58). */
 @keyframes dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
 
-/* Legacy chatH is calc(100vh - 122px) / calc(100vh - 69px), but its flex:1 inside the legacy
-   shell's main viewport makes the effective height 100vh - 127.5px (mobile) and 100vh - 60px
-   (>=860px). Sandbox shell emulation; revisit when the global shell is migrated. */
+/* Legacy chatH: calc(100vh - 122px) below 860px, calc(100vh - 69px) at >=860px.
+   flex:1 inside the shell's main viewport resolves the effective height. */
 .chat-screen {
   display: flex;
-  height: calc(100vh - 127.5px);
+  height: calc(100vh - 122px);
   min-height: 520px;
   flex: 1;
 }
 
 @media (min-width: 860px) {
   .chat-screen {
-    height: calc(100vh - 60px);
+    height: calc(100vh - 69px);
   }
 }

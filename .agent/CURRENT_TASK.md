@@ -47,13 +47,13 @@ Migrate the legacy shell layout and navigation (no Firebase yet). Plan is in MIG
 
 - [x] Git state reverified
 - [x] Audit complete (P4A)
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Parity PASS
-- [ ] Behavior PASS
-- [ ] Regression PASS
+- [x] Implementation complete
+- [x] Build PASS
+- [x] Parity PASS
+- [x] Behavior PASS
+- [x] Regression PASS
 - [ ] Commit/push
 
 ## Exact Next Action
 
-Extract shell CSS (legacy 34-57, 105-131, 538-605) and nav/labels, build AppShell.jsx, then wire App.
+Review the complete P4B diff, repair any scoped issues, then commit/fetch/divergence-check/push and record the verified milestone.

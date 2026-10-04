@@ -85,6 +85,16 @@ export const DEFAULT_READING_GRAMMAR = [
   }
 ];
 
+export const INITIAL_READING_STATE = Object.freeze({
+  selectedWordKey: null,
+  showTranslation: false,
+  saved: {},
+  generatedReading: null,
+  generationLoading: false,
+  generationError: '',
+  quizAnswers: {}
+});
+
 export const READING_TEXT = {
   en: {
     eyebrow: 'READING · BEGINNER 3 · 3 MIN',
