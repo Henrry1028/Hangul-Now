@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`NOT_STARTED`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -24,6 +24,7 @@ Expected branch:
 
 Expected repository state:
 
+- implementation baseline HEAD `50f82a69b5714004bac40f729486d7b270667284`,
 - clean after the P1O audit metadata checkpoint,
 - P1N code checkpoint remains an ancestor,
 - remote ahead is zero.
@@ -78,19 +79,19 @@ Migrate static/generated Reading Quiz parity and the exact local activity persis
 
 ## Progress Checklist
 
-- [ ] Git state reverified
-- [ ] Status set to IN_PROGRESS
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Browser/runtime behavior PASS
-- [ ] Persistence/reload PASS
-- [ ] Responsive parity PASS
-- [ ] Regression PASS
-- [ ] Diff review PASS
+- [x] Git state reverified
+- [x] Status set to IN_PROGRESS
+- [x] Implementation complete (resumed by Claude Code after Codex limit: quiz JSX + CSS added on top of Codex's data/handler/activityData work)
+- [x] Build PASS (Node 20.20.2 container, clean npm ci, standard minified vite build; host Node 24 silent-exit quirk reproduced)
+- [x] Browser/runtime behavior PASS (static 2Q, mocked generated 3Q replacement, correct/wrong styling, repeat-award quirk, answer change, generation reset, exact payload, StrictMode single-award)
+- [x] Persistence/reload PASS (seed logs, 150 cap, XP/dates/logs survive reload, minutes session-only, answers reset on reload)
+- [x] Responsive parity PASS (1440/390 computed styles identical to legacy except pre-existing scaffold IBM Plex Mono webfont diff, see log)
+- [x] Regression PASS (Intro/About/Tutors/Reading at 1440/390, no console/page errors except known favicon 404)
+- [x] Diff review PASS
 - [ ] Commit created
 - [ ] Push complete
 - [ ] Post-push divergence `0 0`
 
 ## Exact Next Action
 
-Commit and push the P1O audit metadata, then reverify Git and implement P1P in the smallest shared-state-compatible set of React files.
+Commit the P1P code, fetch/verify divergence, push, then record the milestone in MIGRATION_STATE/LOG.

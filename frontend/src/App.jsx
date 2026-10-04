@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import IntroPage from './pages/IntroPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import TutorsPage from './pages/TutorsPage.jsx';
 import ReadingPage from './pages/ReadingPage.jsx';
+import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import './styles/intro.css';
 import './styles/reading.css';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('intro');
   const [selectedTutorId, setSelectedTutorId] = useState('jiwoo');
+  const [activityState, setActivityState] = useState(loadActivityState);
+  const activityRef = useRef(activityState);
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
@@ -21,6 +24,13 @@ function App() {
     console.info('[migration:selectTutor]', id);
     setSelectedTutorId(id);
   };
+
+  const handleRecordActivity = useCallback((entry) => {
+    const next = appendActivity(activityRef.current, entry);
+    activityRef.current = next;
+    persistActivityState(next);
+    setActivityState(next);
+  }, []);
 
   return (
     <>
@@ -39,7 +49,11 @@ function App() {
         />
       )}
       {currentPage === 'reading' && (
-        <ReadingPage lang="ko" selectedTutorId={selectedTutorId} />
+        <ReadingPage
+          lang="ko"
+          selectedTutorId={selectedTutorId}
+          onRecordActivity={handleRecordActivity}
+        />
       )}
     </>
   );

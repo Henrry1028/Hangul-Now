@@ -57,6 +57,21 @@ export const DEFAULT_READING_GLOSSARY = {
   }
 };
 
+export const DEFAULT_READING_QUESTIONS = [
+  {
+    q: '벚꽃은 언제 펴요?',
+    en: 'When do the blossoms bloom?',
+    opts: ['4월', '7월', '10월'],
+    a: 0
+  },
+  {
+    q: '밤에는 왜 분위기가 달라요?',
+    en: 'Why is the mood different at night?',
+    opts: ['조명이 켜져서', '사람이 없어서', '비가 와서'],
+    a: 0
+  }
+];
+
 export const DEFAULT_READING_GRAMMAR = [
   {
     form: '-(으)러 오다/가다',
@@ -77,6 +92,7 @@ export const READING_TEXT = {
     translationShow: 'Show English',
     translationHide: 'Hide English',
     empty: 'Tap any underlined word — Hunie will show its meaning and an example here.',
+    checkHeading: 'CHECK YOUR UNDERSTANDING',
     grammarHeading: 'Grammar in this story',
     save: '+ Save to word bank',
     saved: 'Saved to word bank ✓'
@@ -87,6 +103,7 @@ export const READING_TEXT = {
     translationShow: '영어 번역 보기',
     translationHide: '영어 번역 숨기기',
     empty: '밑줄 친 단어를 눌러 보세요. 훈이가 뜻과 예문을 보여 줄게요.',
+    checkHeading: '내용 확인',
     grammarHeading: '이 글의 문법',
     save: '+ 단어장에 저장',
     saved: '단어장에 저장됨 ✓'

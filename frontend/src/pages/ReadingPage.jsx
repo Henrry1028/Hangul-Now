@@ -3,6 +3,7 @@ import {
   DEFAULT_READING_GLOSSARY,
   DEFAULT_READING_GRAMMAR,
   DEFAULT_READING_PARAGRAPHS,
+  DEFAULT_READING_QUESTIONS,
   DEFAULT_READING_TITLE,
   DEFAULT_READING_TRANSLATIONS,
   READING_TEXT
@@ -78,7 +79,7 @@ function SpeakerIcon({ size = 17, full = false }) {
   );
 }
 
-function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
+function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo', onRecordActivity }) {
   const [selectedWordKey, setSelectedWordKey] = useState(null);
   const [showTranslation, setShowTranslation] = useState(false);
   const [saved, setSaved] = useState({});
@@ -88,6 +89,7 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
   const [generatedReading, setGeneratedReading] = useState(null);
   const [generationLoading, setGenerationLoading] = useState(false);
   const [generationError, setGenerationError] = useState('');
+  const [quizAnswers, setQuizAnswers] = useState({});
 
   const requestRef = useRef(null);
   const audioRef = useRef(null);
@@ -122,6 +124,9 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
       example: item.example || ''
     }))
     : DEFAULT_READING_GRAMMAR;
+  const readingQuestions = generatedReading?.questions?.length
+    ? generatedReading.questions
+    : DEFAULT_READING_QUESTIONS;
   const selectedWord = selectedWordKey ? readingGlossary[selectedWordKey] : null;
   const selectedTutor = TUTORS.find((tutor) => tutor.id === selectedTutorId) || TUTORS[0];
 
@@ -304,6 +309,7 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
       setGeneratedReading(data);
       setSelectedWordKey(null);
       setShowTranslation(false);
+      setQuizAnswers({});
     } catch (error) {
       if (mountedRef.current) {
         setGenerationError(`새 자료를 만들지 못했어요: ${error?.message || error}`);
@@ -326,6 +332,20 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
       ...current,
       [selectedWordKey]: !current[selectedWordKey]
     }));
+  };
+
+  const answerQuizQuestion = (question, questionIndex, option, optionIndex) => {
+    const isCorrect = optionIndex === question.a;
+    setQuizAnswers((current) => ({ ...current, [questionIndex]: optionIndex }));
+    onRecordActivity?.({
+      type: 'reading',
+      module: '독해 퀴즈',
+      icon: '📖',
+      title: `독해 문제 풀이 (${questionIndex + 1}번)`,
+      detail: `"${question.q}" ➔ 선택: "${option}" ${isCorrect ? '(정답 🎉)' : '(오답)'}`,
+      xp: isCorrect ? 20 : 10,
+      tag: isCorrect ? '정답 +20XP' : '독해'
+    });
   };
 
   const fullSpeechKey = 'reading-full';
@@ -463,6 +483,37 @@ function ReadingPage({ lang = 'ko', selectedTutorId = 'jiwoo' }) {
               )}
             </div>
           ))}
+
+          <div className="reading-quiz">
+            <span className="reading-quiz-heading">{t.checkHeading}</span>
+            {readingQuestions.map((question, questionIndex) => (
+              <div className="reading-quiz-question" key={`question-${questionIndex}`}>
+                <span className="reading-quiz-prompt">
+                  {questionIndex + 1}. {question.q}{' '}
+                  <span className="reading-quiz-english">{question.en}</span>
+                </span>
+                <div className="reading-quiz-options">
+                  {question.opts.map((option, optionIndex) => {
+                    const picked = quizAnswers[questionIndex] === optionIndex;
+                    const right = optionIndex === question.a;
+                    const classNames = ['reading-quiz-option'];
+                    if (picked) classNames.push(right ? 'is-correct' : 'is-wrong');
+
+                    return (
+                      <button
+                        type="button"
+                        key={`option-${questionIndex}-${optionIndex}`}
+                        className={classNames.join(' ')}
+                        onClick={() => answerQuizQuestion(question, questionIndex, option, optionIndex)}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <aside className="reading-aside">

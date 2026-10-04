@@ -225,6 +225,61 @@
   text-wrap: pretty;
 }
 
+.reading-quiz {
+  border-top: 1px solid var(--line2);
+  padding-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.reading-quiz-heading {
+  font: 500 12px 'IBM Plex Mono', monospace;
+  color: var(--faint);
+}
+
+.reading-quiz-question {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reading-quiz-prompt {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.reading-quiz-english {
+  font-weight: 400;
+  color: var(--faint);
+  font-size: 14px;
+}
+
+.reading-quiz-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reading-quiz-option {
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+
+.reading-quiz-option.is-correct {
+  border-color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.reading-quiz-option.is-wrong {
+  border-color: var(--hot);
+  background: var(--hot-soft);
+}
+
 .reading-aside {
   position: sticky;
   top: 24px;
