@@ -415,21 +415,6 @@
   color: var(--faint);
 }
 
-@media (max-width: 659px) {
-  .reading-content-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .reading-passage-card,
-  .reading-aside {
-    grid-column: 1;
-  }
-
-  .reading-aside {
-    position: static;
-  }
-}
-
 @media (max-width: 520px) {
   .reading-speech-button .reading-speech-label {
     display: none;

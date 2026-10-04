@@ -41,7 +41,7 @@ Roadmap Phase 8: verify that every migrated public/admin screen matches legacy, 
 
 - [x] Git state verified (HEAD 6b9b97b pushed, 0 0)
 - [x] Screen inventory: all legacy screens migrated except deferred `10 Video Class Platform`
-- [ ] Cross-app screen parity sweep
+- [x] Cross-app screen parity sweep: 11 screens x en/ko x 1440/390 — all identical except (a) Intro/About footer inside vs outside the labelled wrapper (known P4B DC-wrapper difference; main scroll extents identical), (b) Intro rotating demo-chat timer text, (c) Reading <=659px grid defect → fixed (P6A-FIX, drop non-legacy mobile override; identical at 360/390/500/659/700/859/1024/1440 en+ko)
 - [ ] Network/asset/console sweep
 - [ ] Auth regression
 - [ ] API smoke
@@ -49,4 +49,4 @@ Roadmap Phase 8: verify that every migrated public/admin screen matches legacy, 
 
 ## Exact Next Action
 
-Run the cross-app parity sweep (legacy `window.app.go`/setState vs sandbox `window.__hnSandboxNavigate`).
+Commit/push the Reading mobile grid fix, then run auth regression, API smoke, and the signed-in/dark sweeps.
