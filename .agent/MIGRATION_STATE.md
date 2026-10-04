@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`01e84258129f7c614cc3ecf065ebab210c6b414f`
+`fdd5946c29037512e8da860a6376719a6c2cc401`
 
 Checkpoint commit:
 
-`refactor: migrate reading ai generation slice to React sandbox`
+`refactor: migrate reading quiz activity slice to React sandbox`
 
 Repository HEAD rule:
 
@@ -77,6 +77,7 @@ React/Vite sandbox:
 - Reading AI generation audit and migration strategy — COMPLETE
 - Reading AI controls and generated passage/translation/glossary/grammar — COMPLETE
 - Reading Quiz and activity/history audit — COMPLETE
+- Reading Quiz + App-owned activity persistence — COMPLETE
 
 ---
 
@@ -84,7 +85,7 @@ React/Vite sandbox:
 
 Milestone:
 
-`P1N READING AI GENERATION MIGRATION`
+`P1P READING QUIZ + ACTIVITY PERSISTENCE MIGRATION`
 
 Status:
 
@@ -92,17 +93,25 @@ Status:
 
 Commit:
 
-`01e84258129f7c614cc3ecf065ebab210c6b414f`
+`fdd5946c29037512e8da860a6376719a6c2cc401`
 
 Commit message:
 
-`refactor: migrate reading ai generation slice to React sandbox`
+`refactor: migrate reading quiz activity slice to React sandbox`
+
+Agent:
+
+Started by Codex (data/handler/activity helper), resumed and completed by Claude Code after the Codex usage limit.
 
 Runtime acceptance:
 
-`PASS`
+`PASS` (see MIGRATION_LOG P1P)
 
-Verified:
+Known issue discovered (pre-existing, not P1P): sandbox `frontend/index.html` loads IBM Plex Mono and Newsreader webfonts that legacy never loads → scheduled as P1Q.
+
+### Previous milestone — P1N READING AI GENERATION MIGRATION
+
+Commit `01e84258129f7c614cc3ecf065ebab210c6b414f`. Verified:
 
 - Node 20 standard production build PASS,
 - live `/api/content/generate` through Vite proxy PASS,
@@ -140,32 +149,26 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P1P`
+`P1Q`
 
 Name:
 
-`READING QUIZ + ACTIVITY PERSISTENCE MIGRATION`
+`SANDBOX WEBFONT PARITY FIX`
 
 Status:
 
-`NOT_STARTED`
-
-Selected strategy:
-
-`QUIZ UI + APP-OWNED LEGACY ACTIVITY STATE`
+`IN_PROGRESS`
 
 Bounded scope:
 
-- add static and generated Reading Quiz rendering,
-- preserve session-local answer selection and generation reset,
-- preserve repeat-answer activity/XP awards,
-- keep `activityLogs`, `userXp`, `studyDates`, and `userTotalMins` in `App.jsx`,
-- preserve legacy `hn-activity-logs`, `hn-study-dates`, and `hn-user-xp` storage contracts,
-- exclude Home/Record UI migration and backend/auth changes.
+- remove the IBM Plex Mono and Newsreader Google Fonts links from `frontend/index.html` (legacy loads only Pretendard + Gowun Batang, so legacy renders those families with system fallbacks),
+- no CSS/component changes.
 
 Next required action:
 
-Implement and validate the bounded P1P Quiz and activity persistence scope.
+Apply the fix, build, compare Mono/Newsreader text metrics with legacy on Intro/About/Tutors/Reading, commit, push.
+
+After P1Q: `P2A HOME AUDIT` (Phase 4).
 
 ---
 
@@ -176,9 +179,12 @@ Implement and validate the bounded P1P Quiz and activity persistence scope.
 - generated translation integration — COMPLETE
 - generated glossary integration — COMPLETE
 - generated grammar integration — COMPLETE
-- Quiz interaction — AUDIT_COMPLETE
-- XP/activity/history mutation — NOT_STARTED
-- learning history integration — NOT_STARTED
+- Quiz interaction — COMPLETE
+- XP/activity/history mutation — COMPLETE (App-owned, legacy storage keys)
+- learned-topic history — COMPLETE (P1N `hn-learned`)
+- history consumption UI — belongs to Home/Record migrations
+
+Reading domain: COMPLETE
 
 ---
 
@@ -186,7 +192,7 @@ Implement and validate the bounded P1P Quiz and activity persistence scope.
 
 Current expected high-level sequence:
 
-1. Finish Reading
+1. ~~Finish Reading~~ — COMPLETE
 2. Home
 3. Writing
 4. Listening
@@ -225,7 +231,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`25–30%`
+`30–35%`
 
 This is a workload estimate, not a completion guarantee.
 

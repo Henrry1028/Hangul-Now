@@ -391,3 +391,53 @@ Findings:
 Next exact milestone:
 
 `P1P READING QUIZ + ACTIVITY PERSISTENCE MIGRATION`
+
+---
+
+## P1P — Reading Quiz + Activity Persistence Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`fdd5946c29037512e8da860a6376719a6c2cc401`
+
+Agent handoff:
+
+- Codex started P1P (quiz data/labels, answer handler, `activityData.js`, App wiring) and hit its usage limit with a dirty tree.
+- Claude Code validated the handoff (HEAD `50f82a6`, checkpoint ancestry OK, divergence `0 0`, dirty files all P1P scope), preserved the work, and finished it.
+
+Implementation:
+
+- Quiz UI rendered inside the passage card after paragraphs, matching legacy markup/styles (`.reading-quiz*` classes).
+- Correct pick: `--accent-ink` border + `--accent-soft` bg; wrong pick: `--hot` + `--hot-soft`; only the selected option is styled; no reveal.
+- App-owned activity state with legacy keys `hn-activity-logs`, `hn-study-dates`, `hn-user-xp`; minutes session-only.
+- Fix during resume: Codex's handler persisted inside a `setState` updater, which React StrictMode double-invokes in dev; replaced with a ref-mirrored synchronous append+persist (matches legacy per-event write).
+
+Validation:
+
+- Node 20.20.2 container standard minified build PASS (host Node 24 silent-exit quirk reproduced, unchanged).
+- static two-question rendering PASS,
+- generated question replacement PASS (mocked `/api/content/generate`, 3 questions; live endpoint covered by P1N),
+- correct/incorrect styling PASS (computed colors match legacy),
+- repeat-answer award quirk PASS (+20 each repeat), answer change PASS (+10),
+- generation answer reset PASS,
+- exact activity payload PASS (type/module/icon/title/detail/xp/tag/time/date/ts),
+- legacy seed logs PASS (6 seeds behind first real entry), 150-entry cap PASS,
+- XP/date/log persistence across reload PASS; minutes not persisted PASS; answers reset on reload PASS,
+- exactly one log per click under StrictMode PASS,
+- `READING_TEXT.en.checkHeading` = legacy `CHECK YOUR UNDERSTANDING`; ko = `내용 확인`,
+- desktop 1440 / mobile 390 computed-style comparison vs legacy: identical for heading, prompt, English line, option buttons, question blocks,
+- Intro/About/Tutors/Reading regression at 1440/390 PASS, no horizontal overflow,
+- no console/page errors except known `favicon.ico` 404.
+
+Known differences (pre-existing, out of P1P scope):
+
+- Legacy renders inside a 240px sidebar shell; sandbox has no shell yet (Phase 6).
+- Sandbox `frontend/index.html` (added in `0ce8364`) loads IBM Plex Mono + Newsreader webfonts; legacy loads neither, so legacy Mono/Newsreader text uses system fallbacks (e.g. Mono Hangul label 14px tall in legacy vs 16px in sandbox). Scheduled as P1Q.
+
+Next milestone:
+
+`P1Q SANDBOX WEBFONT PARITY FIX`

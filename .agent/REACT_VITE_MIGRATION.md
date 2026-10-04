@@ -98,20 +98,21 @@ Commit:
 `11e18eff4c1897e72f28f26b6b657a4e96456e14`
 
 #### Reading AI generation
-`NEXT`
+`COMPLETE`
 
-Expected first step:
+Commit:
 
-source-first audit.
+`01e84258129f7c614cc3ecf065ebab210c6b414f`
 
-#### Reading Quiz
-`PENDING`
+#### Reading Quiz + XP/activity persistence
+`COMPLETE`
 
-#### Reading XP/activity/history
-`PENDING`
+Commit:
+
+`fdd5946c29037512e8da860a6376719a6c2cc401`
 
 #### Reading learning history
-`PENDING`
+`COMPLETE` (learned topics in P1N; history display belongs to Home/Record)
 
 ---
 
@@ -303,7 +304,7 @@ Do not interpret backend capability as permission to expose the feature.
 
 Current estimated migration workload completion:
 
-`25–30%`
+`30–35%`
 
 This estimate may change after audits.
 
@@ -313,7 +314,7 @@ A more useful progress model is:
 
 - Foundation: complete
 - low-risk public pages: largely complete
-- Reading: partially complete
+- Reading: complete
 - medium-risk domains: pending
 - high-risk domains: pending
 - global shell/admin: pending
