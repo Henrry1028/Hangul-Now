@@ -144,11 +144,15 @@ For each:
 
 ### Phase 5 — High-Coupling Domains
 
-Likely domains:
+Status:
 
-- Speaking
-- Chat
-- Conversation
+`COMPLETE`
+
+Completed domains:
+
+- Speaking (`e250f9a`)
+- Chat (`423c3ab`)
+- Conversation (`15594c1`)
 
 Reasons for higher risk may include:
 
@@ -161,7 +165,7 @@ Reasons for higher risk may include:
 - shared/global state,
 - realtime behavior.
 
-These require source-first audits.
+All three received source-first audits and browser/runtime validation.
 
 ---
 
@@ -169,21 +173,32 @@ These require source-first audits.
 
 #### Global Header / Navigation
 
-Deferred until more body domains are migrated because it is coupled to:
+Status:
+
+`LAYOUT + NAVIGATION COMPLETE` (`45ac5d2`)
+
+Completed:
+
+- header/sidebar/mobile pill layout parity,
+- language/theme/tutor/sidebar persistence,
+- responsive navigation, unread badge, tutor card, collapse/resize/Ctrl+B,
+- main viewport scrolling and navigation reset,
+- shell-dependent Writing/Chat sizing cleanup,
+- Reading App-owned state parity.
+
+Remaining in Phase 6:
 
 - auth,
-- theme,
-- language,
 - admin,
-- navigation.
+- profile/onboarding,
+- signed-in identity propagation.
 
 Expected work:
 
-- header parity,
-- language parity,
-- theme parity,
-- auth state,
-- navigation shell,
+- Firebase compat/auth state,
+- profile/onboarding,
+- admin UI flag and Admin route handoff,
+- signed-in identity propagation,
 - unsupported/deferred route handling.
 
 ---
@@ -306,7 +321,7 @@ Do not interpret backend capability as permission to expose the feature.
 
 Current estimated migration workload completion:
 
-`70–75%`
+`78–82%`
 
 This estimate may change after audits.
 
@@ -317,9 +332,10 @@ A more useful progress model is:
 - Foundation: complete
 - low-risk public pages: largely complete
 - Reading: complete
-- medium-risk domains: pending
-- high-risk domains: pending
-- global shell/admin: pending
+- medium-risk domains: complete
+- high-risk domains: complete
+- global shell: layout/navigation complete; auth/profile in progress
+- admin: pending
 - integration/cutover: pending
 
 ---

@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`15594c1e56b9295c85f8714d2101760a5ba3bc45`
+`45ac5d2e8fd6cf08e65bf9b0300af4d00cc2eff7`
 
 Checkpoint commit:
 
-`refactor: migrate conversation page to React sandbox`
+`refactor: migrate global shell to React sandbox`
 
 Repository HEAD rule:
 
@@ -118,13 +118,17 @@ React/Vite sandbox:
 
 Phase 5 (Speaking, Chat, Conversation): COMPLETE
 
+### Global shell
+
+- Shell layout + navigation (P4A audit, P4B `45ac5d2`) — COMPLETE
+
 ---
 
 ## 2. Latest Completed Milestone
 
 Milestone:
 
-`P1P READING QUIZ + ACTIVITY PERSISTENCE MIGRATION`
+`P4B SHELL LAYOUT + NAVIGATION MIGRATION`
 
 Status:
 
@@ -132,55 +136,15 @@ Status:
 
 Commit:
 
-`fdd5946c29037512e8da860a6376719a6c2cc401`
+`45ac5d2e8fd6cf08e65bf9b0300af4d00cc2eff7`
 
 Commit message:
 
-`refactor: migrate reading quiz activity slice to React sandbox`
-
-Agent:
-
-Started by Codex (data/handler/activity helper), resumed and completed by Claude Code after the Codex usage limit.
+`refactor: migrate global shell to React sandbox`
 
 Runtime acceptance:
 
-`PASS` (see MIGRATION_LOG P1P)
-
-Known issue discovered (pre-existing, not P1P): sandbox `frontend/index.html` loads IBM Plex Mono and Newsreader webfonts that legacy never loads → scheduled as P1Q.
-
-### Previous milestone — P1N READING AI GENERATION MIGRATION
-
-Commit `01e84258129f7c614cc3ecf065ebab210c6b414f`. Verified:
-
-- Node 20 standard production build PASS,
-- live `/api/content/generate` through Vite proxy PASS,
-- generated title, subtitle, paragraphs, translations, glossary, and grammar PASS,
-- beginner/intermediate/advanced request payloads PASS,
-- same-level no-op and repeated-action blocking PASS,
-- one network retry PASS,
-- HTTP/API error UI PASS,
-- guest `hn-learned` persistence PASS,
-- selection/translation reset PASS,
-- static full-passage TTS legacy quirk PASS,
-- desktop PASS,
-- mobile PASS,
-- 520/521 TTS regression PASS,
-- Intro/About/Tutors/Reading regression PASS,
-- legacy isolation PASS.
-
-Known out-of-scope issue:
-
-- `favicon.ico` 404
-
-Host toolchain note:
-
-- Host Node `v24.11.1` exits silently during Vite 5 minification after transforming all modules.
-- Unminified host build and direct esbuild JS/CSS minification pass.
-- The repository's existing Node 20 verification image completes the standard minified build.
-
-Known legacy quirk preserved:
-
-- generated Reading full-passage TTS continues to read static `PARAS`.
+`PASS` (see MIGRATION_LOG P4B)
 
 ---
 
@@ -188,40 +152,23 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P4B`
+`P4C`
 
 Name:
 
-`SHELL LAYOUT + NAVIGATION MIGRATION`
+`AUTH + PROFILE SHELL MIGRATION`
 
 Status:
 
 `IN_PROGRESS`
 
-Scope: see MIGRATION_LOG P4A and CURRENT_TASK.
+Scope: see MIGRATION_LOG P4A/P4B and CURRENT_TASK.
 
-### Previous: P4A GLOBAL SHELL AUDIT (COMPLETE)
-
-Next required action:
-
-Source-first audit of the legacy shell (`app-root-shell`, marketing header, sidebar nav, mobile nav, theme/lang toggles, Google auth + Firebase, onboarding/profile, `hn-tutor`/`hn-lang`/`hn-theme`/sidebar persistence, Ctrl+B, scroll reset, Video Class admin-only nav) and the list of shell-dependent emulations to retire (Writing/Chat heights, max-width 1400, Reading state lifting).
-
-### Previous: P3E CONVERSATION AUDIT (COMPLETE)
+### Previous: P4B SHELL LAYOUT + NAVIGATION MIGRATION (COMPLETE, `45ac5d2`)
 
 Next required action:
 
-Source-first audit of legacy Conversation (`08b Conversation`, preview/index.html ~2177-2475): Gemini Live (`/api/live` websocket, mic PCM 16k → 24k playback), session timer, hints/cards, report/PDF, history, translation `cvTrans`, auth gating.
-
-### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
-
-Bounded scope:
-
-- legacy global screen override (preview/index.html lines 118-131) sets `.tutors-screen` padding `clamp(12px,1.6vh,20px) clamp(16px,2vw,32px)` and gap `clamp(10px,1.4vh,18px)` at >=860px; sandbox Tutors root uses inline 40px/24px,
-- move Tutors root layout into `styles/tutors.css` with the >=860px rule (same pattern as Home/Reading).
-
-Next required action:
-
-Implement, build, compare Tutors with legacy at 1440/390, commit, push. Then `P2C WRITING AUDIT`.
+Audit the full Firebase/auth/profile lifecycle and every migrated identity consumer, then implement the bounded P4C strategy. Video Class remains hidden.
 
 ---
 
@@ -253,7 +200,7 @@ Current expected high-level sequence:
 6. ~~Speaking~~ — COMPLETE
 7. ~~Chat~~ — COMPLETE
 8. ~~Conversation~~ — COMPLETE
-9. Global Header / navigation shell
+9. ~~Global Header / navigation shell~~ — layout/navigation COMPLETE; auth/profile PENDING
 10. Admin
 11. Final parity and regression
 12. Cutover readiness
@@ -284,7 +231,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`70–75%`
+`78–82%`
 
 This is a workload estimate, not a completion guarantee.
 

@@ -1058,3 +1058,44 @@ Plan:
 Next milestone:
 
 `P4B SHELL LAYOUT + NAVIGATION MIGRATION`
+
+---
+
+## P4B — Shell Layout + Navigation Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`45ac5d2e8fd6cf08e65bf9b0300af4d00cc2eff7`
+
+Implementation:
+
+- `AppShell.jsx` and `shell.css` port the legacy header, desktop sidebar, mobile pill navigation, active states, unread badge, selected-tutor card, logo variants, and shared `max-width:1400px` screen rules.
+- App-owned `lang`, `theme`, selected tutor, sidebar collapsed state, and 180–460px sidebar width preserve `hn-lang`, `hn-theme`, `hn-tutor`, `hn-sidebar-collapsed`, and `hn-sidebar-width`.
+- Sidebar collapse/open, Ctrl/Cmd+B, drag resize, double-click 240px reset, responsive `wide >= 860`, main-viewport scroll reset, and live language/theme propagation are wired.
+- Reading generated content, selected word, translation visibility, saved words, quiz answers, loading, and errors are App-owned so navigation away/back matches legacy. In-flight generation continues after leaving Reading.
+- Listening still stops and resets on navigation through its verified unmount cleanup.
+- Removed temporary Writing and Chat shell-height emulations and copied the legacy light/dark logos byte-identically.
+- Guest login controls intentionally remain non-authenticating until P4C. Video Class stays hidden.
+
+Validation:
+
+- Node 20.20.2 true-production build PASS: 71 modules, 404.22 kB JS; production dependencies report 0 vulnerabilities (`npm audit --omit=dev`).
+- Legacy/sandbox full-screen geometry measured for all 11 migrated screens at 1440x900 and 390x844: header, sidebar/main widths, screen positions/heights, scroll extents, responsive breakpoints, and no horizontal overflow PASS. Intro/About root-wrapper height differs by the pre-existing DC interpolation wrapper only; main scroll extents are identical.
+- Visual desktop/mobile Intro comparison PASS; Korean dark Home spot check PASS; English light default PASS.
+- Sidebar/header/mobile navigation targets, active state, unread badge, tutor card, scroll reset, collapse/open, Ctrl+B, drag persistence, double-click reset, and resize behavior PASS.
+- `hn-lang`, `hn-theme`, `hn-tutor`, sidebar collapse/width persistence across reload PASS.
+- Reading selection/translation/quiz state survives navigation; in-flight generation completes away from Reading; leave-return-before-complete and subsequent generation race regression PASS.
+- Listening playing-audio leave cleanup calls pause/load and restores 0%/play UI PASS.
+- All migrated screens render at desktop/mobile; no page errors, Vite overlay, console errors, or horizontal overflow.
+
+Code review:
+
+- 0 critical, 0 major issues remaining. One generation single-flight ref race found during review was fixed and browser-regressed.
+
+Next milestone:
+
+`P4C AUTH + PROFILE SHELL MIGRATION`

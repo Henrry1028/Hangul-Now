@@ -4,11 +4,11 @@
 
 Milestone ID:
 
-`P4B`
+`P4C`
 
 Milestone Name:
 
-`SHELL LAYOUT + NAVIGATION MIGRATION`
+`AUTH + PROFILE SHELL MIGRATION`
 
 Status:
 
@@ -16,7 +16,7 @@ Status:
 
 Baseline migration-code checkpoint:
 
-`15594c1e56b9295c85f8714d2101760a5ba3bc45`
+`45ac5d2e8fd6cf08e65bf9b0300af4d00cc2eff7`
 
 Expected branch:
 
@@ -26,34 +26,38 @@ Expected branch:
 
 ## Objective
 
-Migrate the legacy shell layout and navigation (no Firebase yet). Plan is in MIGRATION_LOG P4A.
+Migrate the legacy Firebase auth/profile portion of the global shell without exposing deferred Video Class functionality or weakening server-side authorization.
 
 ## Expected Files
 
-- `frontend/src/components/AppShell.jsx`, `frontend/src/styles/shell.css`, `frontend/src/data/shellData.js` (new)
-- `frontend/src/App.jsx` (shell, lang/theme/tutor/sidebar persistence, lifted Reading state)
-- page/CSS adjustments to remove shell emulations (`writing.css`, `chat.css`) and apply the legacy `max-width:1400px` screen rule
-- `frontend/src/pages/ReadingPage.jsx` (lifted state)
-- `frontend/public/assets/logo-new*.png` if missing
+- `frontend/index.html` (legacy Firebase compat SDK tags if still required)
+- `frontend/src/App.jsx`
+- `frontend/src/components/AppShell.jsx`
+- auth/profile hook and onboarding component/data/style files under `frontend/src/`
+- signed-in identity propagation updates in Reading learning records, Chat correction, Conversation, and report/session calls where legacy uses the verified current user
+- `.agent/*` state files
 
 ## Required Validation
 
-- production build,
-- full-page parity vs legacy (including header/sidebar) for every migrated screen at 1440x900 and 390x844 (ko), plus spot checks in en and dark theme,
-- nav: sidebar/pill/header targets, active state, unread badge, tutor card, collapse/resize/dblclick/Ctrl+B + persistence, lang/theme persistence, `hn-tutor`, scroll reset, listening audio stop on leave,
-- regression of all behavior scenarios (spot), no console/page errors.
+- true-production Node 20 build,
+- identical guest shell behavior,
+- stubbed Firebase auth-state, popup→redirect fallback, logout, Firestore profile/tutor restore+merge, onboarding required/edit flows,
+- admin UI flag parity (`?admin=1` and legacy email heuristic) without exposing Video Class,
+- signed-in uid/profile propagation to all migrated consumers,
+- desktop/mobile, ko/en, light/dark parity and full migrated-domain regression,
+- no console/page errors and no auth/privacy contract regression.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Audit complete (P4A)
-- [x] Implementation complete
-- [x] Build PASS
-- [x] Parity PASS
-- [x] Behavior PASS
-- [x] Regression PASS
+- [ ] P4C source/coupling audit complete
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Auth/profile behavior PASS
+- [ ] Parity PASS
+- [ ] Regression PASS
 - [ ] Commit/push
 
 ## Exact Next Action
 
-Review the complete P4B diff, repair any scoped issues, then commit/fetch/divergence-check/push and record the verified milestone.
+Inspect the full legacy Firebase/auth/profile lifecycle and every migrated userId/profile consumer, then record the bounded P4C implementation strategy before editing source.
