@@ -1205,3 +1205,41 @@ Decisions:
 Next milestone:
 
 `P5B ADMIN CONSOLE MIGRATION`
+
+---
+
+## P5B — Admin Console Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`6b9b97bd302edbef8ace73a19a440b433a40ab48`
+
+Implementation:
+
+- `AdminPage.jsx` ports the `09 Admin Console` markup verbatim plus `buildAdminView` (legacy derivations 6946-7017: current-user fallback row, search/filter, status badges, relative time, join date, tutor names, levels, XP, KPI fallbacks).
+- `App.jsx`: app-wide adminData/adminLoading/adminSearch/adminFilter, `loadAdminDashboard` (Bearer ID token when signed in, success-only update), `handleGoAdmin`, signed-in admin-email `#admin`/`?page=admin` deep link, `admin` route.
+- `AppShell.jsx`: header 👑 Admin pill and sidebar 관리자 콘솔 (Admin) button when `auth.isAdmin`.
+- Not migrated (deferred Video Class): admin header 화상수업 link, LIVE VIDEO CLASS sidebar group, Video Class page, admin tutor-profile form.
+
+Validation:
+
+- Node 20.20.2 production build PASS: 438.30 kB JS (137.70 kB gzip).
+- Legacy vs sandbox with identical Firebase stub: guest has no admin entry; `?admin=1` guest → header/sidebar entry, console fallback (0 users, 142 / $0.048 / 50.0%, jiwoo 2) text identical; real server 401 kept adminData null in both.
+- Signed-in admin email + routed dashboard fixture: KPIs, rows, status badges, relative times, tutor names, XP formatting, search (case-insensitive), empty-search state, 오늘 접속 / 신규 가입 / 전체 filters, refresh, 학습 홈으로 — text identical; request carried `Authorization: Bearer <token>`.
+- `#admin` deep link opens the console for an admin email in both; non-admin email: no deep link, no entry points in both.
+- Admin screen geometry identical at 1440x900 (1185x888) and 390x844 (375x1781); element screenshots pixel-identical in light and dark.
+- Server `/api/admin/dashboard` returns 401 without a token and with a forged token (direct and via Vite proxy).
+- Regression: all 10 navigable screens at 1440/390 (ko), no page/console errors, no overflow, no admin entry or Video Class text for guests.
+
+Known quirks preserved:
+
+- `adminLoading` is tracked but never rendered (legacy).
+- Tutor distribution bar widths are static (100/20/20%) (legacy).
+
+Next milestone:
+
+`P6A FINAL INTEGRATION REGRESSION`

@@ -204,7 +204,7 @@ Expected work:
 
 Status:
 
-`IN_PROGRESS` (P5A audit complete; P5B migration)
+`COMPLETE` (P5A audit, P5B `6b9b97b`)
 
 Expected risk:
 
@@ -318,7 +318,7 @@ Do not interpret backend capability as permission to expose the feature.
 
 Current estimated migration workload completion:
 
-`84–87%`
+`93–95%`
 
 This estimate may change after audits.
 
@@ -332,8 +332,8 @@ A more useful progress model is:
 - medium-risk domains: complete
 - high-risk domains: complete
 - global shell: complete
-- admin: auditing
-- integration/cutover: pending
+- admin: complete
+- integration/cutover: final regression in progress
 
 ---
 

@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P5B`
+`P6A`
 
 Milestone Name:
 
-`ADMIN CONSOLE MIGRATION`
+`FINAL INTEGRATION REGRESSION`
 
 Status:
 
-`READY_TO_COMMIT`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
-`a5d3d20040169611492f7a8489ade4caced7e5e1`
+`6b9b97bd302edbef8ace73a19a440b433a40ab48`
 
 Expected branch:
 
@@ -26,38 +26,27 @@ Expected branch:
 
 ## Objective
 
-Migrate the legacy read-only Admin console (`09 Admin Console`) and its admin-only entry points without exposing Video Class or changing server authorization.
-
-## Expected Files
-
-- `frontend/src/pages/AdminPage.jsx` (new)
-- `frontend/src/App.jsx` (admin state, loader with Bearer ID token, goAdmin, deep link, route)
-- `frontend/src/components/AppShell.jsx` (header 👑 Admin pill, sidebar 관리자 콘솔 button)
-- `frontend/src/hooks/useAuthProfile.js` (only if needed for deep-link/token hooks)
-- `.agent/*` state files
+Roadmap Phase 8: verify that every migrated public/admin screen matches legacy, with no regressions, before the Phase 9 cutover-readiness report. No code changes expected; any defect found is fixed as a bounded `fix:` commit.
 
 ## Required Validation
 
-- Node 20 production build,
-- guest/non-admin: no admin entry points, no Video Class,
-- admin flag (`?admin=1` and stubbed admin email): header + sidebar entry points, page renders,
-- routed dashboard response: KPIs, table rows, search, filters, empty state, tutor counts, refresh, home button,
-- fallback (no adminData / 401): single current-user row and legacy KPI fallbacks, identical to legacy,
-- deep link `#admin` / `?page=admin` for signed-in admin,
-- real server `/api/admin/dashboard` without token still 401,
-- legacy vs sandbox desktop/mobile, light/dark comparison; full migrated-domain regression; no console/page errors.
+- Node 20 production build (done at P5B: PASS),
+- per-screen legacy vs sandbox text + geometry at 1440x900 and 390x844, en and ko, light and dark spot checks,
+- failed requests / asset 404s, console and page errors on every screen,
+- auth regression (guest, signed-in, admin) with the shared Firebase stub,
+- API smoke: proxy reachability of migrated endpoints without spending AI quota where avoidable,
+- Video Class not exposed.
 
 ## Progress Checklist
 
-- [x] Git state verified (HEAD a5d3d20 pushed, 0 0)
-- [x] P5A source/coupling audit complete (MIGRATION_LOG P5A)
-- [x] Implementation complete (AdminPage.jsx, App.jsx admin state/loader/goAdmin/deep link/route, AppShell header+sidebar entry points)
-- [x] Build PASS
-- [x] Admin behavior PASS
-- [x] Parity PASS
-- [x] Regression PASS
-- [ ] Commit/push
+- [x] Git state verified (HEAD 6b9b97b pushed, 0 0)
+- [x] Screen inventory: all legacy screens migrated except deferred `10 Video Class Platform`
+- [ ] Cross-app screen parity sweep
+- [ ] Network/asset/console sweep
+- [ ] Auth regression
+- [ ] API smoke
+- [ ] Cutover readiness report
 
 ## Exact Next Action
 
-Commit the verified P5B implementation, fetch/verify remote-ahead 0, push, then record P5B in STATE/LOG/ROADMAP and start Phase 8 final integration.
+Run the cross-app parity sweep (legacy `window.app.go`/setState vs sandbox `window.__hnSandboxNavigate`).

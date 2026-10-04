@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`a5d3d20040169611492f7a8489ade4caced7e5e1`
+`6b9b97bd302edbef8ace73a19a440b433a40ab48`
 
 Checkpoint commit:
 
-`refactor: migrate auth profile shell to React sandbox`
+`refactor: migrate admin console to React sandbox`
 
 Repository HEAD rule:
 
@@ -125,13 +125,17 @@ Phase 5 (Speaking, Chat, Conversation): COMPLETE
 
 Phase 6 (Global shell): COMPLETE
 
+### Admin
+
+- Admin console audit (P5A) and migration (P5B `6b9b97b`) — COMPLETE
+
 ---
 
 ## 2. Latest Completed Milestone
 
 Milestone:
 
-`P4C AUTH + PROFILE SHELL MIGRATION`
+`P5B ADMIN CONSOLE MIGRATION`
 
 Status:
 
@@ -139,15 +143,15 @@ Status:
 
 Commit:
 
-`a5d3d20040169611492f7a8489ade4caced7e5e1`
+`6b9b97bd302edbef8ace73a19a440b433a40ab48`
 
 Commit message:
 
-`refactor: migrate auth profile shell to React sandbox`
+`refactor: migrate admin console to React sandbox`
 
 Runtime acceptance:
 
-`PASS` (see MIGRATION_LOG P4C)
+`PASS` (see MIGRATION_LOG P5B)
 
 ---
 
@@ -155,11 +159,11 @@ Runtime acceptance:
 
 Milestone ID:
 
-`P5B`
+`P6A`
 
 Name:
 
-`ADMIN CONSOLE MIGRATION`
+`FINAL INTEGRATION REGRESSION`
 
 Status:
 
@@ -167,11 +171,11 @@ Status:
 
 Scope: see CURRENT_TASK.
 
-### Previous: P4C AUTH + PROFILE SHELL MIGRATION (COMPLETE, `a5d3d20`)
+### Previous: P5B ADMIN CONSOLE MIGRATION (COMPLETE, `6b9b97b`)
 
 Next required action:
 
-P5A audit COMPLETE (see MIGRATION_LOG). Implement the bounded P5B strategy. Video Class remains hidden.
+Cross-app (legacy vs sandbox) final regression of every migrated screen; then cutover-readiness report.
 
 ---
 
@@ -204,7 +208,7 @@ Current expected high-level sequence:
 7. ~~Chat~~ — COMPLETE
 8. ~~Conversation~~ — COMPLETE
 9. ~~Global Header / navigation shell~~ — COMPLETE (layout/navigation + auth/profile)
-10. Admin
+10. ~~Admin~~ — COMPLETE
 11. Final parity and regression
 12. Cutover readiness
 13. Production cutover — requires explicit approval
@@ -234,7 +238,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`84–87%`
+`93–95%`
 
 This is a workload estimate, not a completion guarantee.
 
