@@ -1339,3 +1339,20 @@ Not performed:
 - deleting `preview/`
 
 Rollback: `git revert 6d94bad` (details in CUTOVER_READINESS section 7).
+
+---
+
+## P8 — Cloud Run Staging Deployment (user label P6B)
+
+Status:
+
+`BLOCKED` (HARD BLOCKER: gcloud SDK/credentials unavailable). Nothing deployed.
+
+Done without cloud access:
+
+- Discovery from the repository and Firebase CLI.
+- Environment/secrets audit (names only).
+- WebSocket timeout analysis: 900 s recommended; the 300 s default would cut 10-minute tutor sessions.
+- Resume runbook and production rollout recommendation in `.agent/STAGING_DEPLOYMENT.md`.
+
+Production changes: NONE. Firebase Hosting deploy: NOT PERFORMED. DNS: NOT CHANGED.

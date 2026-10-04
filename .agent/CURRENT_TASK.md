@@ -8,7 +8,7 @@ Milestone ID:
 
 Milestone Name:
 
-`EXTERNAL DEPLOYMENT`
+`CLOUD RUN STAGING DEPLOYMENT + EXTERNAL ACCEPTANCE` (user prompt label: P6B)
 
 Status:
 
@@ -16,29 +16,21 @@ Status:
 
 Blocker:
 
-External deployment (firebase deploy, Cloud Run deploy, image push, DNS) is not authorized. It needs a separate explicit approval.
+HARD BLOCKER: the Google Cloud SDK (`gcloud`) is not installed and no gcloud credentials exist on this machine. The agent can't discover Cloud Run services, create secrets, deploy `hangulnow-staging`, or read logs. Reusing the Firebase CLI token for Cloud APIs was deliberately not done.
 
 Baseline:
 
-`6d94bad8f30ca9d6405d0767c81080e700966081` (`build: switch production frontend to React Vite`). Pre-cutover rollback target: `3420082c7ea5294f446a02f52432012940689ed8`.
-
-Expected branch:
-
-`migration/react-vite-modular`
+`ff96dced4083646d9a8ae431892f20693511b889` (clean, 0 0). Nothing deployed; no cloud config changed.
 
 ---
 
-## Completed Before This Point
+## Completed (no cloud access needed)
 
-- P7 local/repository cutover: Express, Firebase Hosting config, and the Docker image now serve `frontend/dist`. localhost:3000 and Docker were validated (CUTOVER_READINESS section 9). `preview/` is unchanged.
+- Repository/Firebase discovery: project `hnageul-copilot-dev-918`; production backend `hangul-now-api` in `asia-northeast3` (from `firebase.json`, unverified live).
+- Environment/secrets audit: required `GEMINI_API_KEY`, `FIREBASE_SERVICE_ACCOUNT_KEY` (no ADC fallback), `ADMIN_EMAILS`.
+- WebSocket timeout analysis: use 900 s; the 300 s default cuts 10-minute tutor sessions.
+- Full resume runbook in `.agent/STAGING_DEPLOYMENT.md`.
 
 ## Exact Next Action
 
-None autonomous. On deployment approval:
-
-1. Build the frontend with Node 20.
-2. Deploy to staging.
-3. Re-run the 8B checklist and section 6 step 5 smoke tests.
-4. Promote.
-
-Keep `ADMIN_EMAILS` configured. Rollback is in CUTOVER_READINESS section 7. Do not delete `preview/`; legacy retirement is a later milestone, after stabilization.
+User: install the Google Cloud SDK and run `gcloud auth login` as the project owner. Then the agent resumes at `.agent/STAGING_DEPLOYMENT.md` section 5 step 2 (read-only discovery) before any deploy.

@@ -172,11 +172,11 @@ Milestone ID:
 
 Name:
 
-`EXTERNAL DEPLOYMENT`
+`CLOUD RUN STAGING DEPLOYMENT + EXTERNAL ACCEPTANCE`
 
 Status:
 
-`BLOCKED` — requires a separate explicit approval. Not started.
+`BLOCKED` — staging deployment approved, but the Google Cloud SDK/credentials are unavailable on this machine (see `.agent/STAGING_DEPLOYMENT.md`). Production deployment is still not authorized.
 
 ### Previous: P7 LOCAL/REPOSITORY PRODUCTION CUTOVER (COMPLETE, `6d94bad`)
 
