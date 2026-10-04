@@ -42,11 +42,11 @@ Roadmap Phase 8: verify that every migrated public/admin screen matches legacy, 
 - [x] Git state verified (HEAD 6b9b97b pushed, 0 0)
 - [x] Screen inventory: all legacy screens migrated except deferred `10 Video Class Platform`
 - [x] Cross-app screen parity sweep: 11 screens x en/ko x 1440/390 — all identical except (a) Intro/About footer inside vs outside the labelled wrapper (known P4B DC-wrapper difference; main scroll extents identical), (b) Intro rotating demo-chat timer text, (c) Reading <=659px grid defect → fixed (P6A-FIX, drop non-legacy mobile override; identical at 360/390/500/659/700/859/1024/1440 en+ko)
-- [ ] Network/asset/console sweep
+- [x] Network/asset/console sweep: no sandbox failed requests, 404s, console or page errors across 44 screen runs (legacy-only aborted `{{ }}` placeholder images noted). Cutover gap found and fixed (P6B): document head (title, favicons, apple-touch-icon, manifest; no <html lang>) + byte-identical root icon/manifest files in frontend/public; 12 full-viewport screenshots pixel-identical legacy vs sandbox
 - [x] Auth regression: onboarding required flow (all steps, 4 validation errors, 5-interest cap, local profile, 2 Firestore merge writes, sidebar) identical; signed-in dark sweep of 11 screens identical geometry; tutor restore defect fixed (P6A-FIX2: Firestore restore no longer writes hn-tutor, matching legacy)
-- [ ] API smoke
+- [x] API smoke: 9 HTTP endpoints identical status+body direct vs Vite proxy (validation paths, no AI quota), admin 401 both, /api/live WebSocket handshake OPEN both
 - [ ] Cutover readiness report
 
 ## Exact Next Action
 
-Commit/push the tutor-restore fix, then API smoke and the cutover readiness report.
+Commit/push P6B head parity, then write the cutover readiness report (Phase 9) and stop at READY FOR PRODUCTION CUTOVER.
