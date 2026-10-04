@@ -651,3 +651,45 @@ Known cross-cutting item (deferred to Phase 6 shell):
 Next milestone:
 
 `P2E LISTENING AUDIT`
+
+---
+
+## P2E — Listening Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`MEDIUM/HIGH`: audio lifecycle, external TTS, translation API, AI generation, XP, and globals shared with other domains.
+
+Source map (`preview/index.html`):
+
+- template 1715-1775 (`05 Listening`),
+- CSS 60-68 (player/wave/progress/control + `listeningWaveLive`) and >=860px 468-479,
+- data 3591-3605 (`SCRIPT`, `LQ`, `DICTATIONS`), labels 3965-3966 / 4033-4034,
+- `toggleTranslation` 5505-5553 (`/api/translate`, shared with Conversation `cvTrans`), `generateMaterial` 5557-5588 (`/api/content/generate`, shared with Reading/Speaking), `setStudyLevel` 5590, `submitDictationAt` 5595-5617,
+- audio 6499-6623: `/api/tts` POST `{text, segments, tutorId}` → blob; `X-TTS-Provider` label; AbortController; device `speechSynthesis` fallback with an estimated duration and a 200ms progress timer; pause/resume for both paths; speed via `playbackRate`/`rate`,
+- render 6733-6797 (sources, 48-bar wave, questions, dictation cards), bindings 7391-7408 and 7687-7712.
+
+Findings:
+
+- Generated material replaces the script (`who` from whoEn/whoKo), questions, and dictations. Generated dictations are merged with the static ones, deduplicated by sentence, and capped at 3.
+- Quiz: every click records activity (20/10 XP, repeat-award like Reading). Once a question is answered, the correct option is revealed (green + `정답`), and a wrong pick shows `다시 해 봐요`.
+- Dictation: Enter (not while IME is composing) submits the NFC/whitespace-normalized value. The activity payload is 25/10 XP. Focus moves to the next input.
+- Navigating away (`go`) or selecting a tutor stops and resets listening audio.
+- Shared legacy globals: `studyLevel` (Reading/Listening/Speaking), `trOn` + `studyTrans` + `translationError` (Listening/Speaking/Conversation), plus single-flight `genLoading` and global `genError`.
+- Generation results land in app state even when the user has navigated away.
+
+Strategy (P2F):
+
+- `ListeningPage.jsx`, `listeningData.js`, `listening.css`, and an App `listening` route.
+- App-owned `listeningState` (generated material, answers, dictation inputs/answers, script toggle, speed, playback status/progress). Audio objects live in page refs and are released and reset on unmount (legacy `go()` behavior).
+- Lift `studyLevel` to App and share it with Reading (ReadingPage receives it as props).
+- App-owned translation state (`trOn`, `studyTrans`, `translationError`). The Conversation `cvTrans` branch is added when Conversation migrates.
+- Generation writes to App state so results survive navigation.
+
+Next milestone:
+
+`P2F LISTENING MIGRATION`

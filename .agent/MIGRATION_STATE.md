@@ -94,6 +94,10 @@ React/Vite sandbox:
 - Writing audit (P2C) — COMPLETE
 - Writing migration: syllable/word build, SVG keyboard, guide, sentence tab (P2D, `e562a11`) — COMPLETE
 
+### Listening
+
+- Listening audit (P2E) — COMPLETE
+
 ---
 
 ## 2. Latest Completed Milestone
@@ -164,19 +168,17 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P2E`
+`P2F`
 
 Name:
 
-`LISTENING AUDIT`
+`LISTENING MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
-Next required action:
-
-Source-first audit of legacy Listening (`05 Listening` template ~1716-1777, listening CSS, audio lifecycle, TTS/generation APIs, dictation, activity/learned coupling).
+Scope: see MIGRATION_LOG P2E and CURRENT_TASK.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 

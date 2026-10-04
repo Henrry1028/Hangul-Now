@@ -4,15 +4,15 @@
 
 Milestone ID:
 
-`P2E`
+`P2F`
 
 Milestone Name:
 
-`LISTENING AUDIT`
+`LISTENING MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
@@ -24,34 +24,48 @@ Expected branch:
 
 Expected repository state:
 
-- P2D checkpoint `e562a11` is an ancestor,
-- only `.agent/*` metadata after it,
+- P2D `e562a11` is an ancestor,
+- metadata commits `docs: ... listening audit` follow it,
 - remote ahead is zero.
 
 ---
 
 ## Objective
 
-Source-first audit of legacy Listening before any implementation.
+Migrate Listening with legacy parity. Strategy is in MIGRATION_LOG P2E.
 
-## Audit Questions
+## Expected Files
 
-- template (`05 Listening`, preview/index.html ~1716-1777) and listening CSS,
-- render data, state fields, handlers,
-- audio lifecycle (`listeningAudio`, `stopListeningAudio`, playback speed), TTS endpoints,
-- AI generation (`genListening`), dictation, questions, translation toggle,
-- activity/XP and learned-topic coupling,
-- smallest safe implementation slices.
+- `frontend/src/data/listeningData.js` (new)
+- `frontend/src/pages/ListeningPage.jsx` (new)
+- `frontend/src/styles/listening.css` (new)
+- `frontend/src/App.jsx` (route + listening/translation/studyLevel state)
+- `frontend/src/pages/ReadingPage.jsx` (studyLevel via props)
+
+## Required Validation
+
+- build,
+- static render parity at 390/1440 vs legacy,
+- play (live `/api/tts` once), pause/resume, speed, progress, provider label, device fallback (forced TTS failure), unmount stop,
+- script toggle, translation toggle (+ `/api/translate` for missing lines),
+- quiz reveal/marks/XP, dictation Enter/normalize/focus/XP,
+- generation (mocked) replaces script/questions/dictations and resets state; level change triggers generation; shared studyLevel with Reading,
+- regression, no console/page errors.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [ ] Legacy Listening source located
-- [ ] State/persistence/API/audio coupling mapped
-- [ ] Bounded slices defined
-- [ ] Audit recorded in MIGRATION_LOG
-- [ ] Audit metadata committed and pushed
+- [x] Audit complete (P2E)
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Behavior PASS
+- [ ] Parity PASS
+- [ ] Regression PASS
+- [ ] Diff review PASS
+- [ ] Commit created
+- [ ] Push complete
+- [ ] Post-push divergence `0 0`
 
 ## Exact Next Action
 
-Read the Listening template and its render data, then map audio and API handlers.
+Create listeningData.js (verbatim SCRIPT/LQ/DICTATIONS + labels), listening.css (legacy 60-68 + 468-479), then ListeningPage.jsx and App wiring.
