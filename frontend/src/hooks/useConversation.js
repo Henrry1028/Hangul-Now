@@ -366,9 +366,16 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
         });
-        r.stream = stream;
         const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const ws = new WebSocket(`${proto}://${window.location.host}/api/live`);
+        const isLocal = typeof window !== 'undefined' && (
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1' ||
+          window.location.hostname.endsWith('.local')
+        );
+        const wsHost = isLocal
+          ? window.location.host
+          : (import.meta.env.VITE_LIVE_WS_HOST || 'hangul-now-api-313423647793.asia-northeast3.run.app');
+        const ws = new WebSocket(`${proto}://${wsHost}/api/live`);
         r.ws = ws;
         ws.onopen = () => {
           const st = stateRef.current;

@@ -250,6 +250,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "https://hangulnow-staging-onpsj3o5ta-du.a.run.app",
   "https://hnageul-copilot-dev-918.web.app",
   "https://hnageul-copilot-dev-918.firebaseapp.com",
+  "https://www.hangulnow.com",
+  "https://hangulnow.com",
   "http://localhost:3000",
   "http://localhost:5173"
 ];
