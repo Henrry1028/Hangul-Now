@@ -124,7 +124,7 @@ The expected order is based on current knowledge and may be adjusted after audit
 
 Likely domains:
 
-- Home
+- Home — `COMPLETE` (`3e125c9`)
 - Writing
 - Listening
 - Record

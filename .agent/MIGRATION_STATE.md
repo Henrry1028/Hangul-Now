@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`fdd5946c29037512e8da860a6376719a6c2cc401`
+`3e125c9741eabda803d5a7c509de5336d82374e8`
 
 Checkpoint commit:
 
-`refactor: migrate reading quiz activity slice to React sandbox`
+`refactor: migrate home page to React sandbox`
 
 Repository HEAD rule:
 
@@ -78,6 +78,14 @@ React/Vite sandbox:
 - Reading AI controls and generated passage/translation/glossary/grammar — COMPLETE
 - Reading Quiz and activity/history audit — COMPLETE
 - Reading Quiz + App-owned activity persistence — COMPLETE
+
+### Home
+
+- Home ("02 Today") static screen + navigation (P2A, `3e125c9`) — COMPLETE
+
+### Cross-domain fixes
+
+- Sandbox webfont parity (P1Q, `946a4cc`) — COMPLETE
 
 ---
 
@@ -149,11 +157,11 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P1Q`
+`P2B`
 
 Name:
 
-`SANDBOX WEBFONT PARITY FIX`
+`TUTORS DESKTOP SCREEN SPACING FIX`
 
 Status:
 
@@ -161,14 +169,12 @@ Status:
 
 Bounded scope:
 
-- remove the IBM Plex Mono and Newsreader Google Fonts links from `frontend/index.html` (legacy loads only Pretendard + Gowun Batang, so legacy renders those families with system fallbacks),
-- no CSS/component changes.
+- legacy global screen override (preview/index.html lines 118-131) sets `.tutors-screen` padding `clamp(12px,1.6vh,20px) clamp(16px,2vw,32px)` and gap `clamp(10px,1.4vh,18px)` at >=860px; sandbox Tutors root uses inline 40px/24px,
+- move Tutors root layout into `styles/tutors.css` with the >=860px rule (same pattern as Home/Reading).
 
 Next required action:
 
-Apply the fix, build, compare Mono/Newsreader text metrics with legacy on Intro/About/Tutors/Reading, commit, push.
-
-After P1Q: `P2A HOME AUDIT` (Phase 4).
+Implement, build, compare Tutors with legacy at 1440/390, commit, push. Then `P2C WRITING AUDIT`.
 
 ---
 
@@ -193,7 +199,7 @@ Reading domain: COMPLETE
 Current expected high-level sequence:
 
 1. ~~Finish Reading~~ — COMPLETE
-2. Home
+2. ~~Home~~ — COMPLETE
 3. Writing
 4. Listening
 5. Record

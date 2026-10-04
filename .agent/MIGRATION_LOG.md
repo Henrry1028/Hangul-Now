@@ -441,3 +441,86 @@ Known differences (pre-existing, out of P1P scope):
 Next milestone:
 
 `P1Q SANDBOX WEBFONT PARITY FIX`
+
+---
+
+## P1Q — Sandbox Webfont Parity Fix
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`946a4ccf08dbbeff53cc18779a1d082715b5d4ac`
+
+Finding:
+
+- Legacy loads only Pretendard and Gowun Batang. Its 52 `'IBM Plex Mono'` and 30 `'Newsreader'` declarations render with system fallbacks.
+- The sandbox scaffold (Intro migration `0ce8364`) additionally loaded both families from Google Fonts. This was unrecorded and changed glyph widths and line heights on every migrated page (for example, a Mono Hangul label was 14px tall in legacy vs 16px in the sandbox).
+
+Fix:
+
+- removed the two `<link>` tags from `frontend/index.html`, with no CSS changes.
+
+Validation:
+
+- Node 20 standard minified build PASS,
+- every Mono/Newsreader leaf element on Intro/About/Tutors/Reading compared with legacy: identical at 390px. At 1440px heights match, and width/wrap differences come only from legacy's 240px sidebar shell (Phase 6),
+- `document.fonts` families: Pretendard, Gowun Batang (same as legacy),
+- no console/page errors.
+
+Next milestone:
+
+`P2A HOME AUDIT`
+
+---
+
+## P2A — Home Audit + Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`3e125c9741eabda803d5a7c509de5336d82374e8`
+
+Risk:
+
+`LOW`. Audit and migration were done in one milestone per the risk policy.
+
+Audit findings:
+
+- Legacy template: `preview/index.html` 1438-1578 (`02 Today`). Data comes from `renderVals` (plan 6723-6729, week 6730, nav 7378), labels from 3958-3962 (en) and 4026-4030 (ko), and `planMeta` from 7759.
+- Content is static except for the tutor-dependent chat plan row (`Reply to {tutor.en}` / `{tutor.ko}에게 답장하기`), the `continueChat` label (`dynamicT`, selected tutor name), `showRomanization` (prop, default true), and `lastJiwooTime` (formatted last time of the Jiwoo chat seed, `오전 9:17`).
+- No API calls, no persistence reads or writes, and no auth reads. Tutor entry points call `selectTutor` (state, `hn-tutor`, a Firestore write only for signed-in users, then Chat). This maps to the established sandbox pattern `onSelectTutor(id)` + `onNavigate('chat')`.
+- Preserved quirk: the "continue chat" card labels the selected tutor but shows a Jiwoo avatar and always opens Jiwoo.
+- Home does not consume activity logs, XP, or study dates. The streak (12), week, and level (64%) are static.
+
+Implementation:
+
+- `HomePage.jsx`, `homeData.js`, `home.css`, and an App `home` route (the Intro "level" CTA now reaches Home).
+- Hub character images keep inline transforms with mouseover/mouseout handlers. The global `img[src*="캐릭터_"]` rule (a legacy quirk where the first selector lacks `:hover`) would otherwise force `translateY(-5px) scale(1.03)`.
+- Root layout lives in `.home-screen` with the legacy >=860px padding/gap override.
+- Max-width stays at 1120 until the shell migration (legacy `max-width:1400px !important` only matters inside its sidebar shell).
+
+Validation:
+
+- Node 20 standard minified build PASS,
+- at 390px all 72 leaf elements are identical to legacy (box + computed style),
+- at 1440px and 1180px all computed styles match. Position and wrap differences come only from legacy's 240px sidebar shell (content width 1185/925 vs 1120),
+- hover transforms PASS,
+- navigation targets match legacy for all 11 entry points, and the Reading targets open Reading,
+- Intro/About/Tutors/Reading (+ Quiz) regression PASS, no console/page errors.
+
+Dev-only note: once, Vite cached an empty `home.css` after a non-atomic shell rewrite. Touching the file fixed it. Not a code issue.
+
+Discovered (pre-existing, out of P2A scope):
+
+- Tutors lacks the legacy >=860px screen padding/gap override (sandbox 40px/24px vs legacy 14.4px 28.8px / 12.6px at 1440). Scheduled as P2B.
+- Legacy `go()` calls `window.scrollTo(0,0)` on navigation; the sandbox `handleNavigate` does not. This is shell/navigation behavior, deferred to Phase 6.
+
+Next milestone:
+
+`P2B TUTORS DESKTOP SCREEN SPACING FIX`
