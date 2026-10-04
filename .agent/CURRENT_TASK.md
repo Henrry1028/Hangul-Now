@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P2F`
+`P2G`
 
 Milestone Name:
 
-`LISTENING MIGRATION`
+`RECORD AUDIT`
 
 Status:
 
-`READY_TO_COMMIT`
+`AUDITING`
 
 Baseline migration-code checkpoint:
 
-`e562a11c922e2af0d253d844710e3f9846ff22af`
+`1b8df9fb47463a66b9e749c780495ddbdd9134e1`
 
 Expected branch:
 
@@ -24,48 +24,33 @@ Expected branch:
 
 Expected repository state:
 
-- P2D `e562a11` is an ancestor,
-- metadata commits `docs: ... listening audit` follow it,
+- P2F `1b8df9f` is an ancestor,
+- only `.agent/*` metadata after it,
 - remote ahead is zero.
 
 ---
 
 ## Objective
 
-Migrate Listening with legacy parity. Strategy is in MIGRATION_LOG P2E.
+Source-first audit of legacy Record ("09 My progress") before any implementation.
 
-## Expected Files
+## Audit Questions
 
-- `frontend/src/data/listeningData.js` (new)
-- `frontend/src/pages/ListeningPage.jsx` (new)
-- `frontend/src/styles/listening.css` (new)
-- `frontend/src/App.jsx` (route + listening/translation/studyLevel state)
-- `frontend/src/pages/ReadingPage.jsx` (studyLevel via props)
-
-## Required Validation
-
-- build,
-- static render parity at 390/1440 vs legacy,
-- play (live `/api/tts` once), pause/resume, speed, progress, provider label, device fallback (forced TTS failure), unmount stop,
-- script toggle, translation toggle (+ `/api/translate` for missing lines),
-- quiz reveal/marks/XP, dictation Enter/normalize/focus/XP,
-- generation (mocked) replaces script/questions/dictations and resets state; level change triggers generation; shared studyLevel with Reading,
-- regression, no console/page errors.
+- template (preview/index.html ~2476-2991), CSS (study-cal/rank/etc. ~489+),
+- render data (activity tabs, filters, calendar, analytics, ranking, weekly review),
+- consumption of App-owned activity logs / XP / study dates / minutes,
+- APIs (weekly review, PDF/TTS?), auth/Firebase coupling,
+- smallest safe implementation slices.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Audit complete (P2E)
-- [x] Implementation complete
-- [x] Build PASS (Node 20; Vite >500kB chunk advisory only)
-- [x] Behavior PASS (mocked scenarios identical to legacy; live /api/tts Gemini multi-speaker PASS)
-- [x] Parity PASS (390: 111/111 identical; 1440: styles/heights identical, 3rd dictation wraps from shell width)
-- [x] Regression PASS
-- [x] Diff review PASS
-- [ ] Commit created
-- [ ] Push complete
-- [ ] Post-push divergence `0 0`
+- [ ] Legacy Record source located
+- [ ] State/persistence/API coupling mapped
+- [ ] Bounded slices defined
+- [ ] Audit recorded in MIGRATION_LOG
+- [ ] Audit metadata committed and pushed
 
 ## Exact Next Action
 
-Create listeningData.js (verbatim SCRIPT/LQ/DICTATIONS + labels), listening.css (legacy 60-68 + 468-479), then ListeningPage.jsx and App wiring.
+Read the Record template and its renderVals data.

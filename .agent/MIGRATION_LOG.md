@@ -693,3 +693,40 @@ Strategy (P2F):
 Next milestone:
 
 `P2F LISTENING MIGRATION`
+
+---
+
+## P2F — Listening Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`1b8df9fb47463a66b9e749c780495ddbdd9134e1`
+
+Implementation:
+
+- `ListeningPage.jsx` ports the legacy logic 1:1: `/api/tts` playback with AbortController, object URL, speed, progress, pause/resume, and device speechSynthesis fallback; `toggleTranslation` (Listening branch); `generateMaterial('listening')` with one network retry; `submitDictationAt`; quiz.
+- `listeningData.js`: `SCRIPT`/`LQ`/`DICTATIONS` verbatim, plus labels and `INITIAL_LISTENING_STATE`. `listening.css` is legacy 60-68 + 468-479 verbatim, plus the shared >=860px screen override.
+- App-owned `listeningState`, `translationState` (`trOn`, `studyTrans`, `translationError`, `cvTrans`, `cvTransLoading`), and `studyLevel` (now shared with Reading through props). The App merge-updaters accept functional patches, so async audio/fetch callbacks merge correctly.
+- Playback is released and reset on unmount (legacy `go()`).
+
+Validation:
+
+- Node 20 build PASS (Vite >500kB chunk advisory warning only),
+- 390: 111/111 elements identical to legacy (boxes + styles). 1440: styles/heights identical, except the third dictation card wraps differently because the legacy card is 321px vs 295px from the shell width,
+- mocked scenario run on both apps was identical (whitespace-insensitive text): quiz wrong→right reveal and marks, dictation wrong/correct/NFC+whitespace normalization, focus advance, activity payloads (10/20/25 XP), script toggle, static translation with 0 `/api/translate` calls, speed buttons, `/api/tts` request body (text + 5 segments + tutorId), multi-speaker provider label, end/replay, TTS 500 → device fallback, level change → generation (`level: intermediate`) with replaced script/questions and merged dictations, translation of generated lines (7 lines, identical order),
+- wait-based pause/resume test identical (one TTS request, resume without refetch, replay at 100%),
+- live `/api/tts` from the sandbox: 200, `Gemini-gemini-3.8-flash-tts-MultiSpeaker`, multi-speaker, playback + pause PASS,
+- regression PASS: Intro/About/Tutors/Home/Writing (physical key)/Reading (shared level → generation intermediate), no console/page errors.
+
+Not observable until the Phase 6 shell exists:
+
+- stop-on-leave, and the shared `studyLevel`/translation across pages (the sandbox has no navigation out of Listening).
+- Conversation's `cvTrans` branch of `toggleTranslation` is added when Conversation migrates.
+
+Next milestone:
+
+`P2G RECORD AUDIT`

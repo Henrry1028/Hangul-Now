@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`e562a11c922e2af0d253d844710e3f9846ff22af`
+`1b8df9fb47463a66b9e749c780495ddbdd9134e1`
 
 Checkpoint commit:
 
-`refactor: migrate writing page to React sandbox`
+`refactor: migrate listening page to React sandbox`
 
 Repository HEAD rule:
 
@@ -97,6 +97,7 @@ React/Vite sandbox:
 ### Listening
 
 - Listening audit (P2E) — COMPLETE
+- Listening migration: player/TTS/fallback, script, translation, generation, quiz, dictation (P2F, `1b8df9f`) — COMPLETE
 
 ---
 
@@ -168,17 +169,19 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P2F`
+`P2G`
 
 Name:
 
-`LISTENING MIGRATION`
+`RECORD AUDIT`
 
 Status:
 
-`IN_PROGRESS`
+`AUDITING`
 
-Scope: see MIGRATION_LOG P2E and CURRENT_TASK.
+Next required action:
+
+Source-first audit of legacy Record (`09 My progress`, preview/index.html ~2476-2991): activity/analytics/ranking tabs, calendar, logs filters, weekly review, APIs, and coupling to App-owned activity state.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 
@@ -216,7 +219,7 @@ Current expected high-level sequence:
 1. ~~Finish Reading~~ — COMPLETE
 2. ~~Home~~ — COMPLETE
 3. ~~Writing~~ — COMPLETE
-4. Listening
+4. ~~Listening~~ — COMPLETE
 5. Record
 6. Speaking
 7. Chat
@@ -252,7 +255,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`40–45%`
+`45–50%`
 
 This is a workload estimate, not a completion guarantee.
 
