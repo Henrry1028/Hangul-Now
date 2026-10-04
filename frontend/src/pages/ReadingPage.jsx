@@ -8,41 +8,14 @@ import {
   DEFAULT_READING_TRANSLATIONS,
   READING_TEXT
 } from '../data/readingData.js';
+import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
 import { TUTORS } from '../data/tutorsData.js';
 
 const FULL_READING_TEXT = DEFAULT_READING_PARAGRAPHS
   .map((paragraph) => paragraph.map((segment) => (typeof segment === 'string' ? segment : segment[0])).join(''))
   .join(' ');
 
-const LEARNED_STORAGE_KEY = 'hn-learned';
 const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
-
-function loadLearnedTopics(type) {
-  try {
-    return JSON.parse(window.localStorage.getItem(LEARNED_STORAGE_KEY) || '{}')[type] || {};
-  } catch {
-    return {};
-  }
-}
-
-function recordLearnedTopic(type, key, label) {
-  if (!key) return;
-  try {
-    const all = JSON.parse(window.localStorage.getItem(LEARNED_STORAGE_KEY) || '{}');
-    const learned = all[type] || {};
-    const previous = learned[key];
-    learned[key] = {
-      label: label || previous?.label || key,
-      firstAt: previous?.firstAt || Date.now(),
-      lastAt: Date.now(),
-      count: (previous?.count || 0) + 1
-    };
-    all[type] = learned;
-    window.localStorage.setItem(LEARNED_STORAGE_KEY, JSON.stringify(all));
-  } catch {
-    // Match the legacy client: storage failures do not block generated material.
-  }
-}
 
 function splitGeneratedParagraph(text, words) {
   const source = String(text || '');

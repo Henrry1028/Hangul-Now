@@ -4,7 +4,9 @@ import AboutPage from './pages/AboutPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import TutorsPage from './pages/TutorsPage.jsx';
 import ReadingPage from './pages/ReadingPage.jsx';
+import WritingPage from './pages/WritingPage.jsx';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
+import { INITIAL_WRITING_STATE } from './data/writingData.js';
 import './styles/intro.css';
 import './styles/reading.css';
 
@@ -13,10 +15,11 @@ function App() {
   const [selectedTutorId, setSelectedTutorId] = useState('jiwoo');
   const [activityState, setActivityState] = useState(loadActivityState);
   const activityRef = useRef(activityState);
+  const [writingState, setWritingState] = useState(INITIAL_WRITING_STATE);
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
-    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading') {
+    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing') {
       setCurrentPage(target);
     }
   };
@@ -61,6 +64,15 @@ function App() {
         <ReadingPage
           lang="ko"
           selectedTutorId={selectedTutorId}
+          onRecordActivity={handleRecordActivity}
+        />
+      )}
+      {currentPage === 'writing' && (
+        <WritingPage
+          lang="ko"
+          selectedTutorId={selectedTutorId}
+          writingState={writingState}
+          onWritingStateChange={setWritingState}
           onRecordActivity={handleRecordActivity}
         />
       )}

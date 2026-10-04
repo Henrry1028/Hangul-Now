@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`IN_PROGRESS`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -60,12 +60,12 @@ Migrate the full Writing screen (build syllable, build word, write sentences) wi
 
 - [x] Git state reverified
 - [x] Audit complete (P2C)
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Behavior PASS
-- [ ] Parity PASS
-- [ ] Regression PASS
-- [ ] Diff review PASS
+- [x] Implementation complete
+- [x] Build PASS (Node 20)
+- [x] Behavior PASS (two scripted scenarios identical to legacy at every checkpoint)
+- [x] Parity PASS (359/359 elements, 0 style diffs; 390 boxes identical; desktop vertical identical, widths differ only by shell width)
+- [x] Regression PASS
+- [x] Diff review PASS
 - [ ] Commit created
 - [ ] Push complete
 - [ ] Post-push divergence `0 0`
