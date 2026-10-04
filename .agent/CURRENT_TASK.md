@@ -64,3 +64,20 @@ None. Remaining candidates (each its own milestone):
 Rollback (if ever needed):
 
 `gcloud run services update-traffic hangul-now-api --to-revisions hangul-now-api-00001-siy=100 --region asia-northeast3 --project hnageul-copilot-dev-918`
+
+## New Observation (2026-10-04, after H1 close) — needs a user decision
+
+Someone other than this agent made changes that are outside H1:
+
+1. **Firebase Hosting was deployed** (live channel released 2026-10-04 22:01:48 KST; `.firebase/` cache present). `https://hnageul-copilot-dev-918.web.app` now serves the v1.1.0 build (`index-B4GqU40J.js`), and its `/api/**` rewrite reaches Cloud Run `hangul-now-api`. Effects measured:
+   - The `/api/live` WebSocket **fails** through web.app, so live conversation is broken for web.app visitors (Hosting can't proxy WebSockets).
+   - The **rate limit is bypassed** through web.app: Cloud Run sees rotating Firebase Hosting proxy IPs (`66.249.82.x`), so `trust proxy 1` keys on the proxy. 42/42 `translate` requests returned 200 (direct Cloud Run caps at 40/min per client).
+2. **Uncommitted work in progress:** `frontend/src/components/SitePasswordGate.jsx` (new) wraps `App.jsx` in a client-side password screen. The password is hard-coded in the JS bundle, so anyone can read it; it hides the UI only and does not protect any API. It is not in any commit or deployment (web.app/Cloud Run bundles don't contain it).
+
+Not touched by this agent. Options:
+
+- If web.app is not intended, disable Hosting (`firebase hosting:disable --project hnageul-copilot-dev-918`, reversible).
+- If it is intended:
+  - make the rate-limit key read the real client IP for Hosting-proxied requests (needs a non-spoofable Hosting signal);
+  - point the frontend WebSocket at the Cloud Run origin.
+- For real access restriction, use server-side checks (Cloud Run IAM/IAP or auth on the API), not a client-side password.
