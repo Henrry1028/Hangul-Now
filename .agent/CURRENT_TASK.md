@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P3B`
+`P3C`
 
 Milestone Name:
 
-`SPEAKING MIGRATION`
+`CHAT AUDIT`
 
 Status:
 
-`READY_TO_COMMIT`
+`AUDITING`
 
 Baseline migration-code checkpoint:
 
-`7e947f0cd4b4c8b03bc81c769cc58b7e5822ba6c`
+`e250f9a651544d7e5f041b7a7c02580afe8918d8`
 
 Expected branch:
 
@@ -26,32 +26,26 @@ Expected branch:
 
 ## Objective
 
-Migrate Speaking with parity, plus the shared translation toggle hook. Strategy is in MIGRATION_LOG P3A.
+Source-first audit of legacy Chat before implementation.
 
-## Expected Files
+## Audit Questions
 
-- `frontend/src/data/speakingData.js`, `frontend/src/pages/SpeakingPage.jsx`, `frontend/src/styles/speaking.css` (new)
-- `frontend/src/hooks/useTranslationToggle.js`, `frontend/src/hooks/useTutorSpeech.js` (new)
-- `frontend/src/pages/ListeningPage.jsx` (uses the shared toggle)
-- `frontend/src/App.jsx`
-
-## Required Validation
-
-- build, 390/1440 parity vs legacy (idle and done states),
-- record toggle/next/activity XP, native TTS request + fallback, generation (mocked), translation toggle from Speaking (incl. Listening-need fetch), Listening regression,
-- regression, no console/page errors.
+- template (`04 Chat`, preview/index.html ~1626-1713) and chat CSS,
+- per-tutor `msgs` (SEED), unread, typing dots, scroll-to-bottom,
+- `/api/chat`, `/api/correction`, chat `/api/translate` (`translateMissingChatMessages`), `trAll`/`trOpen`,
+- tutor session timer (`TUTOR_SESSION_SECONDS`), session end/report (`/api/session/complete-and-review`?),
+- selectTutor Firestore write, auth/user profile coupling, persistence (`hn-msgs`?),
+- slices.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Audit complete (P3A)
-- [x] Implementation complete
-- [x] Build PASS
-- [x] Behavior PASS (identical to legacy; shared translation toggle re-verified from Listening)
-- [x] Parity PASS (idle/done identical at 390 and 1440)
-- [x] Regression PASS
-- [ ] Commit/push
+- [ ] Legacy Chat source located
+- [ ] Coupling mapped
+- [ ] Bounded slices defined
+- [ ] Audit recorded in MIGRATION_LOG
+- [ ] Audit metadata committed and pushed
 
 ## Exact Next Action
 
-Generate speakingData.js, then hooks, SpeakingPage.jsx, and App wiring.
+Read the Chat template and its handlers (sendMessage, corrections, translation, session timer).

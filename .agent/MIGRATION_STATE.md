@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`7e947f0cd4b4c8b03bc81c769cc58b7e5822ba6c`
+`e250f9a651544d7e5f041b7a7c02580afe8918d8`
 
 Checkpoint commit:
 
-`refactor: migrate record page to React sandbox`
+`refactor: migrate speaking page to React sandbox`
 
 Repository HEAD rule:
 
@@ -104,6 +104,10 @@ React/Vite sandbox:
 - Record audit (P2G) — COMPLETE
 - Record migration: stats, weekly audio review, calendar/analytics, ranking (P2H, `7e947f0`) — COMPLETE
 
+### Speaking
+
+- Speaking audit (P3A) and migration incl. shared translation toggle (P3B, `e250f9a`) — COMPLETE
+
 ---
 
 ## 2. Latest Completed Milestone
@@ -174,17 +178,19 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P3B`
+`P3C`
 
 Name:
 
-`SPEAKING MIGRATION`
+`CHAT AUDIT`
 
 Status:
 
-`IN_PROGRESS`
+`AUDITING`
 
-Scope: see MIGRATION_LOG P3A and CURRENT_TASK.
+Next required action:
+
+Source-first audit of legacy Chat (`04 Chat`, preview/index.html ~1627-1713): message state per tutor, `/api/chat`, `/api/correction`, chat translation, unread, typing, tutor session timer, Firestore/auth coupling.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 
@@ -224,7 +230,7 @@ Current expected high-level sequence:
 3. ~~Writing~~ — COMPLETE
 4. ~~Listening~~ — COMPLETE
 5. ~~Record~~ — COMPLETE
-6. Speaking
+6. ~~Speaking~~ — COMPLETE
 7. Chat
 8. Conversation
 9. Global Header / navigation shell
@@ -258,7 +264,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`50–55%`
+`55–60%`
 
 This is a workload estimate, not a completion guarantee.
 

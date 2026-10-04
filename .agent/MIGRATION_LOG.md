@@ -837,3 +837,33 @@ Strategy (P3B):
 Next milestone:
 
 `P3B SPEAKING MIGRATION`
+
+---
+
+## P3B — Speaking Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`e250f9a651544d7e5f041b7a7c02580afe8918d8`
+
+Implementation:
+
+- `SpeakingPage.jsx`, `speakingData.js` (`SENTS` verbatim, labels, `INITIAL_SPEAKING_STATE`), `speaking.css` (`pulse` keyframes, shared >=860px override + `max-width: 920px`), App-owned `speakingState`.
+- `hooks/useTranslationToggle.js`: the legacy app-wide `toggleTranslation` (Listening branch), now shared by Listening and Speaking. ListeningPage receives it as a prop.
+- `hooks/useTutorSpeech.js`: 1:1 legacy `playTutorSpeech`/`stopTutorSpeech`/`speakWithDeviceVoice` (no visual state). Stops on unmount; legacy keeps short tutor speech playing after navigation (minor, accepted).
+
+Validation:
+
+- Node 20 build PASS,
+- idle and done states identical to legacy at 390 (25/31 elements) and at 1440 (the Speaking max-width 920 sits inside the legacy shell, so even positions match),
+- behavior identical: record → stop activity payload (`발음 코칭`, 25 XP, `발음 86점`), native TTS body `{text, tutorId}`, translation line, next sentence, level → generation (`advanced`) with replaced sentence, weak marks, generated tip, and `{tutor} 튜터의 팁`,
+- Listening translation regression via the shared hook: 0 fetches for static content, generated lines fetched in legacy order,
+- no console/page errors.
+
+Next milestone:
+
+`P3C CHAT AUDIT`

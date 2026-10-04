@@ -306,7 +306,7 @@ Do not interpret backend capability as permission to expose the feature.
 
 Current estimated migration workload completion:
 
-`50–55%`
+`55–60%`
 
 This estimate may change after audits.
 
