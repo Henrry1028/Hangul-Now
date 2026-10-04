@@ -1272,3 +1272,35 @@ Validation:
 Result:
 
 `READY FOR PRODUCTION CUTOVER`. See `.agent/CUTOVER_READINESS.md`. Cutover is not performed and needs explicit approval.
+
+---
+
+## P6C — Final Pre-Cutover Gate (Admin Video Class Parity + Real Auth Check)
+
+Status:
+
+`COMPLETE`. Result: `READY FOR MANUAL AUTH CHECK`.
+
+Commit:
+
+`6ab4395cad21d1b0a7832a821ea5803d946fdef9`: `fix: preserve admin video class parity before cutover`
+
+Audit:
+
+- Legacy exposes a functional Video Class preview (8 APIs, 5 mutating, backed by an in-memory mock with no Google Calendar call) on the client admin UI flag only. `?admin=1` grants that flag to anyone, and the email heuristic grants it to any matching Google account.
+- The legacy template runtime (`dc-runtime.js` `resolve`) supports only paths, literals, `!`, equality, and parentheses. Ternaries, `&&`, and arrow handlers resolve to undefined, and the React port reproduces the rendered result.
+
+Implementation:
+
+- `useVideoClass`: verbatim controller plus the access gate (legacy flag AND signed-in AND `POST /api/admin/check` 200 `isAdmin:true`, only attempted when the flag is set).
+- `VideoClassPage` + `VideoClassModals`: legacy markup and styles minus the declarations legacy drops.
+- `App`: guarded route, header load, sidebar/pill no-load quirk, redirect to Home on access loss. `AppShell`: header link, sidebar group, pill item.
+- Not changed: server, auth middleware, Admin console gating, cutover files.
+
+Validation: see `.agent/CUTOVER_READINESS.md` section 8A.
+
+- Node 20.20.2 build PASS (483.84 kB JS). Host Node 24 `npm run build` hits the known silent exit after transform.
+- 88-run cross-app regression: only the known Intro/About wrapper difference.
+- No Video Class or Admin leak for guests or normal users; no page/console errors other than expected 401s for stub tokens.
+
+Real Google sign-in: MANUAL TEST REQUIRED. No test account; nothing faked. Checklist in `.agent/CUTOVER_READINESS.md` section 8B.

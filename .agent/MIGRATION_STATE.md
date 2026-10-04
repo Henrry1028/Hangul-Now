@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`d67e4e8b38e8780db06b57eba9ea9d87a99a367a`
+`6ab4395cad21d1b0a7832a821ea5803d946fdef9`
 
 Checkpoint commit:
 
-`fix: match legacy document head and root icons`
+`fix: preserve admin video class parity before cutover`
 
 Repository HEAD rule:
 
@@ -35,7 +35,7 @@ Working tree at the checkpoint:
 
 Production cutover:
 
-`READY FOR PRODUCTION CUTOVER — awaiting explicit approval (see .agent/CUTOVER_READINESS.md)`
+`READY FOR MANUAL AUTH CHECK` — then explicit cutover approval (see .agent/CUTOVER_READINESS.md sections 6 and 8)
 
 Legacy source of truth:
 
@@ -132,6 +132,7 @@ Phase 6 (Global shell): COMPLETE
 ### Final integration
 
 - P6A final regression with fixes `9b8f4c5` (Reading narrow grid), `17df31a` (tutor restore storage), P6B `d67e4e8` (document head/icons) — COMPLETE
+- P6C admin-only Video Class preview parity (`6ab4395`) — COMPLETE; real Google sign-in — MANUAL TEST REQUIRED
 
 ---
 
@@ -139,23 +140,23 @@ Phase 6 (Global shell): COMPLETE
 
 Milestone:
 
-`P6A FINAL INTEGRATION REGRESSION`
+`P6C FINAL PRE-CUTOVER GATE`
 
 Status:
 
-`COMPLETE`
+`COMPLETE` (manual real-auth check pending)
 
 Commit:
 
-`d67e4e8b38e8780db06b57eba9ea9d87a99a367a`
+`6ab4395cad21d1b0a7832a821ea5803d946fdef9`
 
 Commit message:
 
-`fix: match legacy document head and root icons`
+`fix: preserve admin video class parity before cutover`
 
 Runtime acceptance:
 
-`PASS` (see MIGRATION_LOG P6A)
+`PASS` (see MIGRATION_LOG P6C)
 
 ---
 
@@ -173,11 +174,11 @@ Status:
 
 `BLOCKED` — requires explicit user approval (AGENTS.md sections 2 and 18). Not started.
 
-### Previous: P6A FINAL INTEGRATION REGRESSION (COMPLETE, `d67e4e8`)
+### Previous: P6C FINAL PRE-CUTOVER GATE (COMPLETE, `6ab4395`; manual auth check pending)
 
 Next required action:
 
-Wait for explicit cutover approval, then follow `.agent/CUTOVER_READINESS.md` section 6. Separately, a product decision is needed on admin access to the deferred Video Class preview after cutover.
+The user runs the real Google sign-in checklist (`.agent/CUTOVER_READINESS.md` section 8B). After it passes and explicit approval is given, follow section 6.
 
 ---
 
@@ -212,7 +213,7 @@ Current expected high-level sequence:
 9. ~~Global Header / navigation shell~~ — COMPLETE (layout/navigation + auth/profile)
 10. ~~Admin~~ — COMPLETE
 11. ~~Final parity and regression~~ — COMPLETE
-12. ~~Cutover readiness~~ — READY FOR PRODUCTION CUTOVER
+12. Cutover readiness — READY FOR MANUAL AUTH CHECK (admin Video Class parity done)
 13. Production cutover — requires explicit approval
 14. Legacy retirement — only after successful cutover
 
