@@ -1488,3 +1488,11 @@ Verification:
 - Rate-limit IP keying proven on Cloud Run (spoofed XFF stays limited; a second egress IP gets its own bucket).
 - Playwright 6/6 ×3 environments; Vitest 11/11; ESLint 0 errors.
 - Production logs: 0 5xx, 0 ERROR.
+
+### H1 — closed
+
+- User confirmed the production admin view on `00003-cis`.
+- Budget alert created: `HangulNow monthly (Cloud Run + Gemini)` (budget `b6835b68-b314-481f-978e-39adfe0274ae`) on billing account `01CF5F-1AAF28-0B00D3` (KRW): **₩140,000/month** (≈ $100). Covers both `hnageul-copilot-dev-918` (Cloud Run/Build/Firestore) and `gen-lang-client-0898376857` (the project that owns and bills the Gemini API key). Alerts at 50/90/100% of actual spend plus 100% of forecasted spend, emailed to the billing account admins.
+- Secret-bearing zips deleted by the user (verified).
+
+Next candidates: WebSocket `/api/live` identity, review/audio-review owner checks, then items 10–12.

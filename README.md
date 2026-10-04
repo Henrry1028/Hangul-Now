@@ -14,6 +14,7 @@
 | 구성 | Cloud Run 단일 서비스(`hangul-now-api`, `asia-northeast3`)가 React 빌드 + Express API + WebSocket을 같은 출처로 서빙 |
 | 운영 리비전 | 트래픽이 검증된 리비전에 **고정**되어 있음 (자동 전환 없음) |
 | Firebase Hosting / 커스텀 도메인 | 사용하지 않음 |
+| 비용 알림 | 결제 계정 예산 ₩140,000/월 (앱 프로젝트 + Gemini 키 프로젝트 `gen-lang-client-0898376857`), 50/90/100%·예상 100%에 이메일 |
 
 배포 기록과 롤백 절차: `.agent/PRODUCTION_LAUNCH.md`, `.agent/STAGING_DEPLOYMENT.md`, `.agent/CUTOVER_READINESS.md`.
 

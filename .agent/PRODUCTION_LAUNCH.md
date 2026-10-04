@@ -252,3 +252,9 @@ Rollback (instant, keeps everything for diagnosis):
 `gcloud run services update-traffic hangul-now-api --to-revisions hangul-now-api-00001-siy=100 --region asia-northeast3 --project hnageul-copilot-dev-918`
 
 Note: rolling back the app does **not** roll back the Firestore rules (keep them; the old app only uses its own `users/{uid}`, which the rules allow).
+
+### v1.1.0 follow-up (user-confirmed)
+
+- The real admin login on production (`00003-cis`) shows the admin menu and Video Class: **PASS**.
+- Cost guard: `HangulNow monthly (Cloud Run + Gemini)` (budget `b6835b68-b314-481f-978e-39adfe0274ae`) on billing account `01CF5F-1AAF28-0B00D3` (KRW): **₩140,000/month** (≈ $100). Covers both `hnageul-copilot-dev-918` (Cloud Run/Build/Firestore) and `gen-lang-client-0898376857` (the project that owns and bills the Gemini API key). Alerts at 50/90/100% of actual spend plus 100% of forecasted spend, emailed to the billing account admins.
+- The user deleted both local zips that contained the real `.env`. Keys were not rotated (rotate if those archives were ever shared).
