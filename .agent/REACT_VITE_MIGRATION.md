@@ -127,7 +127,9 @@ Likely domains:
 - Home — `COMPLETE` (`3e125c9`)
 - Writing — `COMPLETE` (`e562a11`)
 - Listening — `COMPLETE` (`1b8df9f`)
-- Record
+- Record — `COMPLETE` (`7e947f0`)
+
+Phase 4 status: `COMPLETE`
 
 For each:
 
@@ -304,7 +306,7 @@ Do not interpret backend capability as permission to expose the feature.
 
 Current estimated migration workload completion:
 
-`45–50%`
+`50–55%`
 
 This estimate may change after audits.
 

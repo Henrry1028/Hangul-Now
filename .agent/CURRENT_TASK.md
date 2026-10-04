@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P2H`
+`P3A`
 
 Milestone Name:
 
-`RECORD MIGRATION`
+`SPEAKING AUDIT`
 
 Status:
 
-`READY_TO_COMMIT`
+`AUDITING`
 
 Baseline migration-code checkpoint:
 
-`1b8df9fb47463a66b9e749c780495ddbdd9134e1`
+`7e947f0cd4b4c8b03bc81c769cc58b7e5822ba6c`
 
 Expected branch:
 
@@ -24,47 +24,33 @@ Expected branch:
 
 Expected repository state:
 
-- P2F `1b8df9f` is an ancestor,
-- metadata commits (`docs: ... record audit`) follow it,
+- P2H `7e947f0` is an ancestor,
+- only `.agent/*` metadata after it,
 - remote ahead is zero.
 
 ---
 
 ## Objective
 
-Migrate Record ("09 My progress") with legacy parity. Strategy is in MIGRATION_LOG P2G.
+Source-first audit of legacy Speaking before implementation.
 
-## Expected Files
+## Audit Questions
 
-- `frontend/src/data/recordData.js` (new)
-- `frontend/src/pages/RecordPage.jsx` (new)
-- `frontend/src/styles/record.css` (new)
-- `frontend/src/App.jsx` (record route, recordState, audio-review controller)
-
-## Required Validation
-
-- build,
-- 390/1440 parity for all 3 tabs vs legacy (same activity storage),
-- calendar month nav / today / select + studied/flame cells from `hn-study-dates`,
-- stats/levels from `hn-user-xp`, log count,
-- audio review play/pause/seek/click-seek/speed/like/script/download/regenerate (alert),
-- rank toggle,
-- regression, no unexpected console/page errors.
+- template (`08 Speaking`, preview/index.html ~2145-2176) and CSS,
+- recording lifecycle (getUserMedia/MediaRecorder?), scoring (simulated vs API),
+- TTS (native sentence), generation (`kind: speaking`), shared `studyLevel`/`trOn`,
+- activity/XP coupling,
+- slices.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Audit complete (P2G)
-- [x] Implementation complete
-- [x] Build PASS (Node 20)
-- [x] Behavior PASS (calendar/rank/seek/speed/like/script/download identical; play/pause timing identical; regenerate + alert)
-- [x] Parity PASS (3 tabs: 390 identical; 1440 vertical identical, widths shell-only)
-- [x] Regression PASS
-- [x] Diff review PASS
-- [ ] Commit created
-- [ ] Push complete
-- [ ] Post-push divergence `0 0`
+- [ ] Legacy Speaking source located
+- [ ] Coupling mapped
+- [ ] Bounded slices defined
+- [ ] Audit recorded in MIGRATION_LOG
+- [ ] Audit metadata committed and pushed
 
 ## Exact Next Action
 
-Generate recordData.js and record.css from legacy, then RecordPage.jsx and App wiring.
+Read the Speaking template and its handlers.

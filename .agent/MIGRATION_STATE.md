@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`1b8df9fb47463a66b9e749c780495ddbdd9134e1`
+`7e947f0cd4b4c8b03bc81c769cc58b7e5822ba6c`
 
 Checkpoint commit:
 
-`refactor: migrate listening page to React sandbox`
+`refactor: migrate record page to React sandbox`
 
 Repository HEAD rule:
 
@@ -99,6 +99,11 @@ React/Vite sandbox:
 - Listening audit (P2E) — COMPLETE
 - Listening migration: player/TTS/fallback, script, translation, generation, quiz, dictation (P2F, `1b8df9f`) — COMPLETE
 
+### Record
+
+- Record audit (P2G) — COMPLETE
+- Record migration: stats, weekly audio review, calendar/analytics, ranking (P2H, `7e947f0`) — COMPLETE
+
 ---
 
 ## 2. Latest Completed Milestone
@@ -169,17 +174,19 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P2H`
+`P3A`
 
 Name:
 
-`RECORD MIGRATION`
+`SPEAKING AUDIT`
 
 Status:
 
-`IN_PROGRESS`
+`AUDITING`
 
-Scope: see MIGRATION_LOG P2G and CURRENT_TASK.
+Next required action:
+
+Source-first audit of legacy Speaking (`08 Speaking`, preview/index.html ~2145-2176): microphone/recording lifecycle, pronunciation scoring APIs, TTS, generation, translation/studyLevel sharing, activity coupling.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 
@@ -218,7 +225,7 @@ Current expected high-level sequence:
 2. ~~Home~~ — COMPLETE
 3. ~~Writing~~ — COMPLETE
 4. ~~Listening~~ — COMPLETE
-5. Record
+5. ~~Record~~ — COMPLETE
 6. Speaking
 7. Chat
 8. Conversation
@@ -253,7 +260,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`45–50%`
+`50–55%`
 
 This is a workload estimate, not a completion guarantee.
 

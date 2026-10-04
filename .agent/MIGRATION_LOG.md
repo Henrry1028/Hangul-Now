@@ -768,3 +768,41 @@ Strategy (P2H):
 Next milestone:
 
 `P2H RECORD MIGRATION`
+
+---
+
+## P2H — Record Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`7e947f0cd4b4c8b03bc81c769cc58b7e5822ba6c`
+
+Implementation:
+
+- `RecordPage.jsx`, `recordData.js` (`COLORS`/`WEEK`/`DAYS`/`WD`/`MON`/`WEEKLY_REVIEW_SCRIPT_KO` verbatim + labels + `INITIAL_RECORD_STATE`), `record.css` (legacy 489-529 verbatim + the shared >=860px override), `hooks/useAudioReview.js`.
+- App-owned `recordState` and audio-review controller (timer/speech at App level), so playback continues after leaving Record (legacy).
+- Stats/levels read the App activity state (`activityLogs`, `userXp`, `userTotalMins`, `studyDates`).
+
+Legacy quirks reproduced (verified in the legacy DOM):
+
+- The legacy template engine renders `{{ a ? b : c }}` as empty: calendar cells never get `is-other-month`/`is-studied`/`is-today`/`is-selected`, the date-briefing text is empty, and the play button has no title. 🔥 flames (`sc-if`) do render.
+- The selected-date weekday indexes the Monday-first `DAYS` with `getDay()` (e.g. 9/27 → 월, 9/9 → 목).
+- Rank toggle styles are static. Regenerate keeps any running timer/speech and shows a blocking `alert()`. `fadeIn` keyframe is undefined.
+
+Validation:
+
+- Node 20 build PASS,
+- all three tabs: 390 → 43/178/104 elements identical to legacy (boxes + styles). 1440 → styles/heights/vertical positions identical, widths differ only by shell width,
+- behavior identical to legacy: calendar select + prev/next month, rank toggle, ±10s seek, speed cycle, like, script accordion, download filename `26-09-27 Hangul Weekly Review_Script.txt`, play/pause timing incl. 1.25× restart (00:00 → 00:02 → pause 00:02 → 00:04),
+- regenerate: time reset after 1.5s, alert message identical,
+- regression PASS across Intro/About/Tutors/Home/Listening (dictation XP)/Writing/Reading/Record, no console/page errors.
+
+Phase 4 (Home, Writing, Listening, Record): COMPLETE.
+
+Next milestone:
+
+`P3A SPEAKING AUDIT` (Phase 5 high-coupling domains: Speaking, Chat, Conversation)
