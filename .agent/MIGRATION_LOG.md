@@ -902,3 +902,46 @@ Strategy (P3D):
 Next milestone:
 
 `P3D CHAT MIGRATION`
+
+---
+
+## P3D — Chat Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`423c3abec2c04881c1ee827a5834e7e446660dcc`
+
+Implementation:
+
+- `ChatPage.jsx`, `chatData.js` (`TODAY`/`SEED`/`REPLIES`/`QUICK` verbatim, labels, `fmtDate`, `nowHM`, `createInitialChatState`), `chat.css` (`dot` keyframes + height), and `hooks/useChat.js` (App-level controller: `sendText` incl. mock mode, `requestInlineCorrection`, `translateMissingChatMessages` with batches/guard/chained retry, `toggleChatTranslations`, per-message toggle, `onTutorSelected`).
+- `handleSelectTutor` now applies legacy `selectTutor`'s chat effects (clear unread, reset error, translate if `trAll`).
+
+Legacy quirks preserved:
+
+- Chat activity titles always use "지우" (raw TUTORS entries have no `name`).
+- Correction `userId` is null (guest sandbox; signed-in uid arrives with the shell/auth migration).
+
+Parity:
+
+- Legacy `chatH` is nominally calc(100vh-122px/69px), but its `flex:1` inside the legacy shell yields an effective 100vh-127.5px (mobile) / 100vh-60px (>=860px). The sandbox emulates the effective height (revisit in Phase 6).
+- Identical boxes + styles for all 46 elements at 390x844, 390x700, 1440x900 (heights/vertical; width from shell), and 1180x700.
+
+Behavior validation (mocked APIs, both apps identical):
+
+- send-button colors, pending "1" + typing, correction card from `/api/correction`, reply + activities (15/20 XP), quick reply, all-translation fetch of untranslated replies only, `/api/chat` failure fallback text, identical request bodies (history of last 8 non-pending).
+
+Live:
+
+- `/api/correction` 200 with real fix card. `/api/chat` reply from 박민호 after tutor switch via Tutors. XP 2840 → 2875.
+
+Regression: all routes at 1440/390, no errors.
+
+Dev note: twice, Vite cached an empty CSS file after a non-atomic shell heredoc rewrite. Write CSS with the editor tools instead.
+
+Next milestone:
+
+`P3E CONVERSATION AUDIT`

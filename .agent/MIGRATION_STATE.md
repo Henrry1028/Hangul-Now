@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`e250f9a651544d7e5f041b7a7c02580afe8918d8`
+`423c3abec2c04881c1ee827a5834e7e446660dcc`
 
 Checkpoint commit:
 
-`refactor: migrate speaking page to React sandbox`
+`refactor: migrate chat page to React sandbox`
 
 Repository HEAD rule:
 
@@ -108,6 +108,10 @@ React/Vite sandbox:
 
 - Speaking audit (P3A) and migration incl. shared translation toggle (P3B, `e250f9a`) — COMPLETE
 
+### Chat
+
+- Chat audit (P3C) and migration (P3D, `423c3ab`) — COMPLETE
+
 ---
 
 ## 2. Latest Completed Milestone
@@ -178,17 +182,19 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P3D`
+`P3E`
 
 Name:
 
-`CHAT MIGRATION`
+`CONVERSATION AUDIT`
 
 Status:
 
-`IN_PROGRESS`
+`AUDITING`
 
-Scope: see MIGRATION_LOG P3C and CURRENT_TASK.
+Next required action:
+
+Source-first audit of legacy Conversation (`08b Conversation`, preview/index.html ~2177-2475): Gemini Live (`/api/live` websocket, mic PCM 16k → 24k playback), session timer, hints/cards, report/PDF, history, translation `cvTrans`, auth gating.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 
@@ -229,7 +235,7 @@ Current expected high-level sequence:
 4. ~~Listening~~ — COMPLETE
 5. ~~Record~~ — COMPLETE
 6. ~~Speaking~~ — COMPLETE
-7. Chat
+7. ~~Chat~~ — COMPLETE
 8. Conversation
 9. Global Header / navigation shell
 10. Admin
@@ -262,7 +268,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`55–60%`
+`60–65%`
 
 This is a workload estimate, not a completion guarantee.
 

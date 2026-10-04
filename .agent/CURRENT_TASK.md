@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P3D`
+`P3E`
 
 Milestone Name:
 
-`CHAT MIGRATION`
+`CONVERSATION AUDIT`
 
 Status:
 
-`READY_TO_COMMIT`
+`AUDITING`
 
 Baseline migration-code checkpoint:
 
-`e250f9a651544d7e5f041b7a7c02580afe8918d8`
+`423c3abec2c04881c1ee827a5834e7e446660dcc`
 
 Expected branch:
 
@@ -26,32 +26,26 @@ Expected branch:
 
 ## Objective
 
-Migrate Chat with parity. Strategy is in MIGRATION_LOG P3C.
+Source-first audit of legacy Conversation (Gemini Live) before implementation.
 
-## Expected Files
+## Audit Questions
 
-- `frontend/src/data/chatData.js`, `frontend/src/pages/ChatPage.jsx`, `frontend/src/styles/chat.css`, `frontend/src/hooks/useChat.js` (new)
-- `frontend/src/App.jsx`
-
-## Required Validation
-
-- build, 390/1440 parity of the seeded chat vs legacy,
-- send (mocked /api/chat + /api/correction), pending/typing, reply, correction card, failure fallback, activity XP,
-- all/per-message translation (mocked /api/translate), quick replies, Enter send, tutor switch + unread,
-- one live /api/chat + /api/correction call,
-- regression, no console/page errors.
+- template (`08b Conversation`, preview/index.html ~2177-2475), CSS,
+- live pipeline: mic capture, 16kHz PCM, `/api/live` websocket protocol, 24kHz playback, transcripts, hints/cards,
+- session timer (`TUTOR_SESSION_SECONDS`), wrap-up, `/api/session/complete-and-review`, `/api/session/report`, PDF/transcript download, history,
+- `cvTrans` translation branch, auth gating, Firestore,
+- testability without a microphone (fake media / mocked socket),
+- slices.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Audit complete (P3C)
-- [x] Implementation complete
-- [x] Build PASS
-- [x] Behavior PASS (mocked scenario identical to legacy; live /api/chat + /api/correction PASS)
-- [x] Parity PASS (390x844/390x700/1440x900/1180x700 identical with shell-height emulation)
-- [x] Regression PASS
-- [ ] Commit/push
+- [ ] Legacy Conversation source located
+- [ ] Coupling mapped
+- [ ] Bounded slices defined
+- [ ] Audit recorded
+- [ ] Audit metadata committed and pushed
 
 ## Exact Next Action
 
-Generate chatData.js from legacy, then useChat.js, ChatPage.jsx, chat.css, and App wiring.
+Read the Conversation template and the live-session handlers (~4975-5450).
