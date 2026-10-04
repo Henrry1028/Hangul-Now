@@ -1099,3 +1099,32 @@ Code review:
 Next milestone:
 
 `P4C AUTH + PROFILE SHELL MIGRATION`
+
+---
+
+## P4C — Auth + Profile Shell Audit
+
+Status:
+
+`COMPLETE — IMPLEMENTATION IN_PROGRESS`
+
+Risk:
+
+`HIGH`: Firebase auth listener, Firestore profile/tutor mutation, onboarding persistence, identity propagation into AI/realtime requests, and admin UI state.
+
+Source map (`preview/index.html`):
+
+- Firebase compat SDK tags 16-18 and public client config 3530-3537.
+- auth lifecycle 4775-4830: initialize once, `onAuthStateChanged`, normalized user, legacy admin-email heuristic, Firestore `users/{uid}` restore and last-login merge, signed-out cleanup.
+- profile/tutor lifecycle 6030-6155: signed-in tutor merge, local `hn-profile-{uid}` fallback, two-step draft/validation, local-first save, Firestore merge, popup login with blocked-popup redirect fallback, logout.
+- onboarding markup 650-732 and bindings 7588-7619; sidebar identity/profile markup 1125-1165.
+- profile data 3624-3658: 32 nationalities, 4 gender options, 12 ordered interests, maximum 5.
+- identity consumers: generated content `userId`, `/api/learning/record`, Chat correction, Conversation start/complete/report/history, nickname/nationality/interests, and interest-based Tutor lesson selection.
+
+Bounded implementation strategy:
+
+- Add App-level auth/profile state and exact legacy constants/helpers; use the same compat SDK to avoid a new package/dependency.
+- Port guest/authenticated shell variants and two-step onboarding. Keep local fallback functional if Firestore read/write fails.
+- Wire signed-in identity/profile only into already migrated public domains and persist signed-in tutor selection.
+- Preserve the legacy client-side admin flag as state for the P5 Admin handoff. Do not add an unusable Admin page in P4C and do not expose Video Class.
+- Validate Firebase behavior through a deterministic browser-injected stub; real Google account interaction is outside autonomous test credentials.

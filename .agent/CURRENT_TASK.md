@@ -50,7 +50,7 @@ Migrate the legacy Firebase auth/profile portion of the global shell without exp
 ## Progress Checklist
 
 - [x] Git state reverified
-- [ ] P4C source/coupling audit complete
+- [x] P4C source/coupling audit complete
 - [ ] Implementation complete
 - [ ] Build PASS
 - [ ] Auth/profile behavior PASS
@@ -60,4 +60,14 @@ Migrate the legacy Firebase auth/profile portion of the global shell without exp
 
 ## Exact Next Action
 
-Inspect the full legacy Firebase/auth/profile lifecycle and every migrated userId/profile consumer, then record the bounded P4C implementation strategy before editing source.
+Implement the recorded bounded strategy: Firebase compat auth/profile hook + onboarding, signed-in shell identity, Firestore tutor sync, and identity/profile propagation to migrated API consumers. Admin page rendering remains P5 and Video Class remains hidden.
+
+## Audit Result / Bounded Strategy
+
+- Load the same Firebase compat 10.8.1 app/auth/firestore SDKs and initialize with the existing public client configuration.
+- Add an App-level auth/profile controller that mirrors `onAuthStateChanged`, Firestore `users/{uid}` restore+merge, local `hn-profile-{uid}` fallback, popup-to-redirect login fallback, logout, profile editing, and the legacy email-based `isAdmin` UI flag.
+- Port the two-step onboarding UI and exact validation/persistence behavior. Firestore failure must retain the local profile and show the legacy warning.
+- Render the authenticated lower-sidebar identity, interest summary, logout, and profile editor; hide the header login when authenticated. Preserve the guest shell exactly.
+- Persist tutor changes to Firestore for signed-in users and propagate signed-in uid/profile to generated content, correction, learning records, Conversation start/review/report/history metadata, and lesson-interest selection.
+- Keep the Admin console page and API UI in P5. P4C owns only the admin flag/auth handoff; it must not add a dead Admin route or expose any Video Class control.
+- Validate with an injected Firebase/Firestore stub because real Google credentials are unavailable; also regression-test the unchanged guest shell.
