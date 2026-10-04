@@ -1,0 +1,26 @@
+.home-screen {
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Legacy feature-card hover (inline onmouseover/onmouseout handlers). */
+.home-feature-card {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.home-feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 860px) {
+  .home-screen {
+    padding: clamp(12px, 1.6vh, 20px) clamp(16px, 2vw, 32px);
+    gap: clamp(10px, 1.4vh, 18px);
+  }
+}

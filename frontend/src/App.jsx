@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import IntroPage from './pages/IntroPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
+import HomePage from './pages/HomePage.jsx';
 import TutorsPage from './pages/TutorsPage.jsx';
 import ReadingPage from './pages/ReadingPage.jsx';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
@@ -15,7 +16,7 @@ function App() {
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
-    if (target === 'intro' || target === 'about' || target === 'tutors' || target === 'reading') {
+    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading') {
       setCurrentPage(target);
     }
   };
@@ -39,6 +40,14 @@ function App() {
       )}
       {currentPage === 'about' && (
         <AboutPage lang="ko" onNavigate={handleNavigate} />
+      )}
+      {currentPage === 'home' && (
+        <HomePage
+          lang="ko"
+          selectedTutorId={selectedTutorId}
+          onSelectTutor={handleSelectTutor}
+          onNavigate={handleNavigate}
+        />
       )}
       {currentPage === 'tutors' && (
         <TutorsPage
