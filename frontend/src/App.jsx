@@ -12,11 +12,13 @@ import SpeakingPage from './pages/SpeakingPage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
 import ConversationPage from './pages/ConversationPage.jsx';
 import AdminPage, { buildAdminView } from './pages/AdminPage.jsx';
+import VideoClassPage, { VideoClassModals } from './pages/VideoClassPage.jsx';
 import useAudioReview from './hooks/useAudioReview.js';
 import useTranslationToggle from './hooks/useTranslationToggle.js';
 import useChat from './hooks/useChat.js';
 import useConversation from './hooks/useConversation.js';
 import useAuthProfile from './hooks/useAuthProfile.js';
+import useVideoClass from './hooks/useVideoClass.js';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import { INITIAL_WRITING_STATE } from './data/writingData.js';
 import { INITIAL_LISTENING_STATE } from './data/listeningData.js';
@@ -96,6 +98,8 @@ function App() {
     return true;
   }, []);
   const auth = useAuthProfile({ selectedTutorId, onRestoreTutor: handleRestoreTutor });
+  // Admin-only Video Class preview: legacy admin UI flag + signed-in + server-verified admin.
+  const videoClass = useVideoClass({ isAdminFlag: auth.isAdmin, currentUser: auth.currentUser });
   // Legacy app-wide admin console state (adminData/adminLoading/adminSearch/adminFilter).
   const [adminData, setAdminData] = useState(null);
   const [, setAdminLoading] = useState(false);
@@ -109,8 +113,29 @@ function App() {
       const viewport = document.querySelector('.app-main-viewport');
       if (viewport) viewport.scrollTop = 0;
       window.scrollTo(0, 0);
+    } else if (target === 'videoclass' && videoClass.access) {
+      // Legacy sidebar/pill go('videoclass') opens the page without loading its data.
+      setCurrentPage(target);
+      const viewport = document.querySelector('.app-main-viewport');
+      if (viewport) viewport.scrollTop = 0;
+      window.scrollTo(0, 0);
     }
   };
+
+  // Legacy goVideoClass (header entry): open the page and load tutors/bookings.
+  const handleGoVideoClass = () => {
+    if (!videoClass.access) return;
+    setCurrentPage('videoclass');
+    videoClass.loadVideoClassData();
+    const viewport = document.querySelector('.app-main-viewport');
+    if (viewport) viewport.scrollTop = 0;
+    window.scrollTo(0, 0);
+  };
+
+  // Losing admin access (sign-out, account switch) never leaves the Video Class page open.
+  useEffect(() => {
+    if (currentPage === 'videoclass' && !videoClass.access) setCurrentPage('home');
+  }, [currentPage, videoClass.access]);
 
   // Legacy loadAdminDashboard: Bearer ID token when signed in; failures keep the previous data.
   const loadAdminDashboard = useCallback(async () => {
@@ -235,6 +260,8 @@ function App() {
       onToggleTheme={handleToggleTheme}
       auth={auth}
       onGoAdmin={handleGoAdmin}
+      videoClassAccess={videoClass.access}
+      onGoVideoClass={handleGoVideoClass}
     >
       {currentPage === 'intro' && (
         <IntroPage lang={lang} onNavigate={handleNavigate} />
@@ -354,6 +381,8 @@ function App() {
           onNavigate={handleNavigate}
         />
       )}
+      {currentPage === 'videoclass' && videoClass.access && <VideoClassPage vc={videoClass} />}
+      {videoClass.access && <VideoClassModals vc={videoClass} />}
     </AppShell>
   );
 }

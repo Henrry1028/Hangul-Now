@@ -5,17 +5,18 @@ import OnboardingModal from './OnboardingModal.jsx';
 import '../styles/shell.css';
 
 const SHELL_TEXT = {
-  en: { navHow: 'How it works', navTutors: 'Curriculum', navAbout: 'About us', startFree: 'Start free', themeTitle: 'Toggle dark mode', login: 'Log in', profileEdit: 'Edit profile & interests', profileInterests: 'My interests' },
-  ko: { navHow: '학습 방법', navTutors: '커리큘럼', navAbout: '회사 소개', startFree: '무료로 시작', themeTitle: '다크 모드 전환', login: '로그인', profileEdit: '프로필·관심사 수정 (Edit Profile)', profileInterests: '내 관심사 (My Interests)' }
+  en: { navHow: 'How it works', navTutors: 'Curriculum', navAbout: 'About us', startFree: 'Start free', themeTitle: 'Toggle dark mode', login: 'Log in', navVideoClass: '1:1 Video', profileEdit: 'Edit profile & interests', profileInterests: 'My interests' },
+  ko: { navHow: '학습 방법', navTutors: '커리큘럼', navAbout: '회사 소개', startFree: '무료로 시작', themeTitle: '다크 모드 전환', login: '로그인', navVideoClass: '화상수업', profileEdit: '프로필·관심사 수정 (Edit Profile)', profileInterests: '내 관심사 (My Interests)' }
 };
 
-// Legacy navDef (preview/index.html 6665-6670). The admin-only Video Class group stays
-// hidden: Video Class is deferred product scope (AGENTS.md section 14).
-function navDefs(L) {
+// Legacy navDef (preview/index.html 6665-6670). The Video Class group is admin-only: it is
+// appended only for a server-verified admin (AGENTS.md section 14 keeps it from general users).
+function navDefs(L, videoClassAccess) {
   return [
     { label: L ? '학습' : 'LEARN', items: [['home', L ? '오늘의 학습' : 'Today', '오'], ['tutors', L ? '커리큘럼' : 'Curriculum', '커'], ['chat', L ? '튜터 채팅' : 'Chat', '대']] },
     { label: L ? '4대 영역 연습' : 'PRACTICE', items: [['listening', L ? '듣기 연습' : 'Listening', '듣'], ['reading', L ? '읽기 독해' : 'Reading', '읽'], ['writing', L ? '쓰기 조합' : 'Writing', '쓰'], ['speaking', L ? '말하기 코치' : 'Speaking', '말'], ['conversation', L ? '실시간 회화' : 'Conversation', '회']] },
-    { label: L ? '나의 기록' : 'YOU', items: [['record', L ? '학습 기록' : 'My progress', '기'], ['about', L ? '서비스 소개' : 'About us', '소']] }
+    { label: L ? '나의 기록' : 'YOU', items: [['record', L ? '학습 기록' : 'My progress', '기'], ['about', L ? '서비스 소개' : 'About us', '소']] },
+    ...(videoClassAccess ? [{ label: L ? '화상 수업 매칭' : 'LIVE VIDEO CLASS', items: [['videoclass', L ? '1:1 화상수업' : '1:1 Live Class', '화']] }] : [])
   ];
 }
 
@@ -33,7 +34,7 @@ const GoogleIcon = () => (
 function AppShell({
   lang, theme, page, wide, selectedTutorId, unreadTotal,
   sidebarCollapsed, sidebarWidth, onToggleSidebar, onSidebarWidth,
-  onNavigate, onSetLang, onToggleTheme, auth, onGoAdmin, children
+  onNavigate, onSetLang, onToggleTheme, auth, onGoAdmin, videoClassAccess, onGoVideoClass, children
 }) {
   const L = lang === 'ko' ? 1 : 0;
   const t = SHELL_TEXT[lang] || SHELL_TEXT.en;
@@ -46,7 +47,7 @@ function AppShell({
     genderSymbol: raw.gender === 'female' ? '♀' : '♂',
     genderBg: raw.gender === 'female' ? '#E06B82' : '#4B7BEC'
   };
-  const groups = navDefs(L);
+  const groups = navDefs(L, videoClassAccess);
   const userName = auth.profile?.nickname || auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'Learner';
   const userInitial = (auth.currentUser?.displayName || auth.currentUser?.email || 'U')[0].toUpperCase();
   const interestLabels = profileInterests(auth.profile).map((item) => `${item.icon} ${L ? item.ko : item.en}`).join('  ');
@@ -118,6 +119,12 @@ function AppShell({
           {/* Legacy goHow scrolls the window, which never scrolls inside the shell: it only opens Intro. */}
           <button type="button" onClick={go('intro')} style={{ border: 0, background: 'none', color: 'var(--sub)', fontSize: '14px', cursor: 'pointer' }}>{t.navHow}</button>
           <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'none', color: 'var(--sub)', fontSize: '14px', cursor: 'pointer' }}>{t.navTutors}</button>
+          {videoClassAccess && (
+            <button type="button" onClick={onGoVideoClass} title="1:1 화상 한국어 수업 매칭 플랫폼 (관리자 전용 미리보기)" style={{ border: 0, background: 'none', color: 'var(--ink)', fontSize: '14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '3px 8px', borderRadius: '8px', transition: 'all .15s ease' }}>
+              <span style={{ fontWeight: 600 }}>{t.navVideoClass}</span>
+              <span style={{ fontSize: '10px', fontWeight: 700, padding: '1.5px 6px', borderRadius: '6px', background: 'rgba(212,175,55,0.18)', color: '#B8860B', border: '1px solid rgba(212,175,55,0.4)', letterSpacing: '0.3px' }}>Admin</span>
+            </button>
+          )}
           <button type="button" onClick={go('about')} style={{ border: 0, background: 'none', color: page === 'about' ? 'var(--ink)' : 'var(--sub)', fontSize: '14px', cursor: 'pointer', fontWeight: page === 'about' ? '700' : '400' }}>{t.navAbout}</button>
           <div style={{ display: 'flex', background: 'var(--seg)', borderRadius: '999px', padding: '3px' }}>
             <button type="button" onClick={() => onSetLang('en')} style={{ border: 0, background: L ? 'transparent' : 'var(--card)', color: L ? 'var(--faint)' : 'var(--ink)', borderRadius: '999px', padding: '5px 11px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}>EN</button>
