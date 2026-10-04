@@ -1023,3 +1023,38 @@ Phase 5 (Speaking, Chat, Conversation): COMPLETE.
 Next milestone:
 
 `P4A GLOBAL SHELL AUDIT`
+
+---
+
+## P4A — Global Shell Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`HIGH`: wraps every screen, owns the scroll container, auth/Firebase/profile, admin flag.
+
+Source map (`preview/index.html`):
+
+- markup 622-1186: `app-root-shell` (100dvh flex column) → `marketing-header` (logo light/dark → intro; nav How/Tutors/[admin: Video Class]/About; EN|한국어 segment; theme toggle; [admin: Admin console]; login (guest) / CTA → tutors) → onboarding modal (signed-in, profile) → Video Class modals (admin preview) → `app-body-container` → [wide>=860: collapsed floating opener, `aside#app-sidebar` (collapse button, nav groups LEARN/PRACTICE/YOU/[admin: LIVE VIDEO CLASS], unread badge on chat, tutor card → tutors/chat, user card + logout + interests + edit profile (signed-in) or Google login (guest), admin console button, resizer)] + `main.app-main-viewport` (scrolls; [narrow: sticky pill nav `navFlat`]; all screens incl. Intro/About).
+- CSS: brand/header 34-57, fit-to-screen 105-131 (html/body overflow hidden, header 60px, body calc(100dvh-60px), main scrolls), sidebar 538-605, plus `.cv-layout-grid`.
+- logic: `go` (stop listening audio when leaving listening; `window.scrollTo(0,0)`), nav defs 6665-6676, `toggleSidebar` (`hn-sidebar-collapsed`), `initSidebarResize` (180-460px, dblclick → 240, `hn-sidebar-width`), Ctrl/Cmd+B, resize listener (`wide = innerWidth >= 860`), `setLang`/`setTheme` (`hn-lang`/`hn-theme`, `data-theme` on `<html>`), initial `hn-lang` (default en), `hn-tutor`, `?admin=1`.
+- auth 4775-4830 + 6075-6155: Firebase compat 10.8.1 (CDN), `FIREBASE_CONFIG` 3530, `onAuthStateChanged` → currentUser, `isAdmin` (email contains "admin" or starts with "hopep"; or `?admin=1`), Firestore `users/{uid}` read (selectedTutorId, profile) + merge write, onboarding (`applyProfile`, `openOnboarding`, `saveProfile`), `loginWithGoogle` (popup → redirect fallback), `logoutFirebase`.
+
+Findings and decisions:
+
+- Every screen renders inside the shell. Sandbox pages currently use window scroll with no header/sidebar, which explains all earlier "shell width" deltas and the Writing/Chat height emulations.
+- The admin flag is a client-side UI flag only. It must stay as-is (server endpoints must enforce admin).
+- Video Class (admin-only preview page `10 Video Class Platform` + modals) remains deferred per AGENTS.md section 14 and is NOT migrated in Phase 6. This is recorded as an explicit open product decision for cutover readiness.
+
+Plan:
+
+- P4B Shell layout + navigation: header, sidebar (groups, active state, unread badge, tutor card, collapse/resize/Ctrl+B with persistence), narrow pill nav, main viewport scroll + reset on navigation, EN/KO + theme toggles with persistence (every page receives the live `lang`), `hn-tutor` persistence, legacy CSS verbatim, removal of the shell emulations (Writing/Chat heights), and `max-width:1400px` parity, plus Reading state lifting (generated material, answers, saved words, genError) so navigation away/back matches legacy.
+- P4C Auth/profile: Firebase compat SDK via the same CDN tags, `onAuthStateChanged`, user card/logout, onboarding modal, Firestore tutor/profile sync, admin flag, and signed-in propagation (uid to learning record, correction, conversation, report). Validation stubs Firebase identically in both apps (real Google sign-in needs user credentials).
+- P5 Admin console audit + migration.
+
+Next milestone:
+
+`P4B SHELL LAYOUT + NAVIGATION MIGRATION`

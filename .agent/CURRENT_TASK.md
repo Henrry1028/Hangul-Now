@@ -4,15 +4,15 @@
 
 Milestone ID:
 
-`P4A`
+`P4B`
 
 Milestone Name:
 
-`GLOBAL SHELL AUDIT`
+`SHELL LAYOUT + NAVIGATION MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
@@ -26,28 +26,34 @@ Expected branch:
 
 ## Objective
 
-Source-first audit of the legacy global shell before implementation.
+Migrate the legacy shell layout and navigation (no Firebase yet). Plan is in MIGRATION_LOG P4A.
 
-## Audit Questions
+## Expected Files
 
-- shell markup (`app-root-shell`, `marketing-header`, sidebar, mobile nav, main viewport) and CSS (fit-to-screen rules 105-131, sidebar),
-- which screens render inside vs outside the shell (Intro/About full-page?),
-- navigation (`go`, nav groups, active state, unread badge, scroll reset), Ctrl+B sidebar toggle, resizable sidebar (`hn-sidebar-*`),
-- language/theme toggles (`hn-lang`, `hn-theme`, `data-theme`),
-- Google auth (Firebase), user card, logout, onboarding/profile (nickname/nationality/gender/interests), Firestore sync, `hn-tutor`,
-- Video Class nav (admin-only) — must stay hidden for general users,
-- shell-dependent emulations to retire: Writing/Chat heights, `max-width:1400px`, Reading/genError state lifting, studyLevel/translation sharing (already App-level),
-- build config: production Express static switch is out of scope (cutover).
+- `frontend/src/components/AppShell.jsx`, `frontend/src/styles/shell.css`, `frontend/src/data/shellData.js` (new)
+- `frontend/src/App.jsx` (shell, lang/theme/tutor/sidebar persistence, lifted Reading state)
+- page/CSS adjustments to remove shell emulations (`writing.css`, `chat.css`) and apply the legacy `max-width:1400px` screen rule
+- `frontend/src/pages/ReadingPage.jsx` (lifted state)
+- `frontend/public/assets/logo-new*.png` if missing
+
+## Required Validation
+
+- production build,
+- full-page parity vs legacy (including header/sidebar) for every migrated screen at 1440x900 and 390x844 (ko), plus spot checks in en and dark theme,
+- nav: sidebar/pill/header targets, active state, unread badge, tutor card, collapse/resize/dblclick/Ctrl+B + persistence, lang/theme persistence, `hn-tutor`, scroll reset, listening audio stop on leave,
+- regression of all behavior scenarios (spot), no console/page errors.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [ ] Legacy shell source located
-- [ ] Coupling mapped (auth/Firebase/profile/persistence)
-- [ ] Bounded slices defined
-- [ ] Audit recorded
-- [ ] Audit metadata committed and pushed
+- [x] Audit complete (P4A)
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Parity PASS
+- [ ] Behavior PASS
+- [ ] Regression PASS
+- [ ] Commit/push
 
 ## Exact Next Action
 
-Read the shell markup after the `<helmet>` block (~620-1190) and the auth/profile handlers.
+Extract shell CSS (legacy 34-57, 105-131, 538-605) and nav/labels, build AppShell.jsx, then wire App.

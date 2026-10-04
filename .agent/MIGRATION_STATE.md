@@ -188,15 +188,19 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P4A`
+`P4B`
 
 Name:
 
-`GLOBAL SHELL AUDIT`
+`SHELL LAYOUT + NAVIGATION MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
+
+Scope: see MIGRATION_LOG P4A and CURRENT_TASK.
+
+### Previous: P4A GLOBAL SHELL AUDIT (COMPLETE)
 
 Next required action:
 
