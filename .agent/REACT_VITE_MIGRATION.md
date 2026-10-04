@@ -224,6 +224,10 @@ Do not expose deferred Video Class public functionality while migrating Admin.
 
 ### Phase 8 — Final Integration
 
+Status:
+
+`COMPLETE` (P6A, fixes `9b8f4c5`, `17df31a`, `d67e4e8`)
+
 Required:
 
 - final React build,
@@ -243,6 +247,10 @@ Required:
 ---
 
 ### Phase 9 — Cutover Readiness
+
+Status:
+
+`READY FOR PRODUCTION CUTOVER` (`.agent/CUTOVER_READINESS.md`)
 
 Before actual cutover, produce:
 
@@ -318,7 +326,7 @@ Do not interpret backend capability as permission to expose the feature.
 
 Current estimated migration workload completion:
 
-`93–95%`
+`100% of parity migration code; cutover pending approval`
 
 This estimate may change after audits.
 
@@ -333,7 +341,8 @@ A more useful progress model is:
 - high-risk domains: complete
 - global shell: complete
 - admin: complete
-- integration/cutover: final regression in progress
+- integration: complete
+- cutover: ready, awaiting explicit approval
 
 ---
 

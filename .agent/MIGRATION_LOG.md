@@ -1243,3 +1243,32 @@ Known quirks preserved:
 Next milestone:
 
 `P6A FINAL INTEGRATION REGRESSION`
+
+---
+
+## P6A — Final Integration Regression (+ P6A-FIX, P6A-FIX2, P6B)
+
+Status:
+
+`COMPLETE`
+
+Commits:
+
+- `9b8f4c53e9e9fb188b89745d72084239111d3940`: `fix: match legacy reading grid on narrow screens`. Removed the sandbox-only ≤659px override; Reading is identical at 360/390/500/659/700/859/1024/1440 in en and ko.
+- `17df31a11612e4c93e3f08908712b292f981cb8f`: `fix: keep Firestore tutor restore out of local storage`. Legacy only sets state on restore.
+- `d67e4e8b38e8780db06b57eba9ea9d87a99a367a`: `fix: match legacy document head and root icons`. Title, favicon/apple-touch/manifest links, no `<html lang>`, byte-identical root icons + `site.webmanifest` in `frontend/public`.
+
+Validation:
+
+- Screen inventory: every legacy `data-screen-label` is migrated except the deferred `10 Video Class Platform`.
+- Cross-app sweep: 11 screens × en/ko × 1440/390 have identical text and geometry. Known exceptions: Intro/About footer wrapper (main scroll identical) and the Intro rotating demo chat.
+- 12 full-viewport screenshots are pixel-identical (Home/Reading/About/Record; ko 1440, ko 390, en 1440).
+- Auth: onboarding-required flow, validation errors, interest cap, local + Firestore persistence, sidebar, logout, tutor restore, admin flag and deep link — identical. Signed-in dark sweep has identical geometry.
+- No sandbox failed requests, 404s, console errors, or page errors.
+- API: 9 endpoints have identical status and body directly and through the Vite proxy. Admin returns 401 with no token or a forged token. `/api/live` WebSocket handshake OPEN in both.
+- Final Node 20.20.2 production build PASS (438.28 kB JS).
+- Carried forward from domain milestones (not re-run, to avoid AI/TTS quota): AI generation, TTS/audio lifecycle, live Gemini conversation, audio review.
+
+Result:
+
+`READY FOR PRODUCTION CUTOVER`. See `.agent/CUTOVER_READINESS.md`. Cutover is not performed and needs explicit approval.

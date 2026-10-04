@@ -4,19 +4,23 @@
 
 Milestone ID:
 
-`P6A`
+`P7`
 
 Milestone Name:
 
-`FINAL INTEGRATION REGRESSION`
+`PRODUCTION CUTOVER`
 
 Status:
 
-`IN_PROGRESS`
+`BLOCKED`
+
+Blocker:
+
+Production cutover requires explicit user approval (AGENTS.md sections 2, 10, 18). The autonomous migration stopped at `READY FOR PRODUCTION CUTOVER`.
 
 Baseline migration-code checkpoint:
 
-`6b9b97bd302edbef8ace73a19a440b433a40ab48`
+`d67e4e8b38e8780db06b57eba9ea9d87a99a367a`
 
 Expected branch:
 
@@ -24,29 +28,16 @@ Expected branch:
 
 ---
 
-## Objective
+## Completed Before This Point
 
-Roadmap Phase 8: verify that every migrated public/admin screen matches legacy, with no regressions, before the Phase 9 cutover-readiness report. No code changes expected; any defect found is fixed as a bounded `fix:` commit.
+- P4C auth/profile (`a5d3d20`), P5A/P5B admin (`6b9b97b`), P6A final integration with fixes `9b8f4c5`, `17df31a`, P6B `d67e4e8`.
+- Full report: `.agent/CUTOVER_READINESS.md`.
 
-## Required Validation
+## Open Decisions For The User
 
-- Node 20 production build (done at P5B: PASS),
-- per-screen legacy vs sandbox text + geometry at 1440x900 and 390x844, en and ko, light and dark spot checks,
-- failed requests / asset 404s, console and page errors on every screen,
-- auth regression (guest, signed-in, admin) with the shared Firebase stub,
-- API smoke: proxy reachability of migrated endpoints without spending AI quota where avoidable,
-- Video Class not exposed.
-
-## Progress Checklist
-
-- [x] Git state verified (HEAD 6b9b97b pushed, 0 0)
-- [x] Screen inventory: all legacy screens migrated except deferred `10 Video Class Platform`
-- [x] Cross-app screen parity sweep: 11 screens x en/ko x 1440/390 — all identical except (a) Intro/About footer inside vs outside the labelled wrapper (known P4B DC-wrapper difference; main scroll extents identical), (b) Intro rotating demo-chat timer text, (c) Reading <=659px grid defect → fixed (P6A-FIX, drop non-legacy mobile override; identical at 360/390/500/659/700/859/1024/1440 en+ko)
-- [x] Network/asset/console sweep: no sandbox failed requests, 404s, console or page errors across 44 screen runs (legacy-only aborted `{{ }}` placeholder images noted). Cutover gap found and fixed (P6B): document head (title, favicons, apple-touch-icon, manifest; no <html lang>) + byte-identical root icon/manifest files in frontend/public; 12 full-viewport screenshots pixel-identical legacy vs sandbox
-- [x] Auth regression: onboarding required flow (all steps, 4 validation errors, 5-interest cap, local profile, 2 Firestore merge writes, sidebar) identical; signed-in dark sweep of 11 screens identical geometry; tutor restore defect fixed (P6A-FIX2: Firestore restore no longer writes hn-tutor, matching legacy)
-- [x] API smoke: 9 HTTP endpoints identical status+body direct vs Vite proxy (validation paths, no AI quota), admin 401 both, /api/live WebSocket handshake OPEN both
-- [ ] Cutover readiness report
+1. Approve (or not) production cutover per `.agent/CUTOVER_READINESS.md` section 6.
+2. Video Class admin preview: legacy shows it to admins; React does not. Confirm it stays hidden after cutover.
 
 ## Exact Next Action
 
-Commit/push P6B head parity, then write the cutover readiness report (Phase 9) and stop at READY FOR PRODUCTION CUTOVER.
+None autonomous. On approval: follow `.agent/CUTOVER_READINESS.md` section 6 (Dockerfile frontend build step, `server.js` static/fallback → `frontend/dist`, `firebase.json` public → `frontend/dist`, staging smoke test, promote). Do not start without approval.

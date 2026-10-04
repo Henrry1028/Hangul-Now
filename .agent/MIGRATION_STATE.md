@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`6b9b97bd302edbef8ace73a19a440b433a40ab48`
+`d67e4e8b38e8780db06b57eba9ea9d87a99a367a`
 
 Checkpoint commit:
 
-`refactor: migrate admin console to React sandbox`
+`fix: match legacy document head and root icons`
 
 Repository HEAD rule:
 
@@ -35,7 +35,7 @@ Working tree at the checkpoint:
 
 Production cutover:
 
-`DEFERRED`
+`READY FOR PRODUCTION CUTOVER — awaiting explicit approval (see .agent/CUTOVER_READINESS.md)`
 
 Legacy source of truth:
 
@@ -129,13 +129,17 @@ Phase 6 (Global shell): COMPLETE
 
 - Admin console audit (P5A) and migration (P5B `6b9b97b`) — COMPLETE
 
+### Final integration
+
+- P6A final regression with fixes `9b8f4c5` (Reading narrow grid), `17df31a` (tutor restore storage), P6B `d67e4e8` (document head/icons) — COMPLETE
+
 ---
 
 ## 2. Latest Completed Milestone
 
 Milestone:
 
-`P5B ADMIN CONSOLE MIGRATION`
+`P6A FINAL INTEGRATION REGRESSION`
 
 Status:
 
@@ -143,15 +147,15 @@ Status:
 
 Commit:
 
-`6b9b97bd302edbef8ace73a19a440b433a40ab48`
+`d67e4e8b38e8780db06b57eba9ea9d87a99a367a`
 
 Commit message:
 
-`refactor: migrate admin console to React sandbox`
+`fix: match legacy document head and root icons`
 
 Runtime acceptance:
 
-`PASS` (see MIGRATION_LOG P5B)
+`PASS` (see MIGRATION_LOG P6A)
 
 ---
 
@@ -159,23 +163,21 @@ Runtime acceptance:
 
 Milestone ID:
 
-`P6A`
+`P7`
 
 Name:
 
-`FINAL INTEGRATION REGRESSION`
+`PRODUCTION CUTOVER`
 
 Status:
 
-`IN_PROGRESS`
+`BLOCKED` — requires explicit user approval (AGENTS.md sections 2 and 18). Not started.
 
-Scope: see CURRENT_TASK.
-
-### Previous: P5B ADMIN CONSOLE MIGRATION (COMPLETE, `6b9b97b`)
+### Previous: P6A FINAL INTEGRATION REGRESSION (COMPLETE, `d67e4e8`)
 
 Next required action:
 
-Cross-app (legacy vs sandbox) final regression of every migrated screen; then cutover-readiness report.
+Wait for explicit cutover approval, then follow `.agent/CUTOVER_READINESS.md` section 6. Separately, a product decision is needed on admin access to the deferred Video Class preview after cutover.
 
 ---
 
@@ -209,8 +211,8 @@ Current expected high-level sequence:
 8. ~~Conversation~~ — COMPLETE
 9. ~~Global Header / navigation shell~~ — COMPLETE (layout/navigation + auth/profile)
 10. ~~Admin~~ — COMPLETE
-11. Final parity and regression
-12. Cutover readiness
+11. ~~Final parity and regression~~ — COMPLETE
+12. ~~Cutover readiness~~ — READY FOR PRODUCTION CUTOVER
 13. Production cutover — requires explicit approval
 14. Legacy retirement — only after successful cutover
 
@@ -238,7 +240,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`93–95%`
+`100% of parity migration code; cutover pending approval`
 
 This is a workload estimate, not a completion guarantee.
 
