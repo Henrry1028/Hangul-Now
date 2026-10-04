@@ -178,19 +178,17 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P3C`
+`P3D`
 
 Name:
 
-`CHAT AUDIT`
+`CHAT MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
-Next required action:
-
-Source-first audit of legacy Chat (`04 Chat`, preview/index.html ~1627-1713): message state per tutor, `/api/chat`, `/api/correction`, chat translation, unread, typing, tutor session timer, Firestore/auth coupling.
+Scope: see MIGRATION_LOG P3C and CURRENT_TASK.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 

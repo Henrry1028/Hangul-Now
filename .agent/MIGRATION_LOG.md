@@ -867,3 +867,38 @@ Validation:
 Next milestone:
 
 `P3C CHAT AUDIT`
+
+---
+
+## P3C — Chat Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`HIGH`: live AI endpoints, async reply/correction/translation races, cross-page tutor selection.
+
+Source map (`preview/index.html`):
+
+- template 1626-1712 (`04 Chat`): tutor header (avatar, gender badge, online, role/pace, change tutor, all-translation toggle), translation error bar, message list (date chips, tutor/me bubbles, first-of-group avatar/name/radius, per-message tap-to-translate, pending "1", correction loading/error, correction card), typing dots, quick replies, voice button (no handler), Enter-to-send input,
+- data `TODAY` 3556, `SEED` 3558-3570, `REPLIES` (mock), `QUICK` 3584, labels 3941/3964/4002 (en) and 4009/4032/4070 (ko),
+- handlers: `toggleChatTranslations` 6157, `translateMissingChatMessages` 6163-6230 (batches of 20, per-tutor in-flight guard, strict response validation, chained retry for new replies), `requestInlineCorrection` 6231-6276 (`/api/correction` `{sentence, userId}`, 30s abort, fix card from `has_error`/`wrong_span`/`fixed`/`explanation_*`), `sendText` 6277-6414 (activity 15 XP on send; pending user message; typing; mock mode via `?mock=true`/`hn_mock`; `/api/chat` `{tutorId, message, history(last 8)}` 30s abort; reply → activity 20 XP + tutor message with translation; failure → fallback tutor text),
+- render 6678-6701 (grouping/radius/translation flags), bindings 7384-7390 (`chatH` = calc(100vh - 69px) wide / calc(100vh - 122px) narrow; send button colors),
+- `selectTutor` 6027-6052: clears unread, resets the chat translation error, translates the new tutor if `trAll`, saves `hn-tutor`, writes Firestore when signed in, and navigates to chat. Auto-scroll to the bottom on msgs/page/tutor/typing change (6015).
+
+Findings:
+
+- Messages are in-memory only (SEED). There is no local or Firestore message persistence.
+- Replies, corrections, and translations land in app state even if the user navigates away.
+
+Strategy (P3D):
+
+- `chatData.js` (verbatim `TODAY`/`SEED`/`REPLIES`/`QUICK` + labels + initial chat state), `ChatPage.jsx`, `chat.css` (`dot` keyframes, `chatH` via the >=860px media query), and `hooks/useChat.js` at App level (send/correction/translation logic with functional state merges).
+- App `chat` route. `handleSelectTutor` clears unread and triggers translation like legacy.
+- Deferred to Phase 6 shell: `hn-tutor` persistence/initial load and the Firestore tutor write (signed-in only).
+
+Next milestone:
+
+`P3D CHAT MIGRATION`

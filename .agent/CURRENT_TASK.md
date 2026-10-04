@@ -4,15 +4,15 @@
 
 Milestone ID:
 
-`P3C`
+`P3D`
 
 Milestone Name:
 
-`CHAT AUDIT`
+`CHAT MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
@@ -26,26 +26,32 @@ Expected branch:
 
 ## Objective
 
-Source-first audit of legacy Chat before implementation.
+Migrate Chat with parity. Strategy is in MIGRATION_LOG P3C.
 
-## Audit Questions
+## Expected Files
 
-- template (`04 Chat`, preview/index.html ~1626-1713) and chat CSS,
-- per-tutor `msgs` (SEED), unread, typing dots, scroll-to-bottom,
-- `/api/chat`, `/api/correction`, chat `/api/translate` (`translateMissingChatMessages`), `trAll`/`trOpen`,
-- tutor session timer (`TUTOR_SESSION_SECONDS`), session end/report (`/api/session/complete-and-review`?),
-- selectTutor Firestore write, auth/user profile coupling, persistence (`hn-msgs`?),
-- slices.
+- `frontend/src/data/chatData.js`, `frontend/src/pages/ChatPage.jsx`, `frontend/src/styles/chat.css`, `frontend/src/hooks/useChat.js` (new)
+- `frontend/src/App.jsx`
+
+## Required Validation
+
+- build, 390/1440 parity of the seeded chat vs legacy,
+- send (mocked /api/chat + /api/correction), pending/typing, reply, correction card, failure fallback, activity XP,
+- all/per-message translation (mocked /api/translate), quick replies, Enter send, tutor switch + unread,
+- one live /api/chat + /api/correction call,
+- regression, no console/page errors.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [ ] Legacy Chat source located
-- [ ] Coupling mapped
-- [ ] Bounded slices defined
-- [ ] Audit recorded in MIGRATION_LOG
-- [ ] Audit metadata committed and pushed
+- [x] Audit complete (P3C)
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Behavior PASS
+- [ ] Parity PASS
+- [ ] Regression PASS
+- [ ] Commit/push
 
 ## Exact Next Action
 
-Read the Chat template and its handlers (sendMessage, corrections, translation, session timer).
+Generate chatData.js from legacy, then useChat.js, ChatPage.jsx, chat.css, and App wiring.
