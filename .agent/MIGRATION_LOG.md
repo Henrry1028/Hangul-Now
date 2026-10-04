@@ -730,3 +730,41 @@ Not observable until the Phase 6 shell exists:
 Next milestone:
 
 `P2G RECORD AUDIT`
+
+---
+
+## P2G — Record Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`MEDIUM`: consumes App activity state, uses device speech + timers, has a blocking `alert()`. No backend API.
+
+Source map (`preview/index.html`):
+
+- template 2476-2987 (`09 My progress`): header + 3-tab segment (`activity` = weekly audio review [default], `analytics` = calendar + weekly bars + live-conversation card, `ranking` = level/XP, daily quests, badges, leaderboard), plus 5 stat cards,
+- CSS 489-~532 (`study-cal-*`, `cal-flame-dot`, `live-pulse`, `rank-row`, `quest-item`, `badge-card`) and the shared >=860px screen override,
+- data `COLORS`/`WEEK`/`WD`/`MON` 3929-3933, `WEEKLY_REVIEW_SCRIPT_KO` 4109-4120, labels `recH1`/`weekH` 4001/4069,
+- audio review 4847-4966 (speechSynthesis of the script + a 1s/speed timer, pause, seek ±10, click-to-seek, speed cycle 1.0→1.25→1.5→2.0→0.8 with restart, like/dislike toggle, script accordion, fake 1.5s regenerate + `alert`, Blob `.txt` download),
+- render 7019-7157 (weekly bars, live-conversation constants, calendar 35/42 cells from `studyDates`, fixed today `2026-09-27`, leaderboards, levels from `userXp` /500, quests, badges), stats 7506-7518, bindings 7718-7791, initial state 4186-4208.
+
+Findings:
+
+- The template does not render the activity log list (`filteredLogs`/`recTabs` are dead bindings). Stats use `activityLogs.length`, `userXp`, `userTotalMins`, and `userStreak` (12).
+- The leaderboard "me" row uses the guest name (`게스트`/`Guest`) when signed out. The rank toggle buttons keep static styles regardless of the selected tab (quirk).
+- `animation: fadeIn` references an undefined keyframe (no-op quirk).
+- Calendar navigation is local. The date-pick briefing is static text; "이날 복습하기" → chat and "회화 시작" → speaking (navigation only).
+- Audio review keeps playing (speech + timer) after navigating away, because legacy state and timers are app-level.
+
+Strategy (P2H):
+
+- `recordData.js` (verbatim constants + script + labels), `RecordPage.jsx`, `record.css` (verbatim CSS), and an App `record` route.
+- App-owned `recordState` (tab, calendar, rank tab), plus the audio-review state and controller (timer/speech refs in App), so playback survives navigation like legacy.
+- Activity values come from the App activity state (`studyDates`, `userXp`, `activityLogs`, `userTotalMins`).
+
+Next milestone:
+
+`P2H RECORD MIGRATION`

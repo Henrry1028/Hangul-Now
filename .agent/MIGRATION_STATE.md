@@ -169,19 +169,17 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P2G`
+`P2H`
 
 Name:
 
-`RECORD AUDIT`
+`RECORD MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
-Next required action:
-
-Source-first audit of legacy Record (`09 My progress`, preview/index.html ~2476-2991): activity/analytics/ranking tabs, calendar, logs filters, weekly review, APIs, and coupling to App-owned activity state.
+Scope: see MIGRATION_LOG P2G and CURRENT_TASK.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 

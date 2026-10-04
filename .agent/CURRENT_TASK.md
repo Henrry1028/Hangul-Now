@@ -4,15 +4,15 @@
 
 Milestone ID:
 
-`P2G`
+`P2H`
 
 Milestone Name:
 
-`RECORD AUDIT`
+`RECORD MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
 Baseline migration-code checkpoint:
 
@@ -25,32 +25,46 @@ Expected branch:
 Expected repository state:
 
 - P2F `1b8df9f` is an ancestor,
-- only `.agent/*` metadata after it,
+- metadata commits (`docs: ... record audit`) follow it,
 - remote ahead is zero.
 
 ---
 
 ## Objective
 
-Source-first audit of legacy Record ("09 My progress") before any implementation.
+Migrate Record ("09 My progress") with legacy parity. Strategy is in MIGRATION_LOG P2G.
 
-## Audit Questions
+## Expected Files
 
-- template (preview/index.html ~2476-2991), CSS (study-cal/rank/etc. ~489+),
-- render data (activity tabs, filters, calendar, analytics, ranking, weekly review),
-- consumption of App-owned activity logs / XP / study dates / minutes,
-- APIs (weekly review, PDF/TTS?), auth/Firebase coupling,
-- smallest safe implementation slices.
+- `frontend/src/data/recordData.js` (new)
+- `frontend/src/pages/RecordPage.jsx` (new)
+- `frontend/src/styles/record.css` (new)
+- `frontend/src/App.jsx` (record route, recordState, audio-review controller)
+
+## Required Validation
+
+- build,
+- 390/1440 parity for all 3 tabs vs legacy (same activity storage),
+- calendar month nav / today / select + studied/flame cells from `hn-study-dates`,
+- stats/levels from `hn-user-xp`, log count,
+- audio review play/pause/seek/click-seek/speed/like/script/download/regenerate (alert),
+- rank toggle,
+- regression, no unexpected console/page errors.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [ ] Legacy Record source located
-- [ ] State/persistence/API coupling mapped
-- [ ] Bounded slices defined
-- [ ] Audit recorded in MIGRATION_LOG
-- [ ] Audit metadata committed and pushed
+- [x] Audit complete (P2G)
+- [ ] Implementation complete
+- [ ] Build PASS
+- [ ] Behavior PASS
+- [ ] Parity PASS
+- [ ] Regression PASS
+- [ ] Diff review PASS
+- [ ] Commit created
+- [ ] Push complete
+- [ ] Post-push divergence `0 0`
 
 ## Exact Next Action
 
-Read the Record template and its renderVals data.
+Generate recordData.js and record.css from legacy, then RecordPage.jsx and App wiring.
