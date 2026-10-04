@@ -1,5 +1,10 @@
 # HangulNow React + Vite Migration — Multi-Agent Operating Rules
 
+> **Status: the React + Vite migration is COMPLETE and production is LIVE on Cloud Run.**
+> Sections 1 and 4–19 describe how the migration was run and still apply as working discipline
+> (Git safety, state files, parity mindset). Sections 2–3 describe the **current** architecture.
+> Product rules for new development are in `README.md`.
+
 ## 1. Mission
 
 Migrate the existing HangulNow legacy SPA from:
@@ -29,71 +34,43 @@ Post-migration cleanup and UX improvement are separate tasks.
 
 ---
 
-## 2. Runtime Architecture
+## 2. Runtime Architecture (post-migration — current)
 
-### Legacy / production-like source of truth
+The migration is **COMPLETE** and production is **LIVE** (see `.agent/MIGRATION_STATE.md`).
 
-- frontend source: `preview/index.html`
-- backend: `server.js`
-- runtime: `http://localhost:3000`
-- architecture: CDN UMD React 18 + monolithic SPA
+### Product source of truth
 
-### React + Vite migration sandbox
+- **Frontend: `frontend/src` (React 18 + Vite 5) is the only product frontend.**
+- Build output `frontend/dist` (not committed) is served by Express (`server.js`) together with `/api/*` and the WebSocket `/api/live`.
+- `preview/` (legacy CDN UMD SPA) is a **rollback-only archive**. Do not edit it; edits never reach users.
 
-- source: `frontend/`
-- runtime: `http://localhost:5173`
-- React: 18.x
-- Vite: 5.4.x
-- API proxy: `/api -> http://localhost:3000`
+### Runtimes
 
-### Critical rule
+| Purpose | Address | How |
+|---|---|---|
+| Development (hot reload) | `http://localhost:5173` | `npm start` (API on 3000) + `cd frontend && npm run dev` (Vite proxies `/api` and `/api/live` to 3000) |
+| Production-like local | `http://localhost:3000` | `cd frontend && npm run build` (Node 20/22), then `npm start` |
+| Staging | `https://hangulnow-staging-313423647793.asia-northeast3.run.app` | Cloud Run `hangulnow-staging` |
+| Production | `https://hangul-now-api-313423647793.asia-northeast3.run.app` | Cloud Run `hangul-now-api`; traffic pinned to a verified revision |
 
-Until explicit production-cutover approval:
+### Critical rules
 
-- `localhost:3000` remains the legacy source of truth.
-- `localhost:5173` remains the migration sandbox.
-- Do not switch Express static serving to `frontend/dist`.
-- Do not remove legacy frontend dependencies.
-- Do not delete or retire `preview/index.html`.
-- Do not perform production cutover.
+- Build the frontend with **Node 20 or 22** (`.nvmrc`). Node 24 silently stops Vite builds.
+- Deploy only via `git archive` → Cloud Build → `gcloud run deploy --image … --no-traffic --tag …` → verify the tag URL → `update-traffic`. Never use `gcloud run deploy --source .` on Windows (it corrupts Korean asset filenames).
+- Keep Cloud Run **max instances = 1** until in-memory state (`reviewJobs`, Video Class data, rate-limit counters) is externalized.
+- Do not deploy Firebase Hosting for the app (it cannot proxy the `/api/live` WebSocket). Never run a bare `firebase deploy`; rules only: `firebase deploy --only firestore:rules`.
+- Production deployment, traffic shifts, custom domains, and key rotation need explicit user approval.
+- The full developer rule set lives in `README.md` ("개발 규칙").
 
 ---
 
-## 3. Current Verified Migration Checkpoint
+## 3. Current Checkpoint
 
-Required branch:
+- Production release: tag **`v1.0.0-react`** → `19c1500` (application code `6d94bad`), Cloud Run revision `hangul-now-api-00001-siy`.
+- `main` contains the full migration history (fast-forwarded to `9f594f2`). New work branches from `main`.
+- Post-launch hardening (milestone `H1`) is on branch `hardening/post-launch`; status and decisions are in `.agent/CURRENT_TASK.md`.
 
-`migration/react-vite-modular`
-
-Last verified **migration-code checkpoint** at the time this file set was created:
-
-`11e18eff4c1897e72f28f26b6b657a4e96456e14`
-
-Verified commit:
-
-`refactor: migrate reading tts slice to React sandbox`
-
-Important: this hash is a migration checkpoint, **not a self-referential requirement that every future repository HEAD equal this value**.
-
-The repository HEAD may legitimately be a descendant because:
-
-- orchestration metadata (`AGENTS.md`, `.agent/*`) may be committed,
-- later verified migration milestones may be committed.
-
-Handoff validation must therefore verify ancestry and explain all commits after the last verified migration checkpoint. Never require a state file to contain the hash of the commit that contains that same state file.
-
-Current migration status:
-
-- Scaffold: COMPLETE
-- Intro: COMPLETE
-- About: COMPLETE
-- Tutors: COMPLETE
-- Reading safe viewer/vocabulary: COMPLETE
-- Reading TTS: COMPLETE
-- Reading AI generation: NOT STARTED
-- Reading Quiz/history: NOT STARTED
-
-The authoritative live status is:
+Historical migration checkpoints (`11e18ef…` etc.) and the per-domain status are kept in `.agent/MIGRATION_LOG.md`. The live status is:
 
 `.agent/MIGRATION_STATE.md`
 

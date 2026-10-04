@@ -1,175 +1,190 @@
 # Hangul Now (훈민정음)
 
-영어권 학습자가 AI 튜터와 메신저처럼 대화하며 한국어를 연습할 수 있는 교육 플랫폼입니다. 대화, 문장 교정, 작문 첨삭, 발음 평가, 형태소 분석 및 복습 콘텐츠 생성을 하나의 Express 애플리케이션으로 제공합니다.
+영어권 학습자가 AI 튜터와 한국어를 연습하는 교육 플랫폼입니다. 대화, 문장 교정, 읽기·듣기·말하기·쓰기 연습, Gemini Live 실시간 회화, 학습 기록을 제공합니다.
 
-## 주요 기능
+> **제품의 유일한 프론트엔드 소스는 `frontend/src`(React 18 + Vite 5)입니다.**
+> `preview/`는 마이그레이션 이전 레거시 화면으로 **롤백용 보관본**이며, 수정해도 운영에 반영되지 않습니다.
 
-- 지우·민호·수진 등 페르소나 기반 AI 한국어 튜터 대화
-- 문법, 맞춤법 및 자연스러운 표현 교정
-- 문법·발음·어휘 서브 에이전트를 이용한 병렬 코칭
-- 한국어 형태소 분석, 문장 성분 표시 및 로마자 변환
-- 작문 첨삭과 발음 평가
-- 학습 세션 요약 및 오답 기반 복습 퀴즈 생성
-- Gemini Live 기반 10분 튜터 수업, 종료 1분 전 자동 마무리 및 핵심 데이터 확정
-- 최근 일상 3개·반복 실수 5개의 경량 장기 기억과 5챕터 개인 오디오 복습 생성
-- Firebase Admin 연동 시 대화와 학습 기록 저장
-- Gemini API 키가 없을 때도 확인 가능한 데모 응답
+## 운영 현황
+
+| 항목 | 값 |
+| --- | --- |
+| 운영 URL | https://hangul-now-api-313423647793.asia-northeast3.run.app |
+| 스테이징 | https://hangulnow-staging-313423647793.asia-northeast3.run.app |
+| 구성 | Cloud Run 단일 서비스(`hangul-now-api`, `asia-northeast3`)가 React 빌드 + Express API + WebSocket을 같은 출처로 서빙 |
+| 운영 리비전 | 트래픽이 검증된 리비전에 **고정**되어 있음 (자동 전환 없음) |
+| Firebase Hosting / 커스텀 도메인 | 사용하지 않음 |
+
+배포 기록과 롤백 절차: `.agent/PRODUCTION_LAUNCH.md`, `.agent/STAGING_DEPLOYMENT.md`, `.agent/CUTOVER_READINESS.md`.
 
 ## 기술 구성
 
 | 영역 | 기술 |
 | --- | --- |
-| 웹 서버 | Node.js, Express, ESM |
-| 프런트엔드 | `preview/`의 정적 HTML/CSS/JavaScript SPA |
-| 생성형 AI | Google Gemini API |
-| 언어 처리 | Kiwi NLP, 자체 한국어 분석 및 로마자 변환 모듈 |
-| 데이터 | Firebase Admin, Firestore, Firebase Storage |
-| 배포 | Docker, Google Cloud Run, Firebase Hosting/App Hosting |
-
-> 현재 프런트엔드는 React/Vite 빌드가 아니라 Express가 `preview/` 디렉터리를 직접 제공하는 구조입니다.
+| 프론트엔드 | React 18, Vite 5 (`frontend/`) — 빌드 결과 `frontend/dist`를 Express가 서빙 |
+| 서버 | Node.js, Express 4 (ESM, `server.js`), WebSocket `/api/live` |
+| 생성형 AI | Google Gemini API (대화·교정·생성·Live·TTS) |
+| 인증·데이터 | Firebase Auth(Google 로그인), Firestore, Firebase Storage (서버는 Firebase Admin) |
+| 배포 | Docker 멀티 스테이지(Node 20 빌드 → Node 22 런타임), Cloud Build, Cloud Run |
+| 품질 | ESLint, Vitest, Playwright 스모크 테스트 (`frontend/`) |
 
 ## 빠른 시작
 
 ### 요구 사항
 
-- Node.js 20 이상
-- npm
-- 선택 사항: Google Gemini API 키
-- 선택 사항: Firebase 서비스 계정
+- **Node.js 20 또는 22** (`.nvmrc`, `engines: >=20 <23`). Node 24에서는 Vite 빌드가 메시지 없이 멈춥니다.
+- npm, (선택) Docker
 
-### 설치
+### 설치와 환경변수
 
 ```bash
-git clone https://github.com/Henrry1028/Hangul-Now.git
-cd Hangul-Now
 npm install
+cd frontend && npm install && cd ..
+cp .env.example .env   # 값을 채운다 — .env는 절대 커밋·압축 공유하지 않는다
 ```
 
-### 환경변수
+| 변수 | 필수 | 설명 |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | 예 | AI 기능 전체 |
+| `FIREBASE_SERVICE_ACCOUNT_KEY` | 예 | 서비스 계정 JSON 또는 Base64. 없으면 Mock 모드(관리자 API 503, 서버 기록 없음) |
+| `ADMIN_EMAILS` | 예 | 관리자 이메일(쉼표 구분). 비우면 관리자 콘솔·화상수업 미리보기가 사라짐 (또는 Firebase custom claim `admin`) |
+| `FIREBASE_STORAGE_BUCKET` | 아니오 | 기본 `<project_id>.firebasestorage.app` |
+| `ALLOWED_ORIGINS` | 아니오 | CORS 허용 출처(쉼표). 기본값은 운영·스테이징·localhost |
+| `RATE_LIMIT_SCALE`, `RATE_LIMIT_DISABLED`, `TRUST_PROXY_HOPS` | 아니오 | 요청 제한 배율·비활성(로컬 테스트용)·프록시 홉 수(기본 1) |
+| `GEMINI_*_MODEL` 등 | 아니오 | 모델 오버라이드 (`.env.example` 참조) |
 
-`.env.example`을 `.env`로 복사한 후 필요한 값을 입력합니다.
+운영 값은 **Secret Manager**에만 둡니다.
 
-```dotenv
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_TUTOR_LIVE_MODEL=gemini-3.8-live-extended-thinking
-GEMINI_REVIEW_MODEL=gemini-3.8-flash
-GEMINI_REVIEW_TTS_MODEL=gemini-3.8-flash-lite-tts
-PORT=3000
-```
-
-Firebase를 연결하려면 다음 값을 추가할 수 있습니다.
-
-```dotenv
-FIREBASE_SERVICE_ACCOUNT_KEY=base64_or_json_service_account
-FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-```
-
-`FIREBASE_SERVICE_ACCOUNT_KEY`는 서비스 계정 JSON 문자열 또는 해당 JSON을 Base64로 인코딩한 값입니다. 비밀키가 포함된 `.env` 파일은 커밋하지 마세요.
-
-### 실행
+### 개발 (핫 리로드) — http://localhost:5173
 
 ```bash
-npm run dev
+npm start                    # 터미널 1: API + WebSocket (http://localhost:3000)
+cd frontend && npm run dev   # 터미널 2: Vite 개발 서버 (/api, /api/live는 3000으로 프록시)
 ```
 
-브라우저에서 <http://localhost:3000>으로 접속합니다.
+### 운영과 같은 확인 — http://localhost:3000
 
-서버 상태는 다음 주소에서 확인할 수 있습니다.
+`npm start`는 `frontend/dist`를 서빙하므로 **프론트를 고친 뒤 반드시 다시 빌드**합니다 (Node 20/22).
 
 ```bash
-curl http://localhost:3000/api/health
+cd frontend && npm run build && cd .. && npm start
 ```
+
+호스트가 Node 24라면 Docker로 빌드합니다:
+
+```bash
+rm -rf frontend/dist && mkdir frontend/dist
+docker run --rm -v "$(pwd -W)/frontend:/src:ro" -v "$(pwd -W)/frontend/dist:/out" node:20-slim \
+  sh -c 'mkdir /w && cd /src && tar cf - --exclude=node_modules --exclude=dist . | (cd /w && tar xf -) && cd /w && npm ci --include=dev && npm run build && cp -r dist/. /out/'
+```
+
+### 테스트
+
+```bash
+cd frontend
+npm run lint        # ESLint (React Hooks 규칙 포함)
+npm test            # Vitest 단위 테스트
+npm run test:e2e    # Playwright 스모크 — 실행 중인 서버 대상, 기본 http://localhost:3000 (BASE_URL로 변경)
+```
+
+처음 한 번 `npx playwright install chromium`이 필요합니다.
+
+## 개발 규칙 (반드시 지킬 것)
+
+### 코드 위치와 브랜치
+
+1. 새 화면·기능은 **`frontend/src`에만** 만듭니다. `preview/index.html`은 고치지 않습니다.
+2. 기능 브랜치는 `main`에서 만들고, `main`에는 fast-forward 또는 PR로만 반영합니다.
+3. 화면을 추가하면 세 곳을 함께 고칩니다: `pages/새페이지.jsx`, `App.jsx`의 `handleNavigate` 허용 목록과 렌더 분기, `components/AppShell.jsx`의 `navDefs`. 하나라도 빠지면 메뉴를 눌러도 이동하지 않습니다.
+4. 이미지·정적 파일은 `frontend/public/assets`(또는 `frontend/public`)에 넣고 `/assets/파일명`으로 참조합니다. 루트·`assets/`·`preview/assets`의 파일은 웹에서 서빙되지 않습니다.
+
+### 빌드와 배포
+
+1. 프론트 빌드는 Node 20 또는 22로 합니다.
+2. `frontend/dist`는 git에 없습니다. Docker 빌드는 자동으로 만들지만, `npm start`로 로컬 확인할 때는 먼저 빌드합니다. 안 하면 이전 번들이 나갑니다.
+3. **Windows에서 `gcloud run deploy --source .`를 쓰지 않습니다** — 한글 파일명(`훈이_book.png` 등)이 깨져 빌드가 실패합니다. 아래 절차를 씁니다.
+4. 새 리비전은 **항상 `--no-traffic --tag`로 배포**하고, 태그 URL에서 확인한 뒤 `update-traffic`으로 옮깁니다. 문제가 있으면 같은 명령으로 이전 리비전에 되돌립니다.
+5. Cloud Run **max 인스턴스를 1보다 올리지 않습니다.** 복습 작업(`reviewJobs`)·화상수업 예약 데이터·요청 제한 카운터가 프로세스 메모리에 있습니다. Firestore 등으로 옮긴 다음에만 올릴 수 있습니다.
+6. 실시간 회화(WebSocket `/api/live`)는 Cloud Run 주소에서만 동작합니다. Firebase Hosting 리라이트는 WebSocket을 전달하지 못합니다. 세션은 3,600초에서 강제 종료됩니다.
+7. 커스텀 도메인을 붙이면 Firebase Auth 승인 도메인과 `ALLOWED_ORIGINS`에 추가해야 합니다.
+8. `firebase deploy`를 인자 없이 실행하지 않습니다. 규칙만 바꿀 때는 `firebase deploy --only firestore:rules --project hnageul-copilot-dev-918`.
+
+```bash
+# 배포 절차 (예: 커밋 <sha>, 운영 서비스)
+git -c core.autocrlf=false archive --format=tar.gz -o hn-<sha>.tgz <sha>
+gcloud builds submit hn-<sha>.tgz --region asia-northeast3 \
+  --tag asia-northeast3-docker.pkg.dev/hnageul-copilot-dev-918/cloud-run-source-deploy/hangul-now-api:<sha>
+gcloud run deploy hangul-now-api --image <위 태그> --region asia-northeast3 \
+  --no-traffic --tag rc-<sha> --service-account hangul-now-api-runtime@hnageul-copilot-dev-918.iam.gserviceaccount.com \
+  --timeout 3600 --max-instances 1 \
+  --set-secrets GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest
+# 태그 URL 확인 후
+gcloud run services update-traffic hangul-now-api --to-revisions <새 리비전>=100 --region asia-northeast3
+```
+
+### 보안과 데이터
+
+1. 사용자 신원은 서버에서 `Authorization: Bearer <Firebase ID 토큰>`을 검증한 값(`req.user.uid`)만 씁니다. body·query의 `userId`·`email`을 신원으로 믿지 않습니다.
+   - 로그인 필수 API: `authenticateUser`
+   - 게스트도 쓰는 API: `identifyUser` (검증 실패 시 게스트로 처리)
+   - 게스트 요청을 명확히 거부해야 하는 API: `authenticateOptionalUser`
+   - 프론트는 `frontend/src/data/authHeaders.js`의 `authHeaders()`로 토큰을 붙입니다.
+2. 관리자 판정은 `src/adminPolicy.js` 한 곳에서만 합니다 (`requireAdmin`, `GET /api/admin/status`). 클라이언트의 관리자 표시는 서버 응답만 따르며, 데이터 보호는 항상 서버가 맡습니다.
+3. 운영의 `ADMIN_EMAILS` 시크릿(또는 `admin` custom claim)을 비우면 관리자 콘솔과 화상수업 화면이 사라집니다.
+4. 공개 튜터 API에 `email`·`tutorUid`를 다시 넣지 않습니다.
+5. 화상수업은 관리자 미리보기로만 둡니다. 예약·튜터 데이터가 메모리 목업이라 재시작하면 사라집니다.
+6. Firestore 규칙(`firestore.rules`)은 본인 문서만 허용합니다. 클라이언트가 새 컬렉션을 쓰려면 규칙을 먼저 추가하고 Rules 테스트로 검증합니다.
+7. AI·TTS API는 요청 제한(`src/rateLimit.js`)이 걸려 있습니다. 새 비용 API를 만들면 함께 적용합니다.
+8. `.env`와 서비스 계정 JSON은 커밋·압축 공유하지 않습니다.
+
+### 호환성
+
+1. localStorage 키 12개(`hn-lang`, `hn-theme`, `hn-tutor`, `hn-user-xp`, `hn-profile-<uid>`, `hn-learned`, `hn-activity-logs`, `hn-study-dates`, `hn-conversations`, `hn-guest-id`, `hn-sidebar-collapsed`, `hn-sidebar-width`)와 Firestore `users/{uid}` 문서 구조를 바꾸면 기존 사용자 기록이 사라집니다. 바꿀 때는 이전 키를 읽는 변환 코드를 함께 넣습니다.
+2. Express SPA 폴백 정규식(`/api` 제외)을 `app.get("*")`로 되돌리지 않습니다. 새 API 라우트는 폴백보다 위에 등록합니다.
+3. React StrictMode가 켜져 있어 개발 모드에서 effect가 두 번 실행됩니다. WebSocket·타이머·오디오는 반드시 cleanup을 작성합니다.
 
 ## 프로젝트 구조
 
 ```text
-Hangul-Now/
-├── preview/                    # 정적 웹 UI와 캐릭터 에셋
-│   ├── index.html
-│   ├── js/dc-runtime.js
-│   └── assets/
+├── frontend/                 # 제품 프론트엔드 (React + Vite)
+│   ├── src/                  #   pages/, components/, hooks/, data/, styles/
+│   ├── public/               #   정적 파일 (assets/, favicon, manifest)
+│   ├── e2e/                  #   Playwright 스모크 테스트
+│   └── dist/                 #   빌드 결과 (git 제외)
+├── server.js                 # Express API, 정적 서빙(frontend/dist), SPA 폴백
 ├── src/
-│   ├── agents/                 # 문법·발음·어휘 에이전트와 오케스트레이터
-│   ├── pos/                    # 형태소 분석, 문장 성분, 로마자 변환
-│   ├── firebase.js             # Firebase Admin 초기화
-│   ├── geminiService.js        # Gemini 대화·교정·평가 서비스
-│   ├── liveConversation.js     # Gemini Live WebSocket 중계와 튜터 수업 도구
-│   ├── tutorSession.js         # 장기 기억 및 10분 오디오 복습 파이프라인
-│   ├── tts-verification.mjs    # 한국어 음성 텍스트 검증
-│   └── usage-meter.mjs         # 모델 사용량 계측
-├── server.js                   # Express API 및 정적 파일 서버
-├── Dockerfile                  # Cloud Run용 컨테이너 설정
-├── firebase.json               # Firebase Hosting 설정
-├── apphosting.yaml             # Firebase App Hosting 설정
-└── package.json
+│   ├── authMiddleware.js     # 토큰 검증 / identifyUser / requireAdmin
+│   ├── adminPolicy.js        # 관리자 판정 (단일 기준)
+│   ├── rateLimit.js          # AI·TTS 요청 제한
+│   ├── liveConversation.js   # Gemini Live WebSocket 중계
+│   ├── tutorSession.js       # 튜터 장기 기억·오디오 복습
+│   ├── learningHistory.js    # 학습 이력
+│   ├── videoClassService.js  # 화상수업 (관리자 미리보기, 메모리 목업)
+│   └── ...
+├── preview/                  # 레거시 화면 — 롤백용 보관본 (수정 금지)
+├── firestore.rules, storage.rules
+├── Dockerfile                # Node 20 프론트 빌드 → Node 22 런타임
+└── .agent/                   # 마이그레이션·배포 기록 (에이전트 작업 규칙: AGENTS.md)
 ```
 
-## API
+## 주요 API
 
-| 메서드 | 경로 | 설명 |
-| --- | --- | --- |
-| `GET` | `/api/health` | 서버, Gemini 및 Firebase 연결 상태 확인 |
-| `POST` | `/api/chat` | AI 튜터 대화 생성 |
-| `POST` | `/api/correction` | 문장 오류 분석 및 교정 |
-| `POST` | `/api/coaching` | 문법·발음·어휘 통합 코칭 |
-| `POST` | `/api/pos/tag` | 형태소 및 문장 성분 분석 |
-| `POST` | `/api/romanize` | 한국어 로마자 변환 |
-| `POST` | `/api/writing/feedback` | 작문 첨삭과 점수 생성 |
-| `POST` | `/api/speaking/assess` | 발음 평가 결과 생성 |
-| `POST` | `/api/session/artifact` | 학습 세션 요약 생성 |
-| `POST` | `/api/session/quiz` | 오답 기반 복습 퀴즈 생성 |
-| `POST` | `/api/session/complete-and-review` | 튜터 수업 기억 갱신 및 10분 오디오 복습 생성 |
-| `GET` | `/api/session/audio-review/:sessionId` | 로컬 개발 모드의 생성 오디오 재생 |
-| `WS` | `/api/live` | Gemini Live 튜터 수업·Survival 롤플레잉 중계 |
+| 메서드 | 경로 | 인증 | 설명 |
+| --- | --- | --- | --- |
+| `GET` | `/api/health` | — | 상태 확인 |
+| `POST` | `/api/chat`, `/api/correction` | 선택 (토큰 있으면 본인 기록) | 튜터 대화, 문장 교정 |
+| `POST` | `/api/content/generate` | 선택 | 읽기·듣기·말하기 자료 생성 |
+| `POST` | `/api/tts`, `/api/translate` | — | 음성 합성, 번역 |
+| `POST` | `/api/learning/record`, `/api/learning/pick` | 선택 | 학습 이력 기록·선택 |
+| `GET` | `/api/learning/history`, `/api/session/list` | 선택 (게스트는 빈 결과) | 본인 학습 이력·복습 노트 |
+| `POST` | `/api/session/report`, `/api/session/complete-and-review` | 선택 | 복습 노트 PDF, 튜터 오디오 복습 |
+| `GET` | `/api/admin/status` | 필수 | 화면 표시용 관리자 여부 |
+| `POST`/`GET` | `/api/admin/check`, `/api/admin/dashboard` | 관리자 | 관리자 확인·대시보드 |
+| — | `/api/v1/*` | 엔드포인트별 | 화상수업 (관리자 미리보기) |
+| `WS` | `/api/live` | — | Gemini Live 튜터 수업·롤플레잉 |
 
-대화 요청 예시:
-
-```bash
-curl -X POST http://localhost:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"tutorId":"jiwoo","message":"안녕하세요!"}'
-```
-
-## AI 모델 설정
-
-- 일반 대화·교정·작문·발음 서비스는 `src/geminiService.js`에 지정된 Gemini 모델을 사용합니다.
-- 멀티 에이전트 코칭은 `src/agents/orchestrator.mjs`의 전용 모델 설정을 사용합니다.
-- `/api/health` 응답에서 서버가 노출하는 모델 계층과 API 키 설정 여부를 확인할 수 있습니다.
-
-모델 이름은 실제 Google Gemini API에서 사용할 수 있는 모델 ID와 일치해야 합니다.
-
-## 배포
-
-### Docker
-
-```bash
-docker build -t hangul-now .
-docker run --rm -p 3000:8080 --env-file .env hangul-now
-```
-
-### Google Cloud Run
-
-```bash
-gcloud run deploy hangul-now \
-  --source . \
-  --region asia-northeast3 \
-  --allow-unauthenticated
-```
-
-### Firebase
-
-`firebase.json`, `firestore.rules`, `storage.rules`, `apphosting.yaml`을 배포 환경에 맞게 검토한 후 Firebase CLI로 배포합니다.
-
-```bash
-firebase deploy
-```
-
-## 보안 참고사항
-
-- `.env`와 Firebase 서비스 계정 키를 Git에 커밋하지 마세요.
-- 현재 Firestore 규칙은 인증 사용자에게 비교적 넓은 쓰기 권한을 허용하므로 프로덕션 배포 전에 사용자 소유권 검증을 강화하세요.
-- 공개 배포에서는 CORS 허용 범위와 API 요청 크기 제한을 서비스 요구사항에 맞게 조정하세요.
+AI·TTS 경로는 1분당 요청 수가 제한되며 초과 시 `429`와 `Retry-After`를 돌려줍니다.
 
 ## 라이선스
 
-이 프로젝트의 패키지 메타데이터는 ISC 라이선스를 사용합니다.
+ISC (package.json 기준)
