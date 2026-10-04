@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`28bd81c5ac1088f5ae3dd8089aff4906071238fe`
+`e562a11c922e2af0d253d844710e3f9846ff22af`
 
 Checkpoint commit:
 
-`fix: align tutors desktop screen spacing with legacy`
+`refactor: migrate writing page to React sandbox`
 
 Repository HEAD rule:
 
@@ -92,6 +92,7 @@ React/Vite sandbox:
 ### Writing
 
 - Writing audit (P2C) — COMPLETE
+- Writing migration: syllable/word build, SVG keyboard, guide, sentence tab (P2D, `e562a11`) — COMPLETE
 
 ---
 
@@ -163,17 +164,19 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P2D`
+`P2E`
 
 Name:
 
-`WRITING MIGRATION`
+`LISTENING AUDIT`
 
 Status:
 
-`IN_PROGRESS`
+`AUDITING`
 
-Scope: see MIGRATION_LOG P2C (strategy) and CURRENT_TASK.
+Next required action:
+
+Source-first audit of legacy Listening (`05 Listening` template ~1716-1777, listening CSS, audio lifecycle, TTS/generation APIs, dictation, activity/learned coupling).
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 
@@ -210,7 +213,7 @@ Current expected high-level sequence:
 
 1. ~~Finish Reading~~ — COMPLETE
 2. ~~Home~~ — COMPLETE
-3. Writing
+3. ~~Writing~~ — COMPLETE
 4. Listening
 5. Record
 6. Speaking
@@ -247,7 +250,7 @@ Do not expose or migrate for public release unless explicitly approved:
 
 Estimated total migration progress:
 
-`30–35%`
+`40–45%`
 
 This is a workload estimate, not a completion guarantee.
 

@@ -4,19 +4,19 @@
 
 Milestone ID:
 
-`P2D`
+`P2E`
 
 Milestone Name:
 
-`WRITING MIGRATION`
+`LISTENING AUDIT`
 
 Status:
 
-`READY_TO_COMMIT`
+`AUDITING`
 
 Baseline migration-code checkpoint:
 
-`1853fa61ea4fe5bad4ba152d88f37a61679525c5`
+`e562a11c922e2af0d253d844710e3f9846ff22af`
 
 Expected branch:
 
@@ -24,52 +24,34 @@ Expected branch:
 
 Expected repository state:
 
-- P2C-FIX `1853fa6` is an ancestor,
-- a `docs: audit writing migration` metadata commit follows it,
+- P2D checkpoint `e562a11` is an ancestor,
+- only `.agent/*` metadata after it,
 - remote ahead is zero.
 
 ---
 
 ## Objective
 
-Migrate the full Writing screen (build syllable, build word, write sentences) with legacy parity. Strategy is in MIGRATION_LOG P2C.
+Source-first audit of legacy Listening before any implementation.
 
-## Expected Files
+## Audit Questions
 
-- `frontend/src/data/writingData.js` (new)
-- `frontend/src/data/learnedData.js` (new; helpers moved unchanged from ReadingPage)
-- `frontend/src/pages/WritingPage.jsx` (new)
-- `frontend/src/styles/writing.css` (new)
-- `frontend/src/pages/ReadingPage.jsx` (import shared learned helpers)
-- `frontend/src/App.jsx` (writing route + App-owned writing state)
-- `frontend/public/assets/` (6 copied assets)
-
-## Required Validation
-
-- build,
-- syllable build: jamo panel, virtual keyboard, physical keys, compound vowel/batchim two-stroke, error flash, Backspace/Enter/Escape,
-- auto-advance timing, celebration pose, activity payloads (15/25/30 XP), `hn-learned` syllable/word records, review mode, learned progress label,
-- word mode syllable progression,
-- sentence tab count/feedback/activity,
-- hand shadow toggle, setup guide Win/Mac,
-- state survives navigation away and back,
-- desktop 1440 and mobile 390 parity vs legacy,
-- Intro/About/Home/Tutors/Reading regression, no console/page errors.
+- template (`05 Listening`, preview/index.html ~1716-1777) and listening CSS,
+- render data, state fields, handlers,
+- audio lifecycle (`listeningAudio`, `stopListeningAudio`, playback speed), TTS endpoints,
+- AI generation (`genListening`), dictation, questions, translation toggle,
+- activity/XP and learned-topic coupling,
+- smallest safe implementation slices.
 
 ## Progress Checklist
 
 - [x] Git state reverified
-- [x] Audit complete (P2C)
-- [x] Implementation complete
-- [x] Build PASS (Node 20)
-- [x] Behavior PASS (two scripted scenarios identical to legacy at every checkpoint)
-- [x] Parity PASS (359/359 elements, 0 style diffs; 390 boxes identical; desktop vertical identical, widths differ only by shell width)
-- [x] Regression PASS
-- [x] Diff review PASS
-- [ ] Commit created
-- [ ] Push complete
-- [ ] Post-push divergence `0 0`
+- [ ] Legacy Listening source located
+- [ ] State/persistence/API/audio coupling mapped
+- [ ] Bounded slices defined
+- [ ] Audit recorded in MIGRATION_LOG
+- [ ] Audit metadata committed and pushed
 
 ## Exact Next Action
 
-Create writingData.js and learnedData.js, then WritingPage.jsx and writing.css.
+Read the Listening template and its render data, then map audio and API handlers.

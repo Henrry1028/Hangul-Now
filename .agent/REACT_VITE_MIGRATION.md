@@ -125,7 +125,7 @@ The expected order is based on current knowledge and may be adjusted after audit
 Likely domains:
 
 - Home — `COMPLETE` (`3e125c9`)
-- Writing
+- Writing — `COMPLETE` (`e562a11`)
 - Listening
 - Record
 
@@ -304,7 +304,7 @@ Do not interpret backend capability as permission to expose the feature.
 
 Current estimated migration workload completion:
 
-`30–35%`
+`40–45%`
 
 This estimate may change after audits.
 

@@ -608,3 +608,46 @@ Strategy (P2D, one milestone for layout parity):
 Next milestone:
 
 `P2D WRITING MIGRATION`
+
+---
+
+## P2D — Writing Migration
+
+Status:
+
+`COMPLETE`
+
+Commit:
+
+`e562a11c922e2af0d253d844710e3f9846ff22af`
+
+Implementation:
+
+- `WritingPage.jsx` ports the legacy logic 1:1: ordering, target, complete/celebrate, `nextStroke`, `handleVirtualKeyName`, advance, and auto-advance (1800/240ms).
+- `writingData.js` holds the legacy data and helpers, extracted verbatim by script. `writing.css` is the legacy CSS copied verbatim, `!important` included.
+- The SVG keyboard is JSX with identical geometry, attributes, and classes. `onClick` replaces the `window.__hnVirtualKey` bridge.
+- Keyboard listeners attach only while Writing is mounted and are removed on unmount. Auto-advance clears on unmount.
+- Writing state is App-owned (`INITIAL_WRITING_STATE`) so it survives navigation like legacy.
+- Learned helpers moved unchanged from ReadingPage into the shared `learnedData.js`.
+- Six assets were copied byte-identically.
+
+Parity findings preserved:
+
+- Legacy wraps every `{{ }}` interpolation in `<span class="sc-interp">`, and the desktop Writing CSS hits these through descendant selectors. On desktop, the title renders at 11px with .08em letter-spacing, the jamo message/meaning at 11.5px, and word-progress syllables get extra padding. The sandbox reproduces this with `Interp` wrapper spans.
+- `.writing-screen` desktop `height:100%` resolves against the legacy shell main viewport. The sandbox emulates it with `height: calc(100vh - 60px) !important` inside the >=860px block. Revisit in Phase 6.
+- Dead legacy code is not ported: `inputJamo`, the `speakTarget`/`speakSentence` bindings, `fingerStyles`, `keyboardRows`, `HOME_TIPS`, `jLv`, `TARGETS`.
+
+Validation:
+
+- Node 20 build PASS,
+- DOM/style comparison vs legacy: 359/359 elements and 0 computed-style differences at 390x844, 1440x900, and 1920x1080. All boxes identical at 390. On desktop, every vertical position/height is identical, and widths differ only for grid-width-dependent elements (legacy shell content 1200/1400 vs sandbox 1120),
+- two scripted behavior scenarios run on both apps were identical at every checkpoint: wrong-key flash and recovery; guided physical typing; virtual key clicks; Enter/Escape/Backspace; celebration and 1800ms auto-advance; level 2 Shift highlights and two-stroke compound batchim (ㄺ); word mode with mid-word advance; activity payloads (15/25/30 XP) and XP totals; `hn-learned` syllable/word records; review mode; order-free jamo panel picks; hand-shadow toggle; Windows/macOS guide; sentence count, typing, and feedback,
+- regression PASS: Intro/About/Home (Home writing card → Writing)/Tutors/Reading (mocked generation still records `hn-learned` reading), no console/page errors.
+
+Known cross-cutting item (deferred to Phase 6 shell):
+
+- Legacy keeps Reading state (`genReading`, `rAns`, `wordKey`, `saved`, `rTrAll`) at app level. The sandbox ReadingPage keeps it page-local. It is unobservable until the shell provides navigation away from Reading, at which point it should be lifted to App like Writing.
+
+Next milestone:
+
+`P2E LISTENING AUDIT`
