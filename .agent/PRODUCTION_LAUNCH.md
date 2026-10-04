@@ -2,11 +2,12 @@
 
 Status:
 
-`PRODUCTION CANDIDATE READY FOR MANUAL AUTH CHECK`
+`PRODUCTION PUBLIC LAUNCH READY FOR FINAL USER CHECK`
 
-- The production service `hangul-now-api` exists and its candidate passes all automated acceptance.
-- The service is **private**: no public invoker, so every public request gets 403. Nobody outside the project can reach it yet.
-- Public exposure ("traffic migration") happens only after the real-Google-auth check in section 5 passes.
+- **LIVE since 2026-10-04T07:42:50Z** at https://hangul-now-api-313423647793.asia-northeast3.run.app (alternate host https://hangul-now-api-onpsj3o5ta-du.a.run.app).
+- The candidate passed automated acceptance and the user's 13/13 real-Google-auth check.
+- The launch steps (section 6) were executed and post-launch public acceptance passes (section 9).
+- One short user confirmation on the real production origin remains (section 10).
 
 Approval: the user approved the production first launch (Cloud Run direct; no Firebase Hosting deploy, no DNS/custom domain; keep staging and `preview/`).
 
@@ -20,13 +21,13 @@ Approval: the user approved the production first launch (Cloud Run direct; no Fi
 | Region | `asia-northeast3` |
 | Service | `hangul-now-api` (labels `env=production`, `app-commit=6d94bad`, `image-source=19c1500`) |
 | Revision | `hangul-now-api-00001-siy`, tag `candidate` |
-| Primary URLs (private until launch) | https://hangul-now-api-313423647793.asia-northeast3.run.app, https://hangul-now-api-onpsj3o5ta-du.a.run.app |
-| Candidate URL (private) | https://candidate---hangul-now-api-onpsj3o5ta-du.a.run.app |
+| Primary URLs (public since launch) | https://hangul-now-api-313423647793.asia-northeast3.run.app, https://hangul-now-api-onpsj3o5ta-du.a.run.app |
+| Candidate URL (tag kept; public with the service) | https://candidate---hangul-now-api-onpsj3o5ta-du.a.run.app |
 | Image | `asia-northeast3-docker.pkg.dev/hnageul-copilot-dev-918/cloud-run-source-deploy/hangulnow-staging@sha256:ecf22296054974fb08c4209302ddaa6048eac009783d261324630d6e3be6ace2`. This is the **same digest staging accepted**, with no rebuild. It was built by Cloud Build from `git archive 19c1500` (Korean filenames intact). |
 | Application code | `6d94bad` (no non-`.agent` changes through repository HEAD at deploy time, `caff194`) |
 | Runtime SA | `hangul-now-api-runtime@hnageul-copilot-dev-918.iam.gserviceaccount.com`: **no project roles**; `roles/secretmanager.secretAccessor` on the 3 secrets only. The default compute SA, which has project Editor, is not used. |
 | Secrets (names only) | `GEMINI_API_KEY` ← `hn-staging-gemini-api-key`; `FIREBASE_SERVICE_ACCOUNT_KEY` ← `hn-staging-firebase-sa-key`; `ADMIN_EMAILS` ← `hn-staging-admin-emails`, all `:latest`. These are the staging-validated values, reused rather than duplicated (the `staging` prefix is historical). Firebase key project_id = `hnageul-copilot-dev-918`; ADMIN_EMAILS is the admin proven by the staging manual check. |
-| Settings | 1 vCPU, 512 MiB, concurrency 80, **timeout 3600 s**, **min 0, max 1** instances, HTTP/1, ingress all, invoker = none (private) |
+| Settings | 1 vCPU, 512 MiB, concurrency 80, **timeout 3600 s**, **min 0, max 1** instances, HTTP/1, ingress all, invoker = `allUsers` (since 2026-10-04T07:42:50Z) |
 
 ### Why max instances = 1 (intentional first-launch limit)
 
@@ -85,11 +86,13 @@ Over HTTPS with the identity token:
 
 ## 4. Firebase Auth
 
-- No authorized-domain change was needed for the candidate: the manual check runs on `localhost`, which is already authorized.
-- The two production hostnames are added at launch time (section 6, step 1). Nothing was removed.
-- Current list: `localhost`, `hnageul-copilot-dev-918.firebaseapp.com`, `hnageul-copilot-dev-918.web.app`, and the two staging hosts.
+- Candidate: no change was needed (the manual check ran on `localhost`).
+- At launch, **added exactly** `hangul-now-api-313423647793.asia-northeast3.run.app` and `hangul-now-api-onpsj3o5ta-du.a.run.app`, the two hostnames Cloud Run assigned to this service. No wildcard, nothing removed.
+- Current list: `localhost`, `hnageul-copilot-dev-918.firebaseapp.com`, `hnageul-copilot-dev-918.web.app`, `hangulnow-staging-313423647793.asia-northeast3.run.app`, `hangulnow-staging-onpsj3o5ta-du.a.run.app`, `hangul-now-api-313423647793.asia-northeast3.run.app`, `hangul-now-api-onpsj3o5ta-du.a.run.app`.
 
-## 5. Manual Real-Google-Auth Check on the Private Candidate (user)
+## 5. Manual Real-Google-Auth Check on the Private Candidate (user) — PASS 13/13
+
+The user reported all 13 items PASS through the localhost proxy: login, profile, reload, tutor restore, admin menu, Video Class entry, console, Video Class page, `/api/admin/check` 200, logout isolation, entries gone after logout, re-login with admin restored, and no unexpected errors.
 
 Open the private candidate on localhost with your own gcloud identity. Use **one** of these:
 
@@ -117,7 +120,7 @@ Then open **http://localhost:8099** in a normal browser with DevTools Console/Ne
 
 Report PASS/FAIL per item. **Do not open public access before every item passes.**
 
-## 6. Launch Steps (agent, only after the section 5 PASS)
+## 6. Launch Steps — EXECUTED 2026-10-04T07:42:50Z
 
 1. **Firebase authorized domains:** add `hangul-now-api-313423647793.asia-northeast3.run.app` and `hangul-now-api-onpsj3o5ta-du.a.run.app` (additive, `updateMask=authorizedDomains`).
 2. **Pin traffic** to the accepted revision, so a later deploy can't auto-shift:
@@ -143,3 +146,62 @@ Report PASS/FAIL per item. **Do not open public access before every item passes.
 - Staging is preserved, including its authorized domains.
 - `preview/` is preserved.
 - No application source changes.
+
+## 9. Post-Launch Public Acceptance — PASS (2026-10-04T07:42:50Z)
+
+All checks were run against the public URL with **no identity token**.
+
+- **IAM:** `allUsers` → `roles/run.invoker` on `hangul-now-api` only. Staging IAM is unchanged.
+- **Traffic:** pinned to `hangul-now-api-00001-siy=100` (no `latestRevision`), so a later deploy cannot take traffic implicitly. No new revision was created, and the image is unchanged (`sha256:ecf22296…`).
+- **Frontend:**
+  - `/` returns 200 with valid TLS and is byte-identical to `frontend/dist/index.html` (not preview).
+  - Title `Hangul Now | 행글 나우`; `index-BWIOtno1.js` / `index-CAz-CLob.css`.
+  - Favicon (ico/32), apple-touch-icon, manifest, logo, and the Korean-named `훈이_book.png` / `캐릭터_훈이.png` return 200.
+  - `/tutors`, `/admin`, and `/deep/link` fall back to the SPA. The alternate host serves the identical page. HTTP returns 302 → HTTPS.
+- **Screens (real browser, real Firebase SDK):** all 11 at 1440 and 390 in en and ko. The EN/한국어 switch works. Zero console warnings or errors, zero failed requests, zero 5xx.
+- **Firebase auth domain readiness:** clicking **Log in** opened the Google sign-in popup on `hnageul-copilot-dev-918.firebaseapp.com` with no `auth/unauthorized-domain`. The popup was closed without signing in; a real login is the user's section 10 check.
+- **APIs:**
+  - `/api/health` ok; `/api/v1/tutors` 200; `POST /api/chat {}` 400; CORS preflight 204.
+  - `GET /api/does-not-exist`, `/api`, `/api/v1/nope`, and `/api/live` return 404 (not index.html).
+  - `/api/admin/dashboard` with no token, `/api/admin/check` forged or no token, `/api/v1/bookings` forged, and `/api/v1/tutors/profile` with no token all return **401**.
+- **WebSocket:** `wss://hangul-now-api-313423647793.asia-northeast3.run.app/api/live` opens in 252 ms and closes cleanly with 1000 (no Gemini session started). Timeout is 3600 s; sessions over 60 minutes need reconnect support (not implemented).
+- **Isolation:**
+  - **No Video Class for:** guest; `?admin=1` guest; signed-in normal user, with or without `?admin=1`, which also makes no admin calls; an admin-pattern email with a forged token (server 401 on check and dashboard).
+  - **Direct paths:** `/videoclass`, `/videoclass?admin=1`, and `/#videoclass` land on Landing.
+  - The legacy client-flag 👑 console page still opens for `?admin=1`/email-pattern users (P5B parity). It shows only the session's own fallback row, and `/api/admin/dashboard` stays 401, so no server data is exposed.
+- **Logs:**
+  - 0 5xx, 0 ERROR-severity entries.
+  - The 28 WARNING entries are exactly the 4xx request logs from deliberate tests (11 × 401, 8 × 404, 7 × 403 before launch, 2 × 400).
+  - The only app warnings are `Token verification failed` from forged-token tests.
+  - One instance start; no crash, memory, SIGTERM, or permission entries.
+  - Firebase Admin initialized via the runtime SA.
+
+## 10. Final User Check (production origin)
+
+Open **https://hangul-now-api-313423647793.asia-northeast3.run.app**:
+
+1. Google login (no `auth/unauthorized-domain`).
+2. Network: `POST /api/admin/check` → 200 (👑 / 화상수업 entries appear).
+3. Logout (entries disappear).
+4. No unexpected console/network errors.
+
+On PASS, the status becomes `PRODUCTION FIRST LAUNCH PASS`.
+
+## 11. Rollback Readiness
+
+- **Emergency stop** (removes only public access; the service, revision, image, logs, secrets, and staging are all preserved):
+  `gcloud run services remove-iam-policy-binding hangul-now-api --member=allUsers --role=roles/run.invoker --region asia-northeast3 --project hnageul-copilot-dev-918`
+- **Bad future revision:** `gcloud run services update-traffic hangul-now-api --to-revisions=hangul-now-api-00001-siy=100`.
+- **Rebuilt service:** redeploy the validated digest (section 1).
+- Not executed.
+
+## 12. Known Limitations (production)
+
+- `max-instances=1` is **temporary architecture protection**, not a scaling solution: `reviewJobs` and Video Class state live in memory. Externalize them before raising it.
+- `min-instances=0`: cold starts, and in-memory state is lost when the service scales to zero.
+- Video Class (admin preview) data is mock and in-memory, **not durable**.
+- Live sessions are cut at 3600 s (no reconnect).
+- Secrets keep their `hn-staging-*` names.
+- The legacy client admin flag still shows the 👑 console page shell to `?admin=1`/email-pattern users (data server-protected).
+- No custom domain yet.
+- Firebase Hosting is not deployed (`firebase.json` rewrite targets `hangul-now-api` if used later; Hosting can't proxy the WebSocket).

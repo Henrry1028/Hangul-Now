@@ -1397,3 +1397,22 @@ Status:
 - No Firebase Hosting deploy, no DNS, no authorized-domain change, staging and preview preserved, no application source changes.
 
 Details and the launch/rollback runbook: `.agent/PRODUCTION_LAUNCH.md`.
+
+### P9 — public launch executed
+
+- The user reported the candidate real-auth check 13/13 PASS.
+- Launch actions:
+  - Added Firebase authorized domains `hangul-now-api-313423647793.asia-northeast3.run.app` and `hangul-now-api-onpsj3o5ta-du.a.run.app` (additive).
+  - Pinned traffic `hangul-now-api-00001-siy=100`.
+  - Granted `allUsers` `roles/run.invoker` (2026-10-04T07:42:50Z).
+- No rebuild, no new revision, no source change.
+- Post-launch public acceptance PASS:
+  - frontend identical to dist; assets incl. Korean names
+  - 11 screens × 1440/390 × en/ko with zero console messages
+  - Firebase Google popup opens with no unauthorized-domain error
+  - APIs, unknown /api 404, 401s, WSS 252 ms clean close
+  - guest/normal/`?admin=1`/forged isolation
+  - logs: 0 5xx, 0 ERROR
+- Staging, `preview/`, Firebase Hosting (undeployed), and DNS are untouched.
+
+Result: `PRODUCTION PUBLIC LAUNCH READY FOR FINAL USER CHECK` (`.agent/PRODUCTION_LAUNCH.md` section 10).

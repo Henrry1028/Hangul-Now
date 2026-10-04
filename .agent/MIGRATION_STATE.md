@@ -35,7 +35,7 @@ Working tree at the checkpoint:
 
 Production cutover:
 
-`LOCAL CUTOVER DONE (6d94bad)` — Express/Firebase Hosting/Docker serve `frontend/dist`; external deployment NOT performed (separate milestone)
+`LIVE (Cloud Run direct) since 2026-10-04T07:42:50Z: https://hangul-now-api-313423647793.asia-northeast3.run.app`. Earlier record: `LOCAL CUTOVER DONE (6d94bad)` — Express/Firebase Hosting/Docker serve `frontend/dist`; external deployment NOT performed (separate milestone)
 
 Legacy source of truth:
 
@@ -176,7 +176,7 @@ Name:
 
 Status:
 
-`PRODUCTION CANDIDATE READY FOR MANUAL AUTH CHECK`. `hangul-now-api` (revision 00001-siy, tag candidate, staging digest) is deployed **private**, and automated acceptance passes. Waiting on the user's real Google auth check (`.agent/PRODUCTION_LAUNCH.md` section 5) before public exposure.
+`PRODUCTION PUBLIC LAUNCH READY FOR FINAL USER CHECK`. **LIVE** since 2026-10-04T07:42:50Z at https://hangul-now-api-313423647793.asia-northeast3.run.app: revision `hangul-now-api-00001-siy` at 100%, public invoker, candidate manual auth 13/13 PASS, post-launch public acceptance PASS. One short user check on the production origin remains (`.agent/PRODUCTION_LAUNCH.md` section 10).
 
 ### Previous: P8 Cloud Run staging (`hangulnow-staging`), automated + manual auth PASS
 
