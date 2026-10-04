@@ -1,37 +1,52 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 사용자 프로필 및 개인 설정
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // 공통 소유자 판정 — 문서의 userId 필드가 요청자의 uid와 같아야 한다
+    function signedIn() {
+      return request.auth != null;
+    }
+    function ownsExisting() {
+      return signedIn() && resource.data.userId == request.auth.uid;
+    }
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.userId == request.auth.uid;
     }
 
-    // 일일 학습 계획 (DailyPlan) 및 스트릭
+    // 사용자 프로필 및 개인 설정 (클라이언트가 직접 읽고 쓰는 유일한 경로)
+    // 하위 컬렉션(learned, sessions 등)은 서버(Admin SDK) 전용이므로 클라이언트 규칙을 두지 않는다
+    match /users/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    // 일일 학습 계획 (DailyPlan) 및 스트릭 — 본인 문서만
     match /daily_plans/{planId} {
-      allow read, write: if request.auth != null;
+      allow read, update, delete: if ownsExisting();
+      allow create: if ownsIncoming();
     }
 
     // 튜터 목록 (누구나 읽기 가능)
     match /tutors/{tutorId} {
       allow read: if true;
-      allow write: if false; // 관리자 전용
+      allow write: if false; // 관리자 전용 (서버)
     }
 
-    // 대화방 및 메시지 (참여자만 읽기/쓰기)
+    // 튜터 대화 기록 — 문서 ID가 "<uid>_<tutorId>" 형식이며 본인 것만
     match /conversations/{conversationId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if signedIn() && conversationId.matches(request.auth.uid + '_.*');
 
       match /messages/{messageId} {
-        allow read, write: if request.auth != null;
+        allow read, write: if signedIn() && conversationId.matches(request.auth.uid + '_.*');
       }
     }
 
-    // 오답 노트 및 어휘장 (SRS)
+    // 오답 노트 및 어휘장 (SRS) — 본인 문서만
     match /mistake_notes/{noteId} {
-      allow read, write: if request.auth != null;
+      allow read, update, delete: if ownsExisting();
+      allow create: if ownsIncoming();
     }
     match /vocab_items/{vocabId} {
-      allow read, write: if request.auth != null;
+      allow read, update, delete: if ownsExisting();
+      allow create: if ownsIncoming();
     }
 
     // 레슨 콘텐츠 (듣기/읽기/쓰기/말하기)
@@ -40,9 +55,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // 학습 시도 및 평가 기록 (Attempts)
+    // 학습 시도 및 평가 기록 (Attempts) — 본인 문서만
     match /attempts/{attemptId} {
-      allow read, write: if request.auth != null;
+      allow read, update, delete: if ownsExisting();
+      allow create: if ownsIncoming();
     }
+
+    // 위에 없는 모든 경로는 기본 거부 (서버는 Admin SDK로 규칙을 우회한다)
   }
 }

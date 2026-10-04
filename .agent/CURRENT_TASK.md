@@ -1,47 +1,49 @@
-# Current Migration Task
+# Current Task
 
-## Status
+## Task Identity
 
-`COMPLETE` — **HANGULNOW REACT + VITE MIGRATION — COMPLETE**
+Milestone ID:
 
-There is no active migration implementation task.
+`H1`
 
-## Final State
+Milestone Name:
 
-- Production: **LIVE** on Cloud Run direct since 2026-10-04T07:42:50Z, https://hangul-now-api-313423647793.asia-northeast3.run.app.
-- Service `hangul-now-api` (project `hnageul-copilot-dev-918`, region `asia-northeast3`), revision `hangul-now-api-00001-siy` at 100%.
-- Image `…/hangulnow-staging@sha256:ecf22296054974fb08c4209302ddaa6048eac009783d261324630d6e3be6ace2` (app code `6d94bad`).
-- Runtime: 1 vCPU, 512 MiB, concurrency 80, timeout 3600 s, min 0, max 1, SA `hangul-now-api-runtime`, secrets `GEMINI_API_KEY` / `FIREBASE_SERVICE_ACCOUNT_KEY` / `ADMIN_EMAILS`.
-- Final manual production verification: real Google login, authorized domain, `/api/admin/check` 200, Admin console, Video Class, logout isolation, re-login: **PASS**, with no unexpected errors.
-- Preserved:
-  - staging `hangulnow-staging`
-  - `preview/`
-  - candidate tag
-  - rollback path (`.agent/PRODUCTION_LAUNCH.md` section 11)
-- Firebase Hosting: not deployed. Custom domain/DNS: not configured.
+`POST-LAUNCH HARDENING` (user's "권장 후속 작업" list, risk-reviewed)
 
-## Known Post-Launch Limitations (not fixed; future work)
+Status:
 
-1. Video Class (admin preview) data is in-memory and **not durable**.
-2. Post-conversation review jobs (`reviewJobs`) live in process memory and are polled by the client.
-3. Production `max-instances=1` is intentional and temporary until mutable state is externalized.
-4. `min-instances=0`: cold starts can occur.
-5. In-memory state disappears after idle shutdown, restart, or redeploy.
-6. Cloud Run request/WebSocket timeout is 3600 s.
-7. Sessions beyond 60 minutes would need reconnect support (not implemented).
-8. Firebase Hosting is not the production frontend (not deployed).
-9. Production uses the Cloud Run URL directly.
-10. No custom domain is configured.
-11. Legacy `preview/` remains as a rollback/reference source.
-12. Staging `hangulnow-staging` remains available.
+`IN_PROGRESS`
 
-## Recommended Next Phase
+Branch:
 
-`P7 POST-LAUNCH STABILITY MONITORING`: **NOT STARTED**. Do not begin without an explicit instruction.
+`hardening/post-launch` (created from `main` after `main` was fast-forwarded to `9f594f2`)
 
-Later candidates, each a separate milestone:
+Baseline:
 
-- externalize review jobs and Video Class state (then raise max instances)
-- custom domain
-- legacy retirement (`preview/`)
-- Phase 11 cleanup (migration console instrumentation)
+Production = `hangul-now-api-00001-siy` (tag `v1.0.0-react` → `19c1500`), traffic pinned 100%.
+
+## Risk Review Decisions
+
+| # | Item | Decision |
+|---|---|---|
+| 1 | main fast-forward + tag | DONE: `main` = `9f594f2`; tag `v1.0.0-react` → `19c1500` (production image source) |
+| 2 | AGENTS.md / README rewrite | do now (docs) |
+| 3 | rate limit + CORS + budget alert | CORS + rate limit now (staging-verified IP handling); budget alert needs a user amount and billing account |
+| 4 | server-verified identity on learning/session APIs | do now (live IDOR); ships after staging + user login check |
+| 5 | Firestore owner rules | DONE + DEPLOYED (the live DB was in test mode = world-readable/writable, expiring 2026-10-28 → total client outage) |
+| 6 | key rotation | NEEDS USER: `Desktop\마이그레이션\훈민정음_마이그레이션.zip` and `훈민정음.zip` contain the real `.env` (Gemini key + Firebase SA key). The Downloads handoff zips are clean. |
+| 7 | engines + .nvmrc | do now |
+| 8 | unify admin auth + remove client heuristic | do now (ships after user login check) |
+| 9 | remove `[migration:*]` logs | do now |
+| 10 | preview/ and duplicate cleanup | DEFERRED by its own condition (after 2–4 weeks of stability) |
+| 11 | tooling / refactors | tooling now; react-router, modular SDK, and Context split deferred (broad regression risk) |
+| 12 | Firestore state + scaling | DEFERRED (feature-sized design) |
+
+## Progress
+
+- [x] 1 main FF + tag
+- [x] 5 Firestore rules: 20/20 Rules-API tests, deployed, anonymous read → 403
+- [ ] 4 / 8 / 3 / 9 / 7 code changes
+- [ ] 2 docs
+- [ ] 11 tooling
+- [ ] build + local validation → staging → production candidate (`--no-traffic`) → user login check → traffic
