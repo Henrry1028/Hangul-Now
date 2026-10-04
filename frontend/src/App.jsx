@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import SitePasswordGate from './components/SitePasswordGate.jsx';
 import AppShell from './components/AppShell.jsx';
 import IntroPage from './pages/IntroPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
@@ -240,7 +241,8 @@ function App() {
   const unreadTotal = Object.values(chatState.unread || {}).reduce((a, b) => a + b, 0);
 
   return (
-    <AppShell
+    <SitePasswordGate>
+      <AppShell
       lang={lang}
       theme={theme}
       page={currentPage}
@@ -380,6 +382,7 @@ function App() {
       {currentPage === 'videoclass' && videoClass.access && <VideoClassPage vc={videoClass} />}
       {videoClass.access && <VideoClassModals vc={videoClass} />}
     </AppShell>
+    </SitePasswordGate>
   );
 }
 
