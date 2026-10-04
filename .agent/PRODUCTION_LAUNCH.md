@@ -225,3 +225,30 @@ Result: PASS → `PRODUCTION FIRST LAUNCH PASS`.
 - The legacy client admin flag still shows the 👑 console page shell to `?admin=1`/email-pattern users (data server-protected).
 - No custom domain yet.
 - Firebase Hosting is not deployed (`firebase.json` rewrite targets `hangul-now-api` if used later; Hosting can't proxy the WebSocket).
+
+## 13. Release v1.1.0 — Post-Launch Hardening (H1)
+
+| Item | Value |
+|---|---|
+| Revision | `hangul-now-api-00003-cis`, **100% since 2026-10-04T10:47:03Z** (tag `rc-b2274a4`) |
+| Image | `asia-northeast3-docker.pkg.dev/hnageul-copilot-dev-918/cloud-run-source-deploy/hangul-now@sha256:7646a0531c00ae6f5337cb45b1a537a94162e4fa14044d209313541951a99299` (Cloud Build from `git archive b2274a4`) |
+| Source | `b2274a4` on `hardening/post-launch` → `main`; git tag `v1.1.0` |
+| Settings | unchanged: 1 vCPU, 512 MiB, concurrency 80, timeout 3600, min 0, max 1, SA `hangul-now-api-runtime`, same 3 secrets |
+| Previous | `hangul-now-api-00001-siy` (tag `candidate`), 0%, kept for rollback |
+
+Changes:
+
+- **Identity:** server-verified identity on the user-data APIs.
+- **Admin:** unified admin auth plus `GET /api/admin/status`; the client admin heuristic is removed.
+- **Network:** CORS allowlist and AI/TTS rate limits.
+- **Cleanup:** migration logs removed; engines/.nvmrc added.
+- **Tooling:** lint, unit, and e2e tooling.
+- **Firestore:** owner-only rules (deployed separately; the test-mode rules were live).
+
+Deployment followed the README procedure: git archive → Cloud Build → `--no-traffic --tag` → tag-URL verification → `update-traffic`.
+
+Rollback (instant, keeps everything for diagnosis):
+
+`gcloud run services update-traffic hangul-now-api --to-revisions hangul-now-api-00001-siy=100 --region asia-northeast3 --project hnageul-copilot-dev-918`
+
+Note: rolling back the app does **not** roll back the Firestore rules (keep them; the old app only uses its own `users/{uid}`, which the rules allow).

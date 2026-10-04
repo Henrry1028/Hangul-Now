@@ -1452,3 +1452,39 @@ Known limitations:
 Recommended next phase:
 
 `P7 POST-LAUNCH STABILITY MONITORING` (NOT STARTED).
+
+---
+
+## H1 — Post-Launch Hardening (user's recommended follow-ups, risk-reviewed)
+
+Status:
+
+`COMPLETE` (key rotation and budget alert need user decisions; cleanup/refactors/scaling deferred).
+
+| # | Item | Result |
+|---|---|---|
+| 1 | main fast-forward + release tag | DONE: `main` fast-forwarded (no merge commit); tags `v1.0.0-react` → `19c1500`, `v1.1.0` → `b2274a4` |
+| 2 | AGENTS.md §2–3 + README | DONE: README rewritten (the old deploy section used `--source .` and a bare `firebase deploy`) |
+| 3 | rate limit + CORS + budget alert | DONE: CORS allowlist + per-uid/IP rate limits (verified on Cloud Run: forged XFF can't bypass, buckets per client). **Budget alert NOT done** (needs billing account + amount from the user). |
+| 4 | server-verified identity | DONE: learning/*, session/list, session/report, content/generate, chat, correction, coaching, complete-and-review (IDOR closed; guests unaffected) |
+| 5 | Firestore owner rules | DONE + DEPLOYED: the live DB was test mode (world-readable/writable) and would have shut out all clients on 2026-10-28 |
+| 6 | key rotation | **NEEDS USER**: `Desktop\마이그레이션\훈민정음_마이그레이션.zip` and `훈민정음.zip` contain the real `.env` (Gemini key + Firebase SA key) |
+| 7 | engines + .nvmrc | DONE |
+| 8 | unify admin auth, remove client heuristic | DONE: `requireAdmin` in authMiddleware via adminPolicy; `GET /api/admin/status`; `?admin=1`/email heuristic removed |
+| 9 | remove `[migration:*]` logs | DONE |
+| 10 | preview/ and duplicate cleanup | DEFERRED by its own condition (2–4 weeks of stability) |
+| 11 | tooling / refactors | Tooling DONE (ESLint, Vitest 11 tests, Playwright smoke 6 tests; lint found + fixed a stale userId bug). Router, modular SDK, and Context split DEFERRED (broad regression risk). |
+| 12 | Firestore state + scaling | DEFERRED (feature-sized design) |
+
+Production:
+
+- `hangul-now-api-00003-cis` at 100% since 2026-10-04T10:47:03Z; `00001-siy` kept at 0% for rollback.
+- Staging runs the same image (`hangulnow-staging-00003-h58`).
+
+Verification:
+
+- Real-ID-token test users (local, staging, production tag), deleted afterwards.
+- Real Firebase SDK browser run.
+- Rate-limit IP keying proven on Cloud Run (spoofed XFF stays limited; a second egress IP gets its own bucket).
+- Playwright 6/6 ×3 environments; Vitest 11/11; ESLint 0 errors.
+- Production logs: 0 5xx, 0 ERROR.

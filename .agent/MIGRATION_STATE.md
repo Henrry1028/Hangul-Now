@@ -41,6 +41,10 @@ Production cutover:
 
 `COMPLETE — LIVE (Cloud Run direct) since 2026-10-04T07:42:50Z: https://hangul-now-api-313423647793.asia-northeast3.run.app`. Earlier record: `LOCAL CUTOVER DONE (6d94bad)` — Express/Firebase Hosting/Docker serve `frontend/dist`; external deployment NOT performed (separate milestone)
 
+Current production revision:
+
+`hangul-now-api-00003-cis` (release `v1.1.0`, hardening H1) since 2026-10-04T10:47:03Z; rollback target `hangul-now-api-00001-siy` (`v1.0.0-react`).
+
 Legacy source of truth:
 
 `preview/index.html` (no longer served; kept unchanged as rollback source)
