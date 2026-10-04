@@ -89,10 +89,10 @@ function App() {
   const updateSpeakingState = useMemo(() => mergeState(setSpeakingState), []);
   const [chatState, setChatState] = useState(createInitialChatState);
   const updateChatState = useMemo(() => mergeState(setChatState), []);
+  // Legacy Firestore restore only sets tutorId state; hn-tutor is written by selectTutor alone.
   const handleRestoreTutor = useCallback((id) => {
     if (!TUTORS.some((tutor) => tutor.id === id)) return false;
     setSelectedTutorId(id);
-    writeStorage('hn-tutor', id);
     return true;
   }, []);
   const auth = useAuthProfile({ selectedTutorId, onRestoreTutor: handleRestoreTutor });

@@ -43,10 +43,10 @@ Roadmap Phase 8: verify that every migrated public/admin screen matches legacy, 
 - [x] Screen inventory: all legacy screens migrated except deferred `10 Video Class Platform`
 - [x] Cross-app screen parity sweep: 11 screens x en/ko x 1440/390 — all identical except (a) Intro/About footer inside vs outside the labelled wrapper (known P4B DC-wrapper difference; main scroll extents identical), (b) Intro rotating demo-chat timer text, (c) Reading <=659px grid defect → fixed (P6A-FIX, drop non-legacy mobile override; identical at 360/390/500/659/700/859/1024/1440 en+ko)
 - [ ] Network/asset/console sweep
-- [ ] Auth regression
+- [x] Auth regression: onboarding required flow (all steps, 4 validation errors, 5-interest cap, local profile, 2 Firestore merge writes, sidebar) identical; signed-in dark sweep of 11 screens identical geometry; tutor restore defect fixed (P6A-FIX2: Firestore restore no longer writes hn-tutor, matching legacy)
 - [ ] API smoke
 - [ ] Cutover readiness report
 
 ## Exact Next Action
 
-Commit/push the Reading mobile grid fix, then run auth regression, API smoke, and the signed-in/dark sweeps.
+Commit/push the tutor-restore fix, then API smoke and the cutover readiness report.
