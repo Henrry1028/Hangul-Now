@@ -168,21 +168,17 @@ Runtime acceptance:
 
 Milestone ID:
 
-`P8`
+`P9`
 
 Name:
 
-`CLOUD RUN STAGING DEPLOYMENT + EXTERNAL ACCEPTANCE`
+`PRODUCTION FIRST LAUNCH — CLOUD RUN DIRECT`
 
 Status:
 
-`STAGING READY FOR MANUAL AUTH CHECK`. `hangulnow-staging` is deployed (https://hangulnow-staging-313423647793.asia-northeast3.run.app) and automated acceptance passes. Waiting on the user's real Google sign-in on staging (`.agent/STAGING_DEPLOYMENT.md` section 8). Production deployment is still not authorized.
+`PRODUCTION CANDIDATE READY FOR MANUAL AUTH CHECK`. `hangul-now-api` (revision 00001-siy, tag candidate, staging digest) is deployed **private**, and automated acceptance passes. Waiting on the user's real Google auth check (`.agent/PRODUCTION_LAUNCH.md` section 5) before public exposure.
 
-### Previous: P7 LOCAL/REPOSITORY PRODUCTION CUTOVER (COMPLETE, `6d94bad`)
-
-Next required action:
-
-Wait for deployment approval. Then follow `.agent/CUTOVER_READINESS.md` section 6 steps 5–6: build with Node 20, deploy to staging, re-run the 8B checklist and smoke tests on staging, promote. Rollback is in section 7.
+### Previous: P8 Cloud Run staging (`hangulnow-staging`), automated + manual auth PASS
 
 ---
 

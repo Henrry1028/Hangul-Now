@@ -1369,3 +1369,31 @@ Production changes: NONE. Firebase Hosting deploy: NOT PERFORMED. DNS: NOT CHANG
 - Application source changes: none. Production changes: none.
 
 Result: `STAGING READY FOR MANUAL AUTH CHECK`.
+
+### P8 — closed
+
+The user reported the staging real-auth checklist PASS (login, profile, reload, tutor restore, `/api/admin/check` 200, console, Video Class, logout isolation, direct VC blocked when logged out, re-login, no unexpected errors).
+
+---
+
+## P9 — Production First Launch (Cloud Run direct; user label P6C)
+
+Status:
+
+`PRODUCTION CANDIDATE READY FOR MANUAL AUTH CHECK`
+
+- Repo `caff194` clean, 0 0; app code `6d94bad`. Staging healthy.
+- Deployed the **exact staging image digest** (`sha256:ecf2229…`) to new service `hangul-now-api` as revision 00001-siy, tag `candidate`.
+  - Created private: Cloud Run can't create a service with `--no-traffic`, so private plus invoker-at-launch is the zero-exposure equivalent.
+  - Dedicated runtime SA `hangul-now-api-runtime` (secretAccessor on the 3 secrets only; no project roles).
+  - Reused the staging-validated secrets.
+  - 1 vCPU / 512 MiB / concurrency 80 / timeout 3600 / min 0 / max 1 (in-memory `reviewJobs` + Video Class state).
+- Automated acceptance PASS:
+  - HTTPS, assets incl. Korean names, SPA, APIs, unknown /api 404, 401s.
+  - Public 403 everywhere.
+  - WSS open/close; 11 screens × 1440/390 × en/ko through the authenticated localhost proxy.
+  - Logs clean.
+- The `gcloud run services proxy` component needs an admin install. A temporary scratch proxy (`candidate-proxy.cjs`) was used for the agent's browser sweep, then stopped.
+- No Firebase Hosting deploy, no DNS, no authorized-domain change, staging and preview preserved, no application source changes.
+
+Details and the launch/rollback runbook: `.agent/PRODUCTION_LAUNCH.md`.
