@@ -25,7 +25,7 @@ test.beforeEach(async ({ page }) => {
 
 test('serves the React build with metadata', async ({ page, request }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle('Hangul Now | 행글 나우');
+  await expect(page).toHaveTitle('Hangul Now');
   await expect(page.locator('#root')).not.toBeEmpty();
   expect((await request.get('/site.webmanifest')).ok()).toBeTruthy();
   expect((await request.get('/favicon.ico')).ok()).toBeTruthy();
