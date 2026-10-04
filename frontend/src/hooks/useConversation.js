@@ -9,6 +9,7 @@ import {
   loadConversations,
   storeConversations
 } from '../data/conversationData.js';
+import { authHeaders } from '../data/authHeaders.js';
 
 // Legacy Gemini Live conversation controller (preview/index.html 4979-5450). It lives at
 // App level because a legacy session keeps running while the learner visits other screens.
@@ -144,7 +145,7 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
       update({ cvReviewStatus: 'generating', cvReviewStage: 'queued', cvReviewUrl: '', cvReviewError: '' });
       try {
         const res = await fetch('/api/session/complete-and-review', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
           body: JSON.stringify({
             userId: getConversationUserId(), sessionId: record.id,
             userNickname: getNickname(),
@@ -444,7 +445,7 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
       const meta = record?.meta || {};
       try {
         const res = await fetch('/api/session/report', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
           body: JSON.stringify({
             userId: propsRef.current.currentUser?.uid || null,
             turns: turns.map((t) => ({ role: t.role, text: t.text, at: (t.at instanceof Date ? t.at : new Date(t.at || Date.now())).getTime() })),

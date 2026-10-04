@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
-// Legacy 1:1 Video Class controller (preview/index.html 4216-4636). Legacy shows it to the
-// client-side admin UI flag only; here it also requires a signed-in user whom the server
-// verifies as admin (POST /api/admin/check), so general users can never reach it.
+// Legacy 1:1 Video Class controller (preview/index.html 4216-4636). Admin-only preview:
+// `isAdminFlag` is the server-verified admin status (GET /api/admin/status) for the signed-in
+// user, so general users can never reach it. All data endpoints are still server-protected.
 const todayIso = () => new Date().toISOString().split('T')[0];
 
 const createInitialState = () => ({
@@ -60,30 +60,7 @@ export default function useVideoClass({ isAdminFlag, currentUser }) {
   userRef.current = currentUser;
   const update = useCallback((patch) => setState((prev) => ({ ...prev, ...patch })), []);
 
-  // Server-verified admin gate. Only users already carrying the legacy admin UI flag are
-  // checked, so ordinary signed-in users never call the admin endpoint.
-  const [verifiedUid, setVerifiedUid] = useState(null);
-  useEffect(() => {
-    setVerifiedUid(null);
-    const uid = currentUser?.uid;
-    if (!uid || !isAdminFlag) return undefined;
-    let alive = true;
-    (async () => {
-      try {
-        const user = firebaseUser();
-        if (!user || user.uid !== uid) return;
-        const token = await user.getIdToken();
-        if (!token) return;
-        const res = await fetch('/api/admin/check', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-        const data = await res.json().catch(() => null);
-        if (alive && res.ok && data && data.isAdmin === true) setVerifiedUid(uid);
-      } catch (err) {
-        console.warn('[VideoClass] admin verification failed:', err);
-      }
-    })();
-    return () => { alive = false; };
-  }, [currentUser?.uid, isAdminFlag]);
-  const access = Boolean(isAdminFlag && currentUser?.uid && verifiedUid === currentUser.uid);
+  const access = Boolean(isAdminFlag && currentUser?.uid);
 
   const controller = useMemo(() => {
     const loadVideoClassData = async () => {

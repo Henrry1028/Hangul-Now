@@ -3,6 +3,7 @@ import { TUTORS } from '../data/tutorsData.js';
 import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
 import { DICTATIONS, LISTENING_TEXT, LQ, SCRIPT } from '../data/listeningData.js';
 import '../styles/listening.css';
+import { authHeaders } from '../data/authHeaders.js';
 
 const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
 const errorBoxStyle = { background: 'var(--hot-soft)', border: '1px solid var(--hot)', borderRadius: '12px', padding: '12px 16px', fontSize: '13.5px' };
@@ -193,8 +194,8 @@ function ListeningPage({
     try {
       const seen = Object.values(loadLearnedTopics('listening')).map((v) => v.label).filter(Boolean);
       const payload = JSON.stringify({ kind: 'listening', level: lv, userId, seenTopics: seen });
-      const request = () => fetch('/api/content/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload
+      const request = async () => fetch('/api/content/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: payload
       });
       let res;
       try {

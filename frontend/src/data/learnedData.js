@@ -1,3 +1,4 @@
+import { authHeaders } from './authHeaders.js';
 // Legacy "already learned" store (hn-learned), shared by Reading and Writing.
 const LEARNED_STORAGE_KEY = 'hn-learned';
 
@@ -27,10 +28,12 @@ export function recordLearnedTopic(type, key, label, userId = null) {
     // Match the legacy client: storage failures do not block the learning action.
   }
   if (userId) {
-    fetch('/api/learning/record', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, type, items: [{ key, label: label || key }] })
-    }).catch(() => {});
+    authHeaders()
+      .then((headers) => fetch('/api/learning/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ userId, type, items: [{ key, label: label || key }] })
+      }))
+      .catch(() => {});
   }
 }

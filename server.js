@@ -41,7 +41,9 @@ import { usageMeter } from "./src/usage-meter.mjs";
 import { db, auth, storage, isInitialized as isFirebaseReady } from "./src/firebase.js";
 import { getLocalAudioReview, getTutorAudioReviewJob, startTutorAudioReview } from "./src/tutorSession.js";
 import videoClassRouter from "./src/videoClassService.js";
-import { isEmailAdmin } from "./src/adminPolicy.js";
+import { isEffectiveAdmin } from "./src/adminPolicy.js";
+import { authenticateUser, identifyUser, requireAdmin } from "./src/authMiddleware.js";
+import { rateLimit } from "./src/rateLimit.js";
 
 dotenv.config();
 
@@ -237,8 +239,41 @@ const getCloudTtsClient = () => {
   return cloudTtsClient;
 };
 
-app.use(cors());
+// Cloud Run 앞단 프록시 1홉을 신뢰해 req.ip가 실제 클라이언트 IP가 되도록 한다 (요청 제한 키)
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? 1));
+
+// CORS: 같은 출처(Cloud Run이 프론트와 API를 함께 서빙)는 영향 없음. 다른 출처는 허용 목록만.
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://hangul-now-api-313423647793.asia-northeast3.run.app",
+  "https://hangul-now-api-onpsj3o5ta-du.a.run.app",
+  "https://hangulnow-staging-313423647793.asia-northeast3.run.app",
+  "https://hangulnow-staging-onpsj3o5ta-du.a.run.app",
+  "https://hnageul-copilot-dev-918.web.app",
+  "https://hnageul-copilot-dev-918.firebaseapp.com",
+  "http://localhost:3000",
+  "http://localhost:5173"
+];
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : DEFAULT_ALLOWED_ORIGINS)
+    .map((o) => o.trim())
+    .filter(Boolean)
+);
+app.use(cors({
+  origin(origin, callback) {
+    // Origin이 없는 요청(같은 출처 GET, 서버 간 호출, curl)은 CORS 대상이 아니다
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(null, false);
+  }
+}));
 app.use(express.json({ limit: "10mb" }));
+
+// AI·TTS 비용 보호용 요청 제한 (1분 고정 윈도, 검증된 uid 또는 IP 기준)
+const MINUTE = 60_000;
+const limitChat = rateLimit({ name: "chat", limit: 40, windowMs: MINUTE });
+const limitTts = rateLimit({ name: "tts", limit: 120, windowMs: MINUTE });
+const limitTranslate = rateLimit({ name: "translate", limit: 40, windowMs: MINUTE });
+const limitGenerate = rateLimit({ name: "generate", limit: 10, windowMs: MINUTE });
+const limitHeavy = rateLimit({ name: "heavy", limit: 10, windowMs: MINUTE });
 
 // 1. 프론트엔드 서빙: React/Vite 프로덕션 빌드(frontend/dist)
 //    레거시 preview/는 롤백 소스로 저장소에 보존한다 (서빙하지 않음)
@@ -284,7 +319,7 @@ app.get("/api/health", (req, res) => {
 // ============================================================
 // 2. AI 튜터 실시간 대화 API (Gemini 3.8 Flash)
 // ============================================================
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", identifyUser, limitChat, async (req, res) => {
   try {
     const { tutorId = "jiwoo", message, history = [] } = req.body;
     if (!message) {
@@ -294,8 +329,10 @@ app.post("/api/chat", async (req, res) => {
     const response = await generateTutorChat({ tutorId, message, history });
 
     // Firebase 연동 시 대화 기록 Firestore 비동기 저장
-    if (isFirebaseReady && req.body.userId) {
-      const convRef = db.collection("conversations").doc(`${req.body.userId}_${tutorId}`);
+    // 신원은 검증된 토큰(req.user.uid)만 사용한다 — body.userId는 신뢰하지 않는다
+    const uid = req.user?.uid || null;
+    if (isFirebaseReady && uid) {
+      const convRef = db.collection("conversations").doc(`${uid}_${tutorId}`);
       convRef.collection("messages").add({
         sender: "user",
         text: message,
@@ -318,7 +355,7 @@ app.post("/api/chat", async (req, res) => {
 // ============================================================
 // 3. 실시간 문장 교정 카드 API (Gemini Structured Outputs)
 // ============================================================
-app.post("/api/correction", async (req, res) => {
+app.post("/api/correction", identifyUser, limitChat, async (req, res) => {
   try {
     const { sentence } = req.body;
     if (!sentence) {
@@ -328,9 +365,10 @@ app.post("/api/correction", async (req, res) => {
     const correction = await analyzeSentenceCorrection(sentence);
 
     // 오답일 경우 Firebase 오답 노트에 자동 등록
-    if (isFirebaseReady && correction.has_error && req.body.userId) {
+    const uid = req.user?.uid || null;
+    if (isFirebaseReady && correction.has_error && uid) {
       db.collection("mistake_notes").add({
-        userId: req.body.userId,
+        userId: uid,
         original: correction.original,
         wrongSpan: correction.wrong_span,
         fixed: correction.fixed,
@@ -352,7 +390,7 @@ app.post("/api/correction", async (req, res) => {
 // ============================================================
 // 4. Multi-Agent 코칭 시스템 (문법 + 발음 + 어휘 병렬 분석)
 // ============================================================
-app.post("/api/coaching", async (req, res) => {
+app.post("/api/coaching", identifyUser, limitHeavy, async (req, res) => {
   try {
     const {
       userText,
@@ -363,9 +401,9 @@ app.post("/api/coaching", async (req, res) => {
       scenario,
       politeness,
       level,
-      weaknesses = [],
-      userId
+      weaknesses = []
     } = req.body;
+    const userId = req.user?.uid || undefined;
 
     if (!userText && !userAudio) {
       return res.status(400).json({ error: "userText 또는 userAudio 가 필요합니다." });
@@ -435,7 +473,7 @@ app.post("/api/romanize", (req, res) => {
 // ============================================================
 // 6. 작문 첨삭 API
 // ============================================================
-app.post("/api/writing/feedback", async (req, res) => {
+app.post("/api/writing/feedback", limitChat, async (req, res) => {
   try {
     const { topic, content } = req.body;
     if (!content) {
@@ -451,7 +489,7 @@ app.post("/api/writing/feedback", async (req, res) => {
 // ============================================================
 // 7. 발음 평가 API
 // ============================================================
-app.post("/api/speaking/assess", async (req, res) => {
+app.post("/api/speaking/assess", limitChat, async (req, res) => {
   try {
     const { targetSentence, romanization, userTranscript } = req.body;
     const assessment = await evaluatePronunciation({ targetSentence, romanization, userTranscript });
@@ -464,7 +502,7 @@ app.post("/api/speaking/assess", async (req, res) => {
 // ============================================================
 // 8. 선택 튜터 한국어 읽기 API
 // ============================================================
-app.post("/api/tts", async (req, res) => {
+app.post("/api/tts", limitTts, async (req, res) => {
   try {
     const segments = Array.isArray(req.body?.segments)
       ? req.body.segments
@@ -556,7 +594,7 @@ app.post("/api/tts", async (req, res) => {
 // ============================================================
 // 9. 학습 세션 완료 리포트 및 복습 퀴즈 자동 생성
 // ============================================================
-app.post("/api/session/artifact", async (req, res) => {
+app.post("/api/session/artifact", limitHeavy, async (req, res) => {
   try {
     const { sessionData } = req.body;
     const artifact = await generateSessionArtifact(sessionData || {});
@@ -566,7 +604,7 @@ app.post("/api/session/artifact", async (req, res) => {
   }
 });
 
-app.post("/api/session/quiz", async (req, res) => {
+app.post("/api/session/quiz", limitHeavy, async (req, res) => {
   try {
     const { mistakeItems } = req.body;
     const quiz = await generateReviewQuiz(mistakeItems || []);
@@ -582,9 +620,10 @@ app.post("/api/session/quiz", async (req, res) => {
 // ============================================================
 // Survival Korean — 세션 복습 노트 (PDF 생성 + Firebase 아카이빙)
 // ============================================================
-app.post("/api/session/report", async (req, res) => {
+app.post("/api/session/report", identifyUser, limitHeavy, async (req, res) => {
   try {
-    const { userId = null, sessionId = null, turns = [], hints = [], meta = {} } = req.body || {};
+    const { sessionId = null, turns = [], hints = [], meta = {} } = req.body || {};
+    const userId = req.user?.uid || null; // 비로그인은 보관 없이 PDF만
     if (!Array.isArray(turns) || !turns.length) {
       return res.status(400).json({ error: "대화 기록(turns)이 비어 있습니다." });
     }
@@ -616,11 +655,11 @@ app.post("/api/session/report", async (req, res) => {
 // ============================================================
 // Tutor lesson — 경량 장기 기억 + 10분 단독 오디오 리뷰
 // ============================================================
-app.post("/api/session/complete-and-review", async (req, res) => {
+app.post("/api/session/complete-and-review", identifyUser, limitHeavy, async (req, res) => {
   try {
     const requestStartedAt = Date.now();
     const {
-      userId,
+      userId: bodyUserId,
       sessionId,
       userNickname,
       feedbackLanguage = "English",
@@ -633,7 +672,8 @@ app.post("/api/session/complete-and-review", async (req, res) => {
     }
     const selected = TUTOR_TTS_VOICES[tutorId] || TUTOR_TTS_VOICES.jiwoo;
     const job = startTutorAudioReview({
-      userId: userId || "guest",
+      // 로그인: 검증된 uid. 비로그인: 브라우저 게스트 ID("guest-…")만 허용해 다른 사용자의 기억을 덮어쓰지 못하게 한다
+      userId: req.user?.uid || (typeof bodyUserId === "string" && bodyUserId.startsWith("guest-") ? bodyUserId : "guest"),
       sessionId,
       userNickname,
       feedbackLanguage,
@@ -685,9 +725,10 @@ app.get("/api/session/audio-review/:sessionId", async (req, res) => {
 // ============================================================
 
 // 학습 완료 기록
-app.post("/api/learning/record", async (req, res) => {
+app.post("/api/learning/record", identifyUser, async (req, res) => {
   try {
-    const { userId, type, items = [] } = req.body || {};
+    const { type, items = [] } = req.body || {};
+    const userId = req.user?.uid || null;
     if (!LEARN_TYPES.includes(type)) return res.status(400).json({ error: `알 수 없는 type: ${type}` });
     if (!userId) return res.json({ recorded: 0, reason: "not-signed-in" }); // 비로그인은 브라우저가 보관
     res.json(await recordLearned(userId, type, items));
@@ -697,9 +738,10 @@ app.post("/api/learning/record", async (req, res) => {
 });
 
 // 아직 배우지 않은 것 우선으로 고르기 (review=1이면 배운 것만)
-app.post("/api/learning/pick", async (req, res) => {
+app.post("/api/learning/pick", identifyUser, async (req, res) => {
   try {
-    const { userId, type, candidates = [], count = 0, review = false, seenKeys = [] } = req.body || {};
+    const { type, candidates = [], count = 0, review = false, seenKeys = [] } = req.body || {};
+    const userId = req.user?.uid || null;
     if (!LEARN_TYPES.includes(type)) return res.status(400).json({ error: `알 수 없는 type: ${type}` });
 
     // 로그인 사용자는 서버 이력, 비로그인은 브라우저가 보낸 seenKeys를 쓴다
@@ -720,9 +762,10 @@ app.post("/api/learning/pick", async (req, res) => {
 });
 
 // 학습 이력 조회 (마이페이지 · 복습)
-app.get("/api/learning/history", async (req, res) => {
+app.get("/api/learning/history", identifyUser, async (req, res) => {
   try {
-    const { userId, type } = req.query;
+    const { type } = req.query;
+    const userId = req.user?.uid || null;
     if (!userId) return res.json({ items: {}, reason: "not-signed-in" });
     if (!LEARN_TYPES.includes(type)) return res.status(400).json({ error: `알 수 없는 type: ${type}` });
     res.json({ items: await getLearned(userId, type) });
@@ -732,9 +775,10 @@ app.get("/api/learning/history", async (req, res) => {
 });
 
 // 학습자료 생성 — 듣기 · 읽기 · 말하기 (난이도별, 이미 배운 주제는 제외)
-app.post("/api/content/generate", async (req, res) => {
+app.post("/api/content/generate", identifyUser, limitGenerate, async (req, res) => {
   try {
-    const { kind, level = "beginner", userId = null, seenTopics = [] } = req.body || {};
+    const { kind, level = "beginner", seenTopics = [] } = req.body || {};
+    const userId = req.user?.uid || null;
     if (!["listening", "reading", "speaking"].includes(kind)) {
       return res.status(400).json({ error: `알 수 없는 kind: ${kind}` });
     }
@@ -747,7 +791,7 @@ app.post("/api/content/generate", async (req, res) => {
 });
 
 // 영어 번역 보기 — 회화 전사처럼 영어 원본이 없는 한국어 문장을 번역한다
-app.post("/api/translate", async (req, res) => {
+app.post("/api/translate", limitTranslate, async (req, res) => {
   try {
     const { lines = [] } = req.body || {};
     if (!Array.isArray(lines) || !lines.length) return res.json({ translations: [] });
@@ -763,9 +807,9 @@ app.post("/api/translate", async (req, res) => {
 });
 
 // 대시보드(마이페이지) — 누적 복습 노트 목록
-app.get("/api/session/list", async (req, res) => {
+app.get("/api/session/list", identifyUser, async (req, res) => {
   try {
-    const userId = req.query.userId;
+    const userId = req.user?.uid || null;
     if (!userId) return res.json({ sessions: [], reason: "not-signed-in" });
     res.json({ sessions: await listSessions(userId, Number(req.query.limit) || 50) });
   } catch (err) {
@@ -778,41 +822,16 @@ app.get("/api/session/list", async (req, res) => {
 // ============================================================
 
 
-// 관리자 인증 미들웨어
-const requireAdmin = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  const token = typeof authHeader === "string" && authHeader.startsWith("Bearer ")
-    ? authHeader.slice(7).trim()
-    : "";
-
-  if (!token) {
-    return res.status(401).json({ isAdmin: false, error: "관리자 인증 토큰이 필요합니다." });
-  }
-
-  if (!auth) {
-    return res.status(503).json({ isAdmin: false, error: "관리자 인증 서비스를 사용할 수 없습니다." });
-  }
-
-  try {
-    const decoded = await auth.verifyIdToken(token, true);
-    if (decoded.admin !== true && !isEmailAdmin(decoded.email)) {
-      return res.status(403).json({ isAdmin: false, error: "관리자 권한이 없는 계정입니다." });
-    }
-
-    req.adminUser = {
-      uid: decoded.uid,
-      email: decoded.email ?? null
-    };
-    return next();
-  } catch (err) {
-    console.warn("[Admin Auth] Token verification failed:", err.message);
-    return res.status(401).json({ isAdmin: false, error: "유효한 관리자 인증 토큰이 필요합니다." });
-  }
-};
+// 관리자 인증·인가: src/authMiddleware.js의 requireAdmin (판정은 src/adminPolicy.js)
 
 // 1) 관리자 권한 확인 경량 API
 app.post("/api/admin/check", requireAdmin, (req, res) => {
   res.json({ isAdmin: true });
+});
+
+// 1-1) 화면 표시용 관리자 여부 — 로그인 사용자 누구나 200 { isAdmin } (일반 사용자에게 403 콘솔 오류를 만들지 않는다)
+app.get("/api/admin/status", authenticateUser, (req, res) => {
+  res.json({ isAdmin: isEffectiveAdmin(req.user) });
 });
 
 // 2) 관리자 대시보드 통계 및 전체 회원 데이터 API

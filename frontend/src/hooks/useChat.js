@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
 import { REPLIES, nowHM } from '../data/chatData.js';
+import { authHeaders } from '../data/authHeaders.js';
 
 const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -83,7 +84,7 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
       try {
         const res = await fetch('/api/correction', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
           body: JSON.stringify({ sentence, userId: userIdRef.current }),
           signal: controller.signal
         });
@@ -173,12 +174,12 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
       const rawHistory = (stateRef.current.msgs[targetTutorId] || []).filter((m) => !m.pending && m.text);
       const history = rawHistory.slice(-8).map((m) => ({ role: m.from === 'me' ? 'user' : 'model', content: m.text }));
 
-      fetch('/api/chat', {
+      authHeaders().then((headers) => fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ tutorId: targetTutorId, message: text, history }),
         signal: controller.signal
-      })
+      }))
         .then(async (res) => {
           if (!res.ok) throw new Error(`HTTP_${res.status}`);
           const data = await res.json();

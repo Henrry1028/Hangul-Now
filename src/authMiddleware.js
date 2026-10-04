@@ -3,111 +3,126 @@
 // ============================================================
 
 import { auth } from "./firebase.js";
+import { isEffectiveAdmin } from "./adminPolicy.js";
 
 /**
- * Firebase ID Token 인증 미들웨어
+ * Authorization 헤더 검증 공통 로직
  *
  * [Trust Boundary 원칙]
  * - Authorization: Bearer <token> 헤더에서 추출된 토큰만 검증 대상으로 인정합니다.
  * - Firebase Admin auth.verifyIdToken(token, true)로 토큰의 서명 및 revocation 상태를 검증합니다.
- * - 검증 성공 시 오직 decodedToken에서만 추출된 정보를 req.user = { uid, email, adminClaim }으로 설정합니다.
+ * - 검증 성공 시 오직 decodedToken에서만 추출된 정보로 { uid, email, adminClaim }을 만듭니다.
  * - 임의의 body, query, param 등의 비검증 값은 절대 uid로 수용하지 않습니다.
+ *
+ * @returns {Promise<{ kind: "absent" | "malformed" | "unavailable" | "invalid" | "ok", user?: object, error?: Error }>}
+ */
+async function verifyBearer(req) {
+  const authHeader = req.headers?.authorization;
+  if (authHeader === undefined || authHeader === null) return { kind: "absent" };
+  if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) return { kind: "malformed" };
+  const token = authHeader.slice(7).trim();
+  if (!token) return { kind: "malformed" };
+  if (!auth) return { kind: "unavailable" };
+  try {
+    const decoded = await auth.verifyIdToken(token, true);
+    return {
+      kind: "ok",
+      user: {
+        uid: decoded.uid,
+        email: decoded.email || null,
+        adminClaim: decoded.admin === true
+      }
+    };
+  } catch (error) {
+    return { kind: "invalid", error };
+  }
+}
+
+const TOKEN_REQUIRED = "인증 토큰이 필요합니다. (Authorization: Bearer <token>)";
+
+/**
+ * Firebase ID Token 인증 미들웨어
  * - 본 미들웨어는 오직 'Authentication(신원 확인)'만 수행하며, 역할/권한 인가(Authorization)는 수행하지 않습니다.
  */
 export const authenticateUser = async (req, res, next) => {
-  const authHeader = req.headers?.authorization;
-  const token = typeof authHeader === "string" && authHeader.startsWith("Bearer ")
-    ? authHeader.slice(7).trim()
-    : "";
-
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      error: "인증 토큰이 필요합니다. (Authorization: Bearer <token>)"
-    });
+  const result = await verifyBearer(req);
+  if (result.kind === "absent" || result.kind === "malformed") {
+    return res.status(401).json({ success: false, error: TOKEN_REQUIRED });
   }
-
-  if (!auth) {
-    return res.status(503).json({
-      success: false,
-      error: "인증 서비스를 사용할 수 없습니다."
-    });
+  if (result.kind === "unavailable") {
+    return res.status(503).json({ success: false, error: "인증 서비스를 사용할 수 없습니다." });
   }
-
-  try {
-    const decoded = await auth.verifyIdToken(token, true);
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email || null,
-      adminClaim: decoded.admin === true
-    };
-    return next();
-  } catch (err) {
-    console.warn("[Auth] Token verification failed:", err.message);
-    return res.status(401).json({
-      success: false,
-      error: "유효하지 않거나 만료된 인증 토큰입니다."
-    });
+  if (result.kind === "invalid") {
+    console.warn("[Auth] Token verification failed:", result.error.message);
+    return res.status(401).json({ success: false, error: "유효하지 않거나 만료된 인증 토큰입니다." });
   }
+  req.user = result.user;
+  return next();
 };
 
 /**
  * Firebase ID Token 선택적 인증 미들웨어 (Optional Authentication)
- *
- * [Trust Boundary 원칙]
- * - Authorization 헤더가 아예 없는 경우: Guest 요청으로 인정하여 req.user = null 설정 후 통과(next()).
- * - Authorization 헤더가 존재하는 경우: 반드시 Bearer 형식이어야 하며 Firebase 토큰 검증 수행.
- * - 헤더가 존재하나 형식이 잘못되었거나(Malformed/Empty), 토큰이 유효하지 않은 경우:
- *   절대 Guest로 downgrade하지 않고 반드시 HTTP 401 반환.
- * - 검증 성공 시 req.user = { uid, email, adminClaim } 설정 후 next().
+ * - Authorization 헤더가 아예 없는 경우: Guest 요청으로 인정하여 req.user = null 설정 후 통과.
+ * - 헤더가 존재하나 형식이 잘못되었거나 토큰이 유효하지 않은 경우: Guest로 downgrade하지 않고 401.
  */
 export const authenticateOptionalUser = async (req, res, next) => {
-  const authHeader = req.headers?.authorization;
-
-  // Case A: Authorization 헤더 자체가 없음 -> Guest 통과
-  if (authHeader === undefined || authHeader === null) {
+  const result = await verifyBearer(req);
+  if (result.kind === "absent") {
     req.user = null;
     return next();
   }
-
-  // Case B & C: Authorization 헤더가 존재하지만 Bearer 형식이 아니거나 토큰이 비어 있음
-  if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      success: false,
-      error: "인증 토큰이 필요합니다. (Authorization: Bearer <token>)"
-    });
+  if (result.kind === "malformed") {
+    return res.status(401).json({ success: false, error: TOKEN_REQUIRED });
   }
-
-  const token = authHeader.slice(7).trim();
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      error: "인증 토큰이 필요합니다. (Authorization: Bearer <token>)"
-    });
+  if (result.kind === "unavailable") {
+    return res.status(503).json({ success: false, error: "인증 서비스를 사용할 수 없습니다." });
   }
-
-  // Case D: Firebase auth 인스턴스 사용 불가
-  if (!auth) {
-    return res.status(503).json({
-      success: false,
-      error: "인증 서비스를 사용할 수 없습니다."
-    });
+  if (result.kind === "invalid") {
+    console.warn("[Auth] Optional token verification failed:", result.error.message);
+    return res.status(401).json({ success: false, error: "유효하지 않거나 만료된 인증 토큰입니다." });
   }
+  req.user = result.user;
+  return next();
+};
 
-  // Case E & F: Firebase ID Token 검증 수행 (revocation 검사 포함)
-  try {
-    const decoded = await auth.verifyIdToken(token, true);
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email || null,
-      adminClaim: decoded.admin === true
-    };
-    return next();
-  } catch (err) {
-    console.warn("[Auth] Optional token verification failed:", err.message);
-    return res.status(401).json({
-      success: false,
-      error: "유효하지 않거나 만료된 인증 토큰입니다."
-    });
+/**
+ * 신원 식별 미들웨어 (Identity only — 거부하지 않음)
+ * - 유효한 토큰이면 req.user를 설정하고, 그 외(헤더 없음·형식 오류·검증 실패·인증 서비스 불가)는
+ *   모두 게스트(req.user = null)로 처리한다.
+ * - 학습 기록·대화·콘텐츠 생성처럼 "누구의 데이터인지"만 필요하고 게스트도 쓰는 API용이다.
+ *   게스트는 아무 사용자 데이터에도 접근하지 못하므로, 검증 실패를 게스트로 낮춰도 권한이 늘지 않는다.
+ * - body/query의 userId는 절대 신원으로 쓰지 않는다. 라우트는 req.user?.uid만 사용한다.
+ */
+export const identifyUser = async (req, res, next) => {
+  const result = await verifyBearer(req);
+  if (result.kind === "invalid") {
+    console.warn("[Auth] Identity token rejected, treating as guest:", result.error.message);
   }
+  req.user = result.kind === "ok" ? result.user : null;
+  return next();
+};
+
+/**
+ * 관리자 인가 미들웨어 (인증 + adminPolicy.isEffectiveAdmin)
+ * - 관리자 판정은 adminPolicy.js 한 곳에서만 한다 (custom claim admin 또는 ADMIN_EMAILS).
+ * - 응답 형식({ isAdmin: false, error })과 상태 코드는 기존 관리자 API와 동일하다.
+ */
+export const requireAdmin = async (req, res, next) => {
+  const result = await verifyBearer(req);
+  if (result.kind === "absent" || result.kind === "malformed") {
+    return res.status(401).json({ isAdmin: false, error: "관리자 인증 토큰이 필요합니다." });
+  }
+  if (result.kind === "unavailable") {
+    return res.status(503).json({ isAdmin: false, error: "관리자 인증 서비스를 사용할 수 없습니다." });
+  }
+  if (result.kind === "invalid") {
+    console.warn("[Admin Auth] Token verification failed:", result.error.message);
+    return res.status(401).json({ isAdmin: false, error: "유효한 관리자 인증 토큰이 필요합니다." });
+  }
+  if (!isEffectiveAdmin(result.user)) {
+    return res.status(403).json({ isAdmin: false, error: "관리자 권한이 없는 계정입니다." });
+  }
+  req.user = result.user;
+  req.adminUser = { uid: result.user.uid, email: result.user.email ?? null };
+  return next();
 };

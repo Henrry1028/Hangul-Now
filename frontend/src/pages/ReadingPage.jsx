@@ -11,6 +11,7 @@ import {
 } from '../data/readingData.js';
 import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
 import { TUTORS } from '../data/tutorsData.js';
+import { authHeaders } from '../data/authHeaders.js';
 
 const FULL_READING_TEXT = DEFAULT_READING_PARAGRAPHS
   .map((paragraph) => paragraph.map((segment) => (typeof segment === 'string' ? segment : segment[0])).join(''))
@@ -283,9 +284,9 @@ function ReadingPage({
         userId,
         seenTopics
       });
-      const request = () => fetch('/api/content/generate', {
+      const request = async () => fetch('/api/content/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: payload
       });
 

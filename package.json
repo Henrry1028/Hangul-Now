@@ -29,5 +29,8 @@
     "google-cloud"
   ],
   "author": "Hangul Now Team",
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": ">=20 <23"
+  }
 }

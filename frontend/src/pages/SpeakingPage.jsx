@@ -4,6 +4,7 @@ import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
 import { SENTS, SPEAKING_TEXT } from '../data/speakingData.js';
 import useTutorSpeech from '../hooks/useTutorSpeech.js';
 import '../styles/speaking.css';
+import { authHeaders } from '../data/authHeaders.js';
 
 const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
 const roundButton = { width: '56px', height: '56px', borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--bg2)', cursor: 'pointer', fontSize: '12px', fontWeight: 600, color: 'var(--ink2)' };
@@ -41,8 +42,8 @@ function SpeakingPage({
     try {
       const seen = Object.values(loadLearnedTopics('speaking')).map((v) => v.label).filter(Boolean);
       const payload = JSON.stringify({ kind: 'speaking', level: lv, userId, seenTopics: seen });
-      const request = () => fetch('/api/content/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload
+      const request = async () => fetch('/api/content/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: payload
       });
       let res;
       try {

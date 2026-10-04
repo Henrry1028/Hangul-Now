@@ -27,7 +27,6 @@ import { INITIAL_SPEAKING_STATE } from './data/speakingData.js';
 import { createInitialChatState } from './data/chatData.js';
 import { INITIAL_READING_STATE } from './data/readingData.js';
 import { TUTORS } from './data/tutorsData.js';
-import { isAdminEmail } from './data/profileData.js';
 import './styles/intro.css';
 import './styles/reading.css';
 
@@ -107,7 +106,6 @@ function App() {
   const [adminFilter, setAdminFilter] = useState('all');
 
   const handleNavigate = (target) => {
-    console.info('[migration:navigate]', target);
     if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking' || target === 'chat' || target === 'conversation') {
       setCurrentPage(target);
       const viewport = document.querySelector('.app-main-viewport');
@@ -168,20 +166,18 @@ function App() {
     window.scrollTo(0, 0);
   }, [loadAdminDashboard]);
 
-  // Legacy onAuthStateChanged: a signed-in admin email with #admin or ?page=admin opens the console.
+  // #admin 또는 ?page=admin 딥링크: 서버가 관리자로 확인한 로그인 사용자만 콘솔을 연다.
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user || !isAdminEmail(user.email)) return;
+    if (!auth.currentUser || !auth.isAdmin) return;
     if (window.location.hash === '#admin' || new URLSearchParams(window.location.search).get('page') === 'admin') {
       handleGoAdmin();
     }
-  }, [auth.currentUser, handleGoAdmin]);
+  }, [auth.currentUser, auth.isAdmin, handleGoAdmin]);
 
   // Dev-only test aid (stripped from production builds): open a screen directly in browser tests.
   if (import.meta.env.DEV && typeof window !== 'undefined') window.__hnSandboxNavigate = handleNavigate;
 
   const handleSelectTutor = (id) => {
-    console.info('[migration:selectTutor]', id);
     setSelectedTutorId(id);
     writeStorage('hn-tutor', id);
     chat.onTutorSelected(id);

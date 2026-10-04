@@ -44,11 +44,6 @@ export const INTEREST_MAX = 5;
 
 export const emptyProfileDraft = Object.freeze({ nickname: '', nationality: '', gender: '', interests: [] });
 
-export const isAdminEmail = (email = '') => {
-  const normalized = email.toLowerCase();
-  return normalized.includes('admin') || normalized.startsWith('hopep');
-};
-
 export const profileStorageKey = (uid) => `hn-profile-${uid}`;
 
 export function sanitizeProfile(source = {}) {

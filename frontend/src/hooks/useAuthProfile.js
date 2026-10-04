@@ -1,14 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FIREBASE_CONFIG, INTERESTS, INTEREST_MAX, NATIONALITIES,
-  emptyProfileDraft, isAdminEmail, profileStorageKey, sanitizeProfile
+  emptyProfileDraft, profileStorageKey, sanitizeProfile
 } from '../data/profileData.js';
 
-const initialUrlAdmin = () => {
-  if (typeof window === 'undefined') return false;
-  const query = new URLSearchParams(window.location.search);
-  return query.get('admin') === '1' || query.get('admin') === 'true';
-};
+// 관리자 표시 여부는 서버 판정(GET /api/admin/status)으로만 정한다.
+// 클라이언트 휴리스틱(?admin=1, 이메일 패턴)은 쓰지 않는다. 데이터 보호는 항상 서버가 맡는다.
+async function fetchAdminStatus(user) {
+  try {
+    const token = await user.getIdToken();
+    if (!token) return false;
+    const res = await fetch('/api/admin/status', { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return false;
+    const data = await res.json().catch(() => null);
+    return Boolean(data && data.isAdmin === true);
+  } catch {
+    return false;
+  }
+}
 
 const readLocalProfile = (uid) => {
   try { return JSON.parse(localStorage.getItem(profileStorageKey(uid)) || '{}'); } catch { return {}; }
@@ -17,7 +26,7 @@ const readLocalProfile = (uid) => {
 export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(initialUrlAdmin);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [obOpen, setObOpen] = useState(false);
   const [obStep, setObStep] = useState(1);
   const [obDraft, setObDraft] = useState(emptyProfileDraft);
@@ -62,6 +71,7 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
           setCurrentUser(null);
           setProfile(null);
           setObOpen(false);
+          setIsAdmin(false);
           return;
         }
         const userObject = {
@@ -71,7 +81,10 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
           photoURL: user.photoURL || ''
         };
         setCurrentUser(userObject);
-        setIsAdmin(isAdminEmail(user.email));
+        setIsAdmin(false);
+        fetchAdminStatus(user).then((admin) => {
+          if (alive && generation === authGeneration) setIsAdmin(admin);
+        });
         let profileApplied = false;
         try {
           const userRef = firebase.firestore().collection('users').doc(user.uid);
