@@ -12,25 +12,25 @@ Milestone Name:
 
 Status:
 
-`BLOCKED`
-
-Blocker:
-
-HARD BLOCKER: the Google Cloud SDK (`gcloud`) is not installed and no gcloud credentials exist on this machine. The agent can't discover Cloud Run services, create secrets, deploy `hangulnow-staging`, or read logs. Reusing the Firebase CLI token for Cloud APIs was deliberately not done.
+`BLOCKED` on user action. STAGING READY FOR MANUAL AUTH CHECK.
 
 Baseline:
 
-`ff96dced4083646d9a8ae431892f20693511b889` (clean, 0 0). Nothing deployed; no cloud config changed.
+`19c150041285e690f8c05ca3adf4cb7681fe3e30` deployed to `hangulnow-staging` (revision 00001-bmw) at https://hangulnow-staging-313423647793.asia-northeast3.run.app.
 
 ---
 
-## Completed (no cloud access needed)
+## Completed
 
-- Repository/Firebase discovery: project `hnageul-copilot-dev-918`; production backend `hangul-now-api` in `asia-northeast3` (from `firebase.json`, unverified live).
-- Environment/secrets audit: required `GEMINI_API_KEY`, `FIREBASE_SERVICE_ACCOUNT_KEY` (no ADC fallback), `ADMIN_EMAILS`.
-- WebSocket timeout analysis: use 900 s; the 300 s default cuts 10-minute tutor sessions.
-- Full resume runbook in `.agent/STAGING_DEPLOYMENT.md`.
+- gcloud blocker resolved by the user; APIs (cloudbuild, secretmanager) enabled; secrets created and bound; Firebase authorized domains extended with the two staging hosts.
+- Build via git archive + Cloud Build (the `--source` Windows filename bug is documented); deployed with timeout 900.
+- Automated external acceptance PASS: HTTPS frontend, assets, SPA, APIs, unknown /api 404, auth rejections (Firebase Admin live), Video Class isolation, 11 screens × 1440/390 × en/ko, WSS handshake, clean Cloud Run logs.
 
 ## Exact Next Action
 
-User: install the Google Cloud SDK and run `gcloud auth login` as the project owner. Then the agent resumes at `.agent/STAGING_DEPLOYMENT.md` section 5 step 2 (read-only discovery) before any deploy.
+User runs `.agent/STAGING_DEPLOYMENT.md` section 8 on the staging URL and reports the result.
+
+- PASS → mark `STAGING ACCEPTANCE PASS — READY FOR PRODUCTION APPROVAL`.
+- FAIL → debug only the failing step.
+
+Production deployment, Firebase Hosting deploy, and DNS remain unauthorized.

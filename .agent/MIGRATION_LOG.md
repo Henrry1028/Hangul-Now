@@ -1356,3 +1356,16 @@ Done without cloud access:
 - Resume runbook and production rollout recommendation in `.agent/STAGING_DEPLOYMENT.md`.
 
 Production changes: NONE. Firebase Hosting deploy: NOT PERFORMED. DNS: NOT CHANGED.
+
+### P8 resume — staging deployed
+
+- The user resolved the gcloud blocker (SDK installed and authenticated, billing on, `run.googleapis.com` enabled, 0 existing services).
+- Enabled `cloudbuild`/`secretmanager`. Created 3 `hn-staging-*` secrets from `.env` via stdin (values never printed) with per-secret accessor for the compute SA.
+- `gcloud run deploy --source .` failed: Windows upload mangled the Korean asset filenames, so Vite hit ENOENT. Rebuilt from `git archive 19c1500` via Cloud Build (SUCCESS, same bundle hash) and deployed the image.
+- Service `hangulnow-staging`, revision 00001-bmw, https://hangulnow-staging-313423647793.asia-northeast3.run.app, timeout 900.
+- Added the two staging hosts to Firebase authorized domains (additive, existing kept).
+- Automated external acceptance PASS (details in `.agent/STAGING_DEPLOYMENT.md` section 3); Cloud Run logs clean.
+- Found while reading: the project has no serving production frontend/backend (Hosting live returns 404; `hangul-now-api` does not exist).
+- Application source changes: none. Production changes: none.
+
+Result: `STAGING READY FOR MANUAL AUTH CHECK`.

@@ -176,7 +176,7 @@ Name:
 
 Status:
 
-`BLOCKED` — staging deployment approved, but the Google Cloud SDK/credentials are unavailable on this machine (see `.agent/STAGING_DEPLOYMENT.md`). Production deployment is still not authorized.
+`STAGING READY FOR MANUAL AUTH CHECK`. `hangulnow-staging` is deployed (https://hangulnow-staging-313423647793.asia-northeast3.run.app) and automated acceptance passes. Waiting on the user's real Google sign-in on staging (`.agent/STAGING_DEPLOYMENT.md` section 8). Production deployment is still not authorized.
 
 ### Previous: P7 LOCAL/REPOSITORY PRODUCTION CUTOVER (COMPLETE, `6d94bad`)
 
