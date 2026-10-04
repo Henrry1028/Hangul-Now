@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`IN_PROGRESS`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -51,13 +51,13 @@ Migrate the legacy read-only Admin console (`09 Admin Console`) and its admin-on
 
 - [x] Git state verified (HEAD a5d3d20 pushed, 0 0)
 - [x] P5A source/coupling audit complete (MIGRATION_LOG P5A)
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Admin behavior PASS
-- [ ] Parity PASS
-- [ ] Regression PASS
+- [x] Implementation complete (AdminPage.jsx, App.jsx admin state/loader/goAdmin/deep link/route, AppShell header+sidebar entry points)
+- [x] Build PASS
+- [x] Admin behavior PASS
+- [x] Parity PASS
+- [x] Regression PASS
 - [ ] Commit/push
 
 ## Exact Next Action
 
-Commit the P4C/P5A docs, then implement AdminPage + App/AppShell admin wiring per MIGRATION_LOG P5A.
+Commit the verified P5B implementation, fetch/verify remote-ahead 0, push, then record P5B in STATE/LOG/ROADMAP and start Phase 8 final integration.

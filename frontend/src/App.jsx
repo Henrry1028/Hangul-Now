@@ -11,6 +11,7 @@ import RecordPage from './pages/RecordPage.jsx';
 import SpeakingPage from './pages/SpeakingPage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
 import ConversationPage from './pages/ConversationPage.jsx';
+import AdminPage, { buildAdminView } from './pages/AdminPage.jsx';
 import useAudioReview from './hooks/useAudioReview.js';
 import useTranslationToggle from './hooks/useTranslationToggle.js';
 import useChat from './hooks/useChat.js';
@@ -24,6 +25,7 @@ import { INITIAL_SPEAKING_STATE } from './data/speakingData.js';
 import { createInitialChatState } from './data/chatData.js';
 import { INITIAL_READING_STATE } from './data/readingData.js';
 import { TUTORS } from './data/tutorsData.js';
+import { isAdminEmail } from './data/profileData.js';
 import './styles/intro.css';
 import './styles/reading.css';
 
@@ -94,6 +96,11 @@ function App() {
     return true;
   }, []);
   const auth = useAuthProfile({ selectedTutorId, onRestoreTutor: handleRestoreTutor });
+  // Legacy app-wide admin console state (adminData/adminLoading/adminSearch/adminFilter).
+  const [adminData, setAdminData] = useState(null);
+  const [, setAdminLoading] = useState(false);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [adminFilter, setAdminFilter] = useState('all');
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
@@ -104,6 +111,46 @@ function App() {
       window.scrollTo(0, 0);
     }
   };
+
+  // Legacy loadAdminDashboard: Bearer ID token when signed in; failures keep the previous data.
+  const loadAdminDashboard = useCallback(async () => {
+    setAdminLoading(true);
+    try {
+      let token = '';
+      const firebase = window.firebase;
+      if (firebase && firebase.auth && firebase.auth().currentUser) {
+        token = await firebase.auth().currentUser.getIdToken();
+      }
+      const res = await fetch('/api/admin/dashboard', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        setAdminData(data);
+      }
+      setAdminLoading(false);
+    } catch (err) {
+      console.warn('[Admin Dashboard] Load error:', err);
+      setAdminLoading(false);
+    }
+  }, []);
+
+  const handleGoAdmin = useCallback(() => {
+    setCurrentPage('admin');
+    loadAdminDashboard();
+    const viewport = document.querySelector('.app-main-viewport');
+    if (viewport) viewport.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }, [loadAdminDashboard]);
+
+  // Legacy onAuthStateChanged: a signed-in admin email with #admin or ?page=admin opens the console.
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user || !isAdminEmail(user.email)) return;
+    if (window.location.hash === '#admin' || new URLSearchParams(window.location.search).get('page') === 'admin') {
+      handleGoAdmin();
+    }
+  }, [auth.currentUser, handleGoAdmin]);
 
   // Dev-only test aid (stripped from production builds): open a screen directly in browser tests.
   if (import.meta.env.DEV && typeof window !== 'undefined') window.__hnSandboxNavigate = handleNavigate;
@@ -187,6 +234,7 @@ function App() {
       onSetLang={handleSetLang}
       onToggleTheme={handleToggleTheme}
       auth={auth}
+      onGoAdmin={handleGoAdmin}
     >
       {currentPage === 'intro' && (
         <IntroPage lang={lang} onNavigate={handleNavigate} />
@@ -287,6 +335,23 @@ function App() {
           conversation={conversation}
           translationState={translationState}
           onToggleTranslation={toggleTranslation}
+        />
+      )}
+      {currentPage === 'admin' && (
+        <AdminPage
+          view={buildAdminView({
+            adminData,
+            adminSearch,
+            adminFilter,
+            currentUser: auth.currentUser,
+            selectedTutorId,
+            userXp: activityState.userXp
+          })}
+          adminSearch={adminSearch}
+          onAdminSearch={setAdminSearch}
+          onAdminFilter={setAdminFilter}
+          onRefresh={loadAdminDashboard}
+          onNavigate={handleNavigate}
         />
       )}
     </AppShell>

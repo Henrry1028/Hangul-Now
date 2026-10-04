@@ -33,7 +33,7 @@ const GoogleIcon = () => (
 function AppShell({
   lang, theme, page, wide, selectedTutorId, unreadTotal,
   sidebarCollapsed, sidebarWidth, onToggleSidebar, onSidebarWidth,
-  onNavigate, onSetLang, onToggleTheme, auth, children
+  onNavigate, onSetLang, onToggleTheme, auth, onGoAdmin, children
 }) {
   const L = lang === 'ko' ? 1 : 0;
   const t = SHELL_TEXT[lang] || SHELL_TEXT.en;
@@ -128,6 +128,12 @@ function AppShell({
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>}
           </button>
+          {auth.isAdmin && (
+            <button type="button" onClick={onGoAdmin} style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #D4AF37', background: 'rgba(212,175,55,0.15)', color: 'var(--ink)', padding: '6px 14px', borderRadius: '999px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+              <span>👑</span>
+              <span>Admin</span>
+            </button>
+          )}
           {!auth.currentUser && <button type="button" onClick={auth.login} style={{ border: 0, background: 'none', color: 'var(--ink)', fontSize: '14px', cursor: 'pointer' }}>{t.login}</button>}
           <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'var(--solid)', color: 'var(--on-solid)', padding: '10px 18px', borderRadius: '999px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>{t.startFree}</button>
         </nav>
@@ -206,6 +212,12 @@ function AppShell({
                   <button type="button" onClick={auth.login} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', padding: '8px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background .15s' }}>
                     <GoogleIcon />
                     <span>{L ? 'Google 계정으로 로그인' : 'Sign in with Google'}</span>
+                  </button>
+                )}
+                {auth.isAdmin && (
+                  <button type="button" onClick={onGoAdmin} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1.5px solid #D4AF37', background: 'linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(35,73,63,0.18) 100%)', color: 'var(--ink)', padding: '9px 12px', borderRadius: '12px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', width: '100%', marginTop: '6px', transition: 'all .15s ease', boxShadow: '0 3px 10px rgba(212,175,55,0.12)' }}>
+                    <span>👑</span>
+                    <span>관리자 콘솔 (Admin)</span>
                   </button>
                 )}
               </div>
