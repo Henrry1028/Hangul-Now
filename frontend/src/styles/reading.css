@@ -445,6 +445,7 @@
 @media (min-width: 860px) {
   .reading-screen {
     padding: clamp(12px, 1.6vh, 20px) clamp(16px, 2vw, 32px);
-    gap: clamp(10px, 1.4vh, 18px);
+    /* Legacy's later Reading-specific rule overrides the shared clamp gap. */
+    gap: 12px;
   }
 }
