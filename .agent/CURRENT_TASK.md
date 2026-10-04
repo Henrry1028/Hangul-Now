@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`IN_PROGRESS`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -55,12 +55,12 @@ Migrate Record ("09 My progress") with legacy parity. Strategy is in MIGRATION_L
 
 - [x] Git state reverified
 - [x] Audit complete (P2G)
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Behavior PASS
-- [ ] Parity PASS
-- [ ] Regression PASS
-- [ ] Diff review PASS
+- [x] Implementation complete
+- [x] Build PASS (Node 20)
+- [x] Behavior PASS (calendar/rank/seek/speed/like/script/download identical; play/pause timing identical; regenerate + alert)
+- [x] Parity PASS (3 tabs: 390 identical; 1440 vertical identical, widths shell-only)
+- [x] Regression PASS
+- [x] Diff review PASS
 - [ ] Commit created
 - [ ] Push complete
 - [ ] Post-push divergence `0 0`

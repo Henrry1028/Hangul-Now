@@ -1,0 +1,60 @@
+/* Verbatim legacy Record styles (preview/index.html 489-529). */
+/* === 학습 캘린더 & 게이미피케이션 & 실시간 랭킹 CSS === */
+.study-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 600px; margin: 0 auto; width: 100%; }
+.study-cal-cell {
+  height: 38px; border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent; font-size: 13px; font-weight: 500;
+}
+.study-cal-cell:hover { transform: translateY(-1px); border-color: var(--accent); }
+.study-cal-cell.is-today { border-color: var(--accent-ink) !important; font-weight: 700; }
+.study-cal-cell.is-selected { background: var(--accent-ink) !important; color: #fff !important; box-shadow: 0 3px 10px rgba(35,73,63,0.25); }
+.study-cal-cell.is-studied { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.study-cal-cell.is-other-month { opacity: 0.25; cursor: default; }
+.study-cal-cell.is-other-month:hover { transform: none; border-color: transparent; }
+.cal-flame-dot { position: absolute; top: 2px; right: 4px; font-size: 10px; line-height: 1; }
+
+.live-pulse {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22C55E;
+  box-shadow: 0 0 0 0 rgba(34,197,94,0.7); animation: livePulse 2s infinite;
+}
+@keyframes livePulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34,197,94,0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+
+.rank-row {
+  display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 14px;
+  background: var(--card); border: 1px solid var(--line2); transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.rank-row:hover { border-color: var(--line3); transform: translateX(2px); }
+.rank-row.is-me {
+  background: linear-gradient(135deg, rgba(35,73,63,0.08) 0%, rgba(201,162,74,0.12) 100%);
+  border: 1.5px solid var(--accent); box-shadow: 0 4px 14px rgba(35,73,63,0.08);
+}
+
+.quest-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px;
+  border-radius: 12px; background: var(--card); border: 1px solid var(--line2);
+}
+.badge-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 14px 10px;
+  border-radius: 14px; background: var(--card); border: 1px solid var(--line2); transition: all 0.2s ease;
+}
+.badge-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.05); }
+.badge-card.is-locked { opacity: 0.45; filter: grayscale(0.8); }
+
+.record-screen {
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+@media (min-width: 860px) {
+  /* Legacy global screen override. */
+  .record-screen {
+    padding: clamp(12px, 1.6vh, 20px) clamp(16px, 2vw, 32px);
+    gap: clamp(10px, 1.4vh, 18px);
+  }
+}

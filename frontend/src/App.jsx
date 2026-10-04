@@ -6,9 +6,12 @@ import TutorsPage from './pages/TutorsPage.jsx';
 import ReadingPage from './pages/ReadingPage.jsx';
 import WritingPage from './pages/WritingPage.jsx';
 import ListeningPage from './pages/ListeningPage.jsx';
+import RecordPage from './pages/RecordPage.jsx';
+import useAudioReview from './hooks/useAudioReview.js';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import { INITIAL_WRITING_STATE } from './data/writingData.js';
 import { INITIAL_LISTENING_STATE } from './data/listeningData.js';
+import { INITIAL_RECORD_STATE } from './data/recordData.js';
 import './styles/intro.css';
 import './styles/reading.css';
 
@@ -37,10 +40,13 @@ function App() {
   const [studyLevel, setStudyLevel] = useState('beginner');
   const updateListeningState = useMemo(() => mergeState(setListeningState), []);
   const updateTranslationState = useMemo(() => mergeState(setTranslationState), []);
+  const [recordState, setRecordState] = useState(INITIAL_RECORD_STATE);
+  const updateRecordState = useMemo(() => mergeState(setRecordState), []);
+  const audioReview = useAudioReview(recordState, updateRecordState);
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
-    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening') {
+    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record') {
       setCurrentPage(target);
     }
   };
@@ -110,6 +116,16 @@ function App() {
           translationState={translationState}
           onTranslationStateChange={updateTranslationState}
           onRecordActivity={handleRecordActivity}
+        />
+      )}
+      {currentPage === 'record' && (
+        <RecordPage
+          lang="ko"
+          recordState={recordState}
+          onRecordStateChange={updateRecordState}
+          audioReview={audioReview}
+          activityState={activityState}
+          onNavigate={handleNavigate}
         />
       )}
     </>
