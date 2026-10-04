@@ -8,13 +8,16 @@ import WritingPage from './pages/WritingPage.jsx';
 import ListeningPage from './pages/ListeningPage.jsx';
 import RecordPage from './pages/RecordPage.jsx';
 import SpeakingPage from './pages/SpeakingPage.jsx';
+import ChatPage from './pages/ChatPage.jsx';
 import useAudioReview from './hooks/useAudioReview.js';
 import useTranslationToggle from './hooks/useTranslationToggle.js';
+import useChat from './hooks/useChat.js';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import { INITIAL_WRITING_STATE } from './data/writingData.js';
 import { INITIAL_LISTENING_STATE } from './data/listeningData.js';
 import { INITIAL_RECORD_STATE } from './data/recordData.js';
 import { INITIAL_SPEAKING_STATE } from './data/speakingData.js';
+import { createInitialChatState } from './data/chatData.js';
 import './styles/intro.css';
 import './styles/reading.css';
 
@@ -49,10 +52,12 @@ function App() {
   const [speakingState, setSpeakingState] = useState(INITIAL_SPEAKING_STATE);
   const updateSpeakingState = useMemo(() => mergeState(setSpeakingState), []);
   const toggleTranslation = useTranslationToggle(translationState, updateTranslationState, listeningState);
+  const [chatState, setChatState] = useState(createInitialChatState);
+  const updateChatState = useMemo(() => mergeState(setChatState), []);
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
-    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking') {
+    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking' || target === 'chat') {
       setCurrentPage(target);
     }
   };
@@ -60,6 +65,7 @@ function App() {
   const handleSelectTutor = (id) => {
     console.info('[migration:selectTutor]', id);
     setSelectedTutorId(id);
+    chat.onTutorSelected(id);
   };
 
   const handleRecordActivity = useCallback((entry) => {
@@ -68,6 +74,7 @@ function App() {
     persistActivityState(next);
     setActivityState(next);
   }, []);
+  const chat = useChat(chatState, updateChatState, selectedTutorId, handleRecordActivity);
 
   return (
     <>
@@ -146,6 +153,15 @@ function App() {
           translationState={translationState}
           onToggleTranslation={toggleTranslation}
           onRecordActivity={handleRecordActivity}
+        />
+      )}
+      {currentPage === 'chat' && (
+        <ChatPage
+          lang="ko"
+          selectedTutorId={selectedTutorId}
+          chatState={chatState}
+          chat={chat}
+          onNavigate={handleNavigate}
         />
       )}
     </>

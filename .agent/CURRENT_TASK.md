@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`IN_PROGRESS`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -45,11 +45,11 @@ Migrate Chat with parity. Strategy is in MIGRATION_LOG P3C.
 
 - [x] Git state reverified
 - [x] Audit complete (P3C)
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Behavior PASS
-- [ ] Parity PASS
-- [ ] Regression PASS
+- [x] Implementation complete
+- [x] Build PASS
+- [x] Behavior PASS (mocked scenario identical to legacy; live /api/chat + /api/correction PASS)
+- [x] Parity PASS (390x844/390x700/1440x900/1180x700 identical with shell-height emulation)
+- [x] Regression PASS
 - [ ] Commit/push
 
 ## Exact Next Action
