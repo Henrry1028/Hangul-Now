@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`IN_PROGRESS`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -51,16 +51,23 @@ Migrate the legacy Firebase auth/profile portion of the global shell without exp
 
 - [x] Git state reverified
 - [x] P4C source/coupling audit complete
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Auth/profile behavior PASS
-- [ ] Parity PASS
-- [ ] Regression PASS
+- [x] Implementation complete
+- [x] Build PASS
+- [x] Auth/profile behavior PASS
+- [x] Parity PASS
+- [x] Regression PASS
+- [x] Handoff diff review (Claude Code takeover after Codex limit): 2 parity fixes applied and revalidated
 - [ ] Commit/push
+
+## Handoff Review Fixes (Claude Code)
+
+- Conversation history/report `meta.userName` restored to legacy `currentUser?.displayName || ''` (was nickname-first `getNickname()`, which also turned guest `''` into `'Learner'`).
+- Sidebar avatar initial restored to legacy `(displayName || email || 'U')[0].toUpperCase()` (was nickname-first).
+- Revalidated: Node 20.20.2 `NODE_ENV=production` build PASS (75 modules, 421.65 kB JS); stubbed signed-in sidebar identical in legacy/sandbox (initial, nickname, interests, hidden header login, one Firestore merge write); logout → guest shell identical; all 10 nav screens at 1440/390 with no page/console errors, no overflow, no Video Class text.
 
 ## Exact Next Action
 
-Implement the recorded bounded strategy: Firebase compat auth/profile hook + onboarding, signed-in shell identity, Firestore tutor sync, and identity/profile propagation to migrated API consumers. Admin page rendering remains P5 and Video Class remains hidden.
+Commit the verified P4C implementation, fetch and verify remote-ahead is zero, push, then record the completed milestone (STATE/LOG/ROADMAP) and begin the P5 Admin audit.
 
 ## Audit Result / Bounded Strategy
 

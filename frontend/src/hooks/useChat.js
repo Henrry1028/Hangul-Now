@@ -7,13 +7,15 @@ const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
 // Legacy chat controller (sendText, requestInlineCorrection, translateMissingChatMessages,
 // toggleChatTranslations). It lives at App level so replies, corrections and translations
 // still land after leaving the Chat screen, like the legacy app-wide state.
-export default function useChat(chatState, updateChatState, tutorId, recordActivity) {
+export default function useChat(chatState, updateChatState, tutorId, recordActivity, userId = null) {
   const stateRef = useRef(chatState);
   stateRef.current = chatState;
   const tutorRef = useRef(tutorId);
   tutorRef.current = tutorId;
   const recordRef = useRef(recordActivity);
   recordRef.current = recordActivity;
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
   const requestsRef = useRef(new Set());
   const mockTimerRef = useRef(null);
 
@@ -82,7 +84,7 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
         const res = await fetch('/api/correction', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sentence, userId: null }),
+          body: JSON.stringify({ sentence, userId: userIdRef.current }),
           signal: controller.signal
         });
         const data = await res.json().catch(() => ({}));

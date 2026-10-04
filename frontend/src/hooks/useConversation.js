@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
-import { recordLearnedTopic } from '../data/learnedData.js';
+import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
+import { INTERESTS } from '../data/profileData.js';
 import {
   SCENARIO_NAMES,
   TUTOR_SESSION_SECONDS,
@@ -11,11 +12,11 @@ import {
 
 // Legacy Gemini Live conversation controller (preview/index.html 4979-5450). It lives at
 // App level because a legacy session keeps running while the learner visits other screens.
-export default function useConversation({ tutorId, lang, reviewMode, recordActivity }) {
+export default function useConversation({ tutorId, lang, reviewMode, recordActivity, currentUser, profile }) {
   const [state, setState] = useState(createInitialConversationState);
   const stateRef = useRef(state);
   const propsRef = useRef({});
-  propsRef.current = { tutorId, lang, reviewMode, recordActivity };
+  propsRef.current = { tutorId, lang, reviewMode, recordActivity, currentUser, profile };
   const r = useRef({}).current; // ws, stream, contexts, timers and flags
 
   const controller = useMemo(() => {
@@ -26,11 +27,25 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
       setState(next);
     };
     const L = () => propsRef.current.lang === 'ko';
-    // Guest sandbox: profile/onboarding (nickname, nationality, interests) arrive with the shell.
-    const getNickname = () => 'Learner';
-    const pickLessonInterest = () => null;
+    const getNickname = () => propsRef.current.profile?.nickname
+      || propsRef.current.currentUser?.displayName
+      || propsRef.current.currentUser?.email?.split('@')[0]
+      || 'Learner';
+    const pickLessonInterest = () => {
+      const list = (propsRef.current.profile?.interests || [])
+        .map((id) => INTERESTS.find((item) => item.id === id))
+        .filter(Boolean);
+      if (!list.length) return null;
+      const learned = loadLearnedTopics('topic');
+      const key = (item) => `interest:${item.id}`;
+      const oldest = (items) => items.slice().sort((a, b) => (learned[key(a)]?.lastAt || 0) - (learned[key(b)]?.lastAt || 0))[0];
+      const seen = list.filter((item) => learned[key(item)]);
+      if (propsRef.current.reviewMode) return seen.length ? oldest(seen) : list[0];
+      return list.find((item) => !learned[key(item)]) || oldest(list);
+    };
 
     const getConversationUserId = () => {
+      if (propsRef.current.currentUser?.uid) return propsRef.current.currentUser.uid;
       try {
         let id = localStorage.getItem('hn-guest-id');
         if (!id) {
@@ -284,7 +299,7 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
           scenarioId: st.cvScenario || 'market',
           scenarioTitle: st.cvMode === 'roleplay' ? (SCENARIO_NAMES[st.cvScenario] || '롤플레잉') : (st.cvTutorName || '튜터 수업'),
           partnerName: st.cvTutorName || '상대',
-          userName: '',
+          userName: propsRef.current.currentUser?.displayName || '',
           startedAt: r.startedAt || Date.now(),
           endedAt: Date.now()
         }
@@ -316,8 +331,9 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
         const topicKey = st.cvMode === 'roleplay' ? `scenario:${st.cvScenario}` : `lesson:${st.cvTutorName || ''}`;
         const topicLabel = st.cvMode === 'roleplay' ? (SCENARIO_NAMES[st.cvScenario] || '상황극')
           : ((turns.find((t) => t.role === 'tutor')?.text || '').slice(0, 40));
-        if (topicLabel) recordLearnedTopic('topic', `${topicKey}:${topicLabel.slice(0, 20)}`, topicLabel);
-        if (st.cvMode !== 'roleplay' && r.interest) recordLearnedTopic('topic', `interest:${r.interest.id}`, r.interest.ko);
+        const userId = propsRef.current.currentUser?.uid || null;
+        if (topicLabel) recordLearnedTopic('topic', `${topicKey}:${topicLabel.slice(0, 20)}`, topicLabel, userId);
+        if (st.cvMode !== 'roleplay' && r.interest) recordLearnedTopic('topic', `interest:${r.interest.id}`, r.interest.ko, userId);
       }
       const scenTitle = st.cvMode === 'roleplay' ? (SCENARIO_NAMES[st.cvScenario] || '상황극') : (st.cvTutorName || '수업');
       propsRef.current.recordActivity?.({
@@ -359,13 +375,14 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
           const tutor = TUTORS.find((tu) => tu.id === id) || TUTORS[0];
           const isKo = L();
           const interest = st.cvMode === 'roleplay' ? null : pickLessonInterest();
+          const activeProfile = propsRef.current.profile || {};
           r.interest = interest;
           ws.send(JSON.stringify({
             type: 'start', tutorId: id, level: st.cvLevel || 'beginner',
             mode: st.cvMode || 'tutor', scenarioId: st.cvScenario || 'market',
             userId: getConversationUserId(), review: !!review,
             userNickname: getNickname(),
-            nationality: '', interests: [],
+            nationality: activeProfile.nationality || '', interests: activeProfile.interests || [],
             lessonInterest: interest ? interest.id : '',
             feedbackLanguage: isKo ? 'Korean' : 'English',
             lessonTopic: interest ? interest.ko : (tutor.role[isKo ? 1 : 0] || (isKo ? '자유 회화' : 'Free conversation'))
@@ -429,7 +446,7 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
         const res = await fetch('/api/session/report', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: null,
+            userId: propsRef.current.currentUser?.uid || null,
             turns: turns.map((t) => ({ role: t.role, text: t.text, at: (t.at instanceof Date ? t.at : new Date(t.at || Date.now())).getTime() })),
             hints: (record?.hints || st.cvHints || []).map((h) => ({
               error_phrase: h.error_phrase, corrected_phrase: h.corrected_phrase,
@@ -440,7 +457,7 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
               scenarioTitle: meta.scenarioTitle || (st.cvMode === 'roleplay' ? (SCENARIO_NAMES[st.cvScenario] || '롤플레잉') : (record?.tutor || st.cvTutorName || '튜터 수업')),
               level: levelKo[record?.level || st.cvLevel] || '초급',
               partnerName: meta.partnerName || record?.tutor || st.cvTutorName || '상대',
-              userName: meta.userName || '',
+              userName: meta.userName || propsRef.current.currentUser?.displayName || '',
               startedAt: meta.startedAt || record?.savedAt || r.startedAt || Date.now(),
               endedAt: meta.endedAt || record?.savedAt || Date.now()
             }

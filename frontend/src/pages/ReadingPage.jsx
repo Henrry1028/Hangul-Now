@@ -60,7 +60,8 @@ function ReadingPage({
   onStudyLevelChange,
   readingState,
   onReadingStateChange,
-  onRecordActivity
+  onRecordActivity,
+  userId = null
 }) {
   const [localReadingState, setLocalReadingState] = useState(INITIAL_READING_STATE);
   const [speechStatus, setSpeechStatus] = useState('idle');
@@ -279,7 +280,7 @@ function ReadingPage({
       const payload = JSON.stringify({
         kind: 'reading',
         level: nextLevel,
-        userId: null,
+        userId,
         seenTopics
       });
       const request = () => fetch('/api/content/generate', {
@@ -300,7 +301,7 @@ function ReadingPage({
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       if (data.topic) {
-        recordLearnedTopic('reading', `${nextLevel}:${data.topic}`, data.topic);
+        recordLearnedTopic('reading', `${nextLevel}:${data.topic}`, data.topic, userId);
       }
       updateReadingState({
         generatedReading: data,

@@ -18,7 +18,8 @@ function SpeakingPage({
   onStudyLevelChange,
   translationState,
   onToggleTranslation,
-  onRecordActivity
+  onRecordActivity,
+  userId = null
 }) {
   const L = lang === 'ko' ? 1 : 0;
   const t = SPEAKING_TEXT[lang] || SPEAKING_TEXT.en;
@@ -39,7 +40,7 @@ function SpeakingPage({
     update({ genLoading: true, genError: '' });
     try {
       const seen = Object.values(loadLearnedTopics('speaking')).map((v) => v.label).filter(Boolean);
-      const payload = JSON.stringify({ kind: 'speaking', level: lv, userId: null, seenTopics: seen });
+      const payload = JSON.stringify({ kind: 'speaking', level: lv, userId, seenTopics: seen });
       const request = () => fetch('/api/content/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload
       });
@@ -53,7 +54,7 @@ function SpeakingPage({
       if (!res.ok) throw new Error(`서버 응답 ${res.status}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      if (data.topic) recordLearnedTopic('speaking', `${lv}:${data.topic}`, data.topic);
+      if (data.topic) recordLearnedTopic('speaking', `${lv}:${data.topic}`, data.topic, userId);
       update({ genLoading: false, genError: '', genSpeaking: data, sIdx: 0, rec: 'idle' });
     } catch (err) {
       update({ genLoading: false, genError: `새 자료를 만들지 못했어요: ${err.message}` });

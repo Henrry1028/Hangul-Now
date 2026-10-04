@@ -9,7 +9,7 @@ export function loadLearnedTopics(type) {
   }
 }
 
-export function recordLearnedTopic(type, key, label) {
+export function recordLearnedTopic(type, key, label, userId = null) {
   if (!key) return;
   try {
     const all = JSON.parse(window.localStorage.getItem(LEARNED_STORAGE_KEY) || '{}');
@@ -25,5 +25,12 @@ export function recordLearnedTopic(type, key, label) {
     window.localStorage.setItem(LEARNED_STORAGE_KEY, JSON.stringify(all));
   } catch {
     // Match the legacy client: storage failures do not block the learning action.
+  }
+  if (userId) {
+    fetch('/api/learning/record', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, type, items: [{ key, label: label || key }] })
+    }).catch(() => {});
   }
 }

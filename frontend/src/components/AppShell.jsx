@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
+import { profileInterests } from '../data/profileData.js';
+import OnboardingModal from './OnboardingModal.jsx';
 import '../styles/shell.css';
 
 const SHELL_TEXT = {
-  en: { navHow: 'How it works', navTutors: 'Curriculum', navAbout: 'About us', startFree: 'Start free', themeTitle: 'Toggle dark mode', login: 'Log in' },
-  ko: { navHow: '학습 방법', navTutors: '커리큘럼', navAbout: '회사 소개', startFree: '무료로 시작', themeTitle: '다크 모드 전환', login: '로그인' }
+  en: { navHow: 'How it works', navTutors: 'Curriculum', navAbout: 'About us', startFree: 'Start free', themeTitle: 'Toggle dark mode', login: 'Log in', profileEdit: 'Edit profile & interests', profileInterests: 'My interests' },
+  ko: { navHow: '학습 방법', navTutors: '커리큘럼', navAbout: '회사 소개', startFree: '무료로 시작', themeTitle: '다크 모드 전환', login: '로그인', profileEdit: '프로필·관심사 수정 (Edit Profile)', profileInterests: '내 관심사 (My Interests)' }
 };
 
 // Legacy navDef (preview/index.html 6665-6670). The admin-only Video Class group stays
@@ -31,7 +33,7 @@ const GoogleIcon = () => (
 function AppShell({
   lang, theme, page, wide, selectedTutorId, unreadTotal,
   sidebarCollapsed, sidebarWidth, onToggleSidebar, onSidebarWidth,
-  onNavigate, onSetLang, onToggleTheme, onLogin, children
+  onNavigate, onSetLang, onToggleTheme, auth, children
 }) {
   const L = lang === 'ko' ? 1 : 0;
   const t = SHELL_TEXT[lang] || SHELL_TEXT.en;
@@ -45,6 +47,9 @@ function AppShell({
     genderBg: raw.gender === 'female' ? '#E06B82' : '#4B7BEC'
   };
   const groups = navDefs(L);
+  const userName = auth.profile?.nickname || auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'Learner';
+  const userInitial = (auth.currentUser?.displayName || auth.currentUser?.email || 'U')[0].toUpperCase();
+  const interestLabels = profileInterests(auth.profile).map((item) => `${item.icon} ${L ? item.ko : item.en}`).join('  ');
   const navItem = ([k, label, glyph]) => {
     const active = page === k;
     return { k, label, glyph, active, hasBadge: k === 'chat' && unreadTotal > 0 };
@@ -103,6 +108,7 @@ function AppShell({
 
   return (
     <div className="app-root-shell" style={{ height: '100dvh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <OnboardingModal lang={lang} auth={auth} />
       <header className="marketing-header" style={{ position: 'sticky', top: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '8px clamp(16px,3vw,36px)', borderBottom: '1px solid var(--line)', background: 'var(--bg)', flexWrap: 'wrap', flex: 'none', height: '62px', boxSizing: 'border-box' }}>
         <button type="button" onClick={go('intro')} aria-label="Hangul Now home" style={{ display: 'flex', alignItems: 'center', border: 0, background: 'none', cursor: 'pointer', padding: 0 }}>
           <img className="brand-logo brand-logo--header brand-logo--light" src="/assets/logo-new.png?v=2" alt="Hangul Now" />
@@ -122,7 +128,7 @@ function AppShell({
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>}
           </button>
-          <button type="button" onClick={onLogin} style={{ border: 0, background: 'none', color: 'var(--ink)', fontSize: '14px', cursor: 'pointer' }}>{t.login}</button>
+          {!auth.currentUser && <button type="button" onClick={auth.login} style={{ border: 0, background: 'none', color: 'var(--ink)', fontSize: '14px', cursor: 'pointer' }}>{t.login}</button>}
           <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'var(--solid)', color: 'var(--on-solid)', padding: '10px 18px', borderRadius: '999px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>{t.startFree}</button>
         </nav>
       </header>
@@ -174,10 +180,34 @@ function AppShell({
                     </div>
                   </div>
                 </div>
-                <button type="button" onClick={onLogin} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', padding: '8px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background .15s' }}>
-                  <GoogleIcon />
-                  <span>{L ? 'Google 계정으로 로그인' : 'Sign in with Google'}</span>
-                </button>
+                {auth.currentUser ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '4px 6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0, flex: 1 }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#D7DCE3', color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none', overflow: 'hidden' }}>
+                          {auth.currentUser.photoURL ? <img src={auth.currentUser.photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : userInitial}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, minWidth: 0 }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--faint)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{auth.currentUser.email}</span>
+                        </div>
+                      </div>
+                      <button type="button" onClick={auth.logout} title="로그아웃" style={{ border: 0, background: 'none', color: 'var(--faint)', fontSize: '13px', cursor: 'pointer', padding: '2px 4px', flex: 'none' }}>✕</button>
+                    </div>
+                    {auth.profile?.onboarded && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '6px 8px', borderRadius: '10px', background: 'var(--chip)' }}>
+                        <span style={{ font: "600 10.5px 'IBM Plex Mono',monospace", letterSpacing: '.06em', color: 'var(--faint)' }}>{t.profileInterests}</span>
+                        <span style={{ fontSize: '11.5px', lineHeight: 1.5, color: 'var(--ink2)' }}>{interestLabels}</span>
+                      </div>
+                    )}
+                    <button type="button" onClick={auth.openOnboarding} style={{ border: 0, background: 'none', color: 'var(--accent-ink)', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', padding: '2px 8px', textAlign: 'left' }}>✎ {t.profileEdit}</button>
+                  </>
+                ) : (
+                  <button type="button" onClick={auth.login} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', padding: '8px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background .15s' }}>
+                    <GoogleIcon />
+                    <span>{L ? 'Google 계정으로 로그인' : 'Sign in with Google'}</span>
+                  </button>
+                )}
               </div>
               <div ref={handleRef} id="sidebar-resizer" className="sidebar-resizer" title="좌우로 드래그하여 사이드바 너비 조정 (더블클릭 시 240px 기본값 복원)" />
             </aside>

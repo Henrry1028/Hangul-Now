@@ -140,7 +140,7 @@ function HandImage({ side, active, target, opacity }) {
   );
 }
 
-function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onWritingStateChange, onRecordActivity }) {
+function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onWritingStateChange, onRecordActivity, userId = null }) {
   const L = lang === 'ko' ? 1 : 0;
   const t = WRITING_TEXT[lang] || WRITING_TEXT.en;
   const s = writingState;
@@ -163,7 +163,7 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
 
   const recordLearn = (type, key, label) => {
     if (!key) return;
-    recordLearnedTopic(type, key, label);
+    recordLearnedTopic(type, key, label, userId);
     update((st) => ({ learnedTick: (st.learnedTick || 0) + 1 }));
   };
 

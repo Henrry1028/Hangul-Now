@@ -15,6 +15,7 @@ import useAudioReview from './hooks/useAudioReview.js';
 import useTranslationToggle from './hooks/useTranslationToggle.js';
 import useChat from './hooks/useChat.js';
 import useConversation from './hooks/useConversation.js';
+import useAuthProfile from './hooks/useAuthProfile.js';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import { INITIAL_WRITING_STATE } from './data/writingData.js';
 import { INITIAL_LISTENING_STATE } from './data/listeningData.js';
@@ -86,6 +87,13 @@ function App() {
   const updateSpeakingState = useMemo(() => mergeState(setSpeakingState), []);
   const [chatState, setChatState] = useState(createInitialChatState);
   const updateChatState = useMemo(() => mergeState(setChatState), []);
+  const handleRestoreTutor = useCallback((id) => {
+    if (!TUTORS.some((tutor) => tutor.id === id)) return false;
+    setSelectedTutorId(id);
+    writeStorage('hn-tutor', id);
+    return true;
+  }, []);
+  const auth = useAuthProfile({ selectedTutorId, onRestoreTutor: handleRestoreTutor });
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
@@ -105,6 +113,7 @@ function App() {
     setSelectedTutorId(id);
     writeStorage('hn-tutor', id);
     chat.onTutorSelected(id);
+    auth.persistTutor(id);
   };
 
   const handleSetLang = (next) => { setLang(next); writeStorage('hn-lang', next); };
@@ -123,9 +132,6 @@ function App() {
     setSidebarWidth(width);
     if (persist) writeStorage('hn-sidebar-width', String(width));
   }, []);
-  // Google sign-in arrives with the auth/profile milestone (P4C).
-  const handleLogin = () => console.info('[migration:login] pending P4C');
-
   // Legacy applyTheme: data-theme on <html>.
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   // Legacy resize listener (wide = innerWidth >= 860) and Ctrl/Cmd+B sidebar toggle.
@@ -151,9 +157,16 @@ function App() {
     persistActivityState(next);
     setActivityState(next);
   }, []);
-  const chat = useChat(chatState, updateChatState, selectedTutorId, handleRecordActivity);
+  const chat = useChat(chatState, updateChatState, selectedTutorId, handleRecordActivity, auth.currentUser?.uid || null);
   // Legacy reviewMode is one app-wide flag (Writing's review toggle also drives Conversation).
-  const conversation = useConversation({ tutorId: selectedTutorId, lang, reviewMode: writingState.reviewMode, recordActivity: handleRecordActivity });
+  const conversation = useConversation({
+    tutorId: selectedTutorId,
+    lang,
+    reviewMode: writingState.reviewMode,
+    recordActivity: handleRecordActivity,
+    currentUser: auth.currentUser,
+    profile: auth.profile
+  });
   const toggleTranslation = useTranslationToggle(translationState, updateTranslationState, listeningState, conversation.state.cvTurns);
 
   const unreadTotal = Object.values(chatState.unread || {}).reduce((a, b) => a + b, 0);
@@ -173,7 +186,7 @@ function App() {
       onNavigate={handleNavigate}
       onSetLang={handleSetLang}
       onToggleTheme={handleToggleTheme}
-      onLogin={handleLogin}
+      auth={auth}
     >
       {currentPage === 'intro' && (
         <IntroPage lang={lang} onNavigate={handleNavigate} />
@@ -206,6 +219,7 @@ function App() {
           readingState={readingState}
           onReadingStateChange={updateReadingState}
           onRecordActivity={handleRecordActivity}
+          userId={auth.currentUser?.uid || null}
         />
       )}
       {currentPage === 'writing' && (
@@ -215,6 +229,7 @@ function App() {
           writingState={writingState}
           onWritingStateChange={setWritingState}
           onRecordActivity={handleRecordActivity}
+          userId={auth.currentUser?.uid || null}
         />
       )}
       {currentPage === 'listening' && (
@@ -229,6 +244,7 @@ function App() {
           onTranslationStateChange={updateTranslationState}
           onToggleTranslation={toggleTranslation}
           onRecordActivity={handleRecordActivity}
+          userId={auth.currentUser?.uid || null}
         />
       )}
       {currentPage === 'record' && (
@@ -252,6 +268,7 @@ function App() {
           translationState={translationState}
           onToggleTranslation={toggleTranslation}
           onRecordActivity={handleRecordActivity}
+          userId={auth.currentUser?.uid || null}
         />
       )}
       {currentPage === 'chat' && (

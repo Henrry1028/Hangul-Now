@@ -17,7 +17,8 @@ function ListeningPage({
   translationState,
   onTranslationStateChange,
   onToggleTranslation,
-  onRecordActivity
+  onRecordActivity,
+  userId = null
 }) {
   const L = lang === 'ko' ? 1 : 0;
   const t = LISTENING_TEXT[lang] || LISTENING_TEXT.en;
@@ -191,7 +192,7 @@ function ListeningPage({
     update({ genLoading: true, genError: '' });
     try {
       const seen = Object.values(loadLearnedTopics('listening')).map((v) => v.label).filter(Boolean);
-      const payload = JSON.stringify({ kind: 'listening', level: lv, userId: null, seenTopics: seen });
+      const payload = JSON.stringify({ kind: 'listening', level: lv, userId, seenTopics: seen });
       const request = () => fetch('/api/content/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload
       });
@@ -205,7 +206,7 @@ function ListeningPage({
       if (!res.ok) throw new Error(`서버 응답 ${res.status}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      if (data.topic) recordLearnedTopic('listening', `${lv}:${data.topic}`, data.topic);
+      if (data.topic) recordLearnedTopic('listening', `${lv}:${data.topic}`, data.topic, userId);
       update({
         genLoading: false,
         genError: '',
