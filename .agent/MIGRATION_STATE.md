@@ -87,6 +87,11 @@ React/Vite sandbox:
 
 - Sandbox webfont parity (P1Q, `946a4cc`) — COMPLETE
 - Tutors desktop screen spacing parity (P2B, `28bd81c`) — COMPLETE
+- Reading desktop screen gap parity (P2C-FIX, `1853fa6`) — COMPLETE
+
+### Writing
+
+- Writing audit (P2C) — COMPLETE
 
 ---
 
@@ -158,19 +163,17 @@ Known legacy quirk preserved:
 
 Milestone ID:
 
-`P2C`
+`P2D`
 
 Name:
 
-`WRITING AUDIT`
+`WRITING MIGRATION`
 
 Status:
 
-`AUDITING`
+`IN_PROGRESS`
 
-Next required action:
-
-Source-first audit of legacy Writing (`preview/index.html` template 1866-2145, writing-screen CSS overrides 134+, render data, jamo composer, AI feedback APIs, activity/learned-topic coupling), then define the bounded Writing migration slices.
+Scope: see MIGRATION_LOG P2C (strategy) and CURRENT_TASK.
 
 ### Previous: P2B TUTORS DESKTOP SCREEN SPACING FIX (COMPLETE, `28bd81c`)
 

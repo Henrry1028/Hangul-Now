@@ -557,3 +557,54 @@ Validation:
 Next milestone:
 
 `P2C WRITING AUDIT`
+
+---
+
+## P2C-FIX — Reading Desktop Screen Gap
+
+Status: `COMPLETE` — commit `1853fa61ea4fe5bad4ba152d88f37a61679525c5`.
+
+- Legacy's >=860px block ends with `.reading-screen { gap: 12px !important }`, which overrides the shared clamp gap.
+- Sandbox `reading.css` used the clamp (12.6px at 900px height).
+- Fix: `gap: 12px` in the Reading >=860px rule. Root gap/padding/scrollHeight now identical to legacy at 1440x900, 1440x700, and 390.
+
+---
+
+## P2C — Writing Audit
+
+Status:
+
+`COMPLETE`
+
+Risk:
+
+`MEDIUM/HIGH`, because of learned-history and XP mutation, global keyboard listeners, auto-advance timers, and the imperative SVG keyboard.
+
+Source map (`preview/index.html`):
+
+- template 1866-2143 (`07 Writing`): tabs, level bar, target card, word progress, compose canvas + Jeongie celebration, jamo panel, SVG keyboard card + Windows/macOS guide, sentence tab,
+- CSS 86-104 (keyboard/hand/celebration), and >=860px no-scroll layout 134-454 (all `!important`),
+- data 3549 (`JEONG_POSES`), 3668-3727 (`JL`/`JV`/`JT_EXTRA`/`TARGETS_BY_LEVEL`/`WORDS_BY_LEVEL`/`JT_ALL`/`decompSyl`/`jamoHint`), 3729-3824 (`KB_SVG_ROWS`/`KB_MAP` geometry), 3839-3916 (`JAMO_KEY_MAP`/`JAMO_SEQ`/`HAND_IMAGE`/`buildHandImage`), 4079 (`getHangulPron`),
+- logic 5454-5500 (key handlers, backspace, reset), 5620-5645 (`hn-learned` store), 5723-5901 (ordering, target, complete/celebrate, next/advance, input, `nextStroke`, `handleVirtualKeyName`), 5902-6005 (SVG keyboard via `innerHTML` + `window.__hnVirtualKey`), 6006-6014 (auto-advance: 1800ms celebrating / 240ms mid-word),
+- render data 6819-6940, bindings 7429-7481, initial state 4158-4183, labels 3969-3973 (en) and 4037-4041 (ko).
+
+Findings:
+
+- No AI/API in Writing. The sentence tab's "Get feedback" shows static corrections and records an activity (`문장 쓰기`, 30 XP).
+- Syllable completion records learned `syllable` (`hn-learned`) and activity (`자모 쓰기`, 15 XP). The last syllable of a word records learned `word` and activity (`단어 조립`, 25 XP). The signed-in `/api/learning/record` POST is not applicable in the guest-only sandbox (same as P1N).
+- Target order comes from `hn-learned` + a date-seeded shuffle, recomputed every render. Learned items drop out of the fresh list; review mode shows only learned items, oldest first.
+- Global keydown/keyup: Shift state, Backspace (stepwise), Enter (next), Escape (reset), and other keys go to `handleVirtualKeyName` (expected key → stage value; wrong key → 500ms error flash). Inputs and textareas are ignored. Ctrl+B is the shell sidebar toggle (Phase 6).
+- Jamo panel buttons set L/V/T directly with no ordering; the visible row set depends on level (`j[2] <= jLevel`).
+- Dead bindings: `speakTarget`/`speakSentence`, `fingerStyles`, and `keyboardRows` are not used by the template.
+- Legacy keeps Writing state at app level, so progress, tab, level, and sentence text survive navigation.
+
+Strategy (P2D, one milestone for layout parity):
+
+- `writingData.js` (verbatim data/helpers), shared `learnedData.js` (move the existing Reading helpers unchanged), `WritingPage.jsx`, `writing.css` (legacy rules copied incl. `!important`), and an App-owned writing state + `writing` route.
+- SVG keyboard as JSX with the same geometry, attributes, and classes. `onClick` replaces the `window.__hnVirtualKey` bridge.
+- Copy 6 assets byte-identically: `hand_realistic_{left,right}_v2.png`, `정이_{축하,붓글씨,공부,장구}.png`.
+- Shell-dependent items stay deferred (legacy `max-width:1400px` / `height:100%` of the main viewport).
+
+Next milestone:
+
+`P2D WRITING MIGRATION`
