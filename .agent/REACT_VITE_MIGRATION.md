@@ -275,6 +275,10 @@ Stop there.
 
 ### Phase 10 — Production Cutover
 
+Status:
+
+`LOCAL/REPOSITORY CUTOVER DONE` (`6d94bad`); external deployment NOT performed (separate approval).
+
 Requires explicit user approval.
 
 Possible actions after approval may include:
@@ -342,7 +346,7 @@ A more useful progress model is:
 - global shell: complete
 - admin: complete
 - integration: complete
-- cutover: ready, awaiting explicit approval
+- cutover: local/repository done (`6d94bad`); external deployment pending approval
 
 ---
 

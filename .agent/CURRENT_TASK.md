@@ -4,42 +4,41 @@
 
 Milestone ID:
 
-`P7`
+`P8`
 
 Milestone Name:
 
-`LOCAL/REPOSITORY PRODUCTION CUTOVER (no external deploy)`
+`EXTERNAL DEPLOYMENT`
 
 Status:
 
-`IN_PROGRESS`
+`BLOCKED`
 
-Baseline (pre-cutover) commit:
+Blocker:
 
-`3420082c7ea5294f446a02f52432012940689ed8`
+External deployment (firebase deploy, Cloud Run deploy, image push, DNS) is not authorized. It needs a separate explicit approval.
 
-Authorization:
+Baseline:
 
-User reported the real Google admin auth checklist (CUTOVER_READINESS 8B) as 10/10 PASS and approved the local/repository cutover. NOT authorized: firebase deploy, Cloud Run deploy, image push, DNS, deleting preview/.
+`6d94bad8f30ca9d6405d0767c81080e700966081` (`build: switch production frontend to React Vite`). Pre-cutover rollback target: `3420082c7ea5294f446a02f52432012940689ed8`.
 
-## Bounded Plan
+Expected branch:
 
-- `server.js`: static `preview` → `frontend/dist`; SPA fallback serves `frontend/dist/index.html` for non-`/api` GETs only (unknown `/api/*` no longer returns index.html). Route/middleware order otherwise unchanged; `/api/live` WS is attached to the HTTP server upgrade path and is unaffected.
-- `firebase.json`: hosting `public` `preview` → `frontend/dist`; rewrites/ignore unchanged.
-- `Dockerfile`: Node 20 frontend build stage; runtime stage unchanged plus `COPY --from` of `frontend/dist`.
-- `.dockerignore`: exclude `frontend/node_modules` and `frontend/dist` (host artifacts must not enter the image).
-- `preview/` untouched (rollback source).
+`migration/react-vite-modular`
 
-## Progress Checklist
+---
 
-- [x] Git safety check (3420082, clean, 0 0)
-- [x] Edits (server.js, firebase.json, Dockerfile, .dockerignore)
-- [x] Node 20.20.2 build → frontend/dist (index-BWIOtno1.js)
-- [x] localhost:3000 cutover validation PASS
-- [x] Docker build/run validation PASS (local image, not pushed)
-- [ ] Rollback documented
-- [ ] Commit/push
+## Completed Before This Point
+
+- P7 local/repository cutover: Express, Firebase Hosting config, and the Docker image now serve `frontend/dist`. localhost:3000 and Docker were validated (CUTOVER_READINESS section 9). `preview/` is unchanged.
 
 ## Exact Next Action
 
-Commit the cutover source change, push, then document rollback + evidence in CUTOVER_READINESS.
+None autonomous. On deployment approval:
+
+1. Build the frontend with Node 20.
+2. Deploy to staging.
+3. Re-run the 8B checklist and section 6 step 5 smoke tests.
+4. Promote.
+
+Keep `ADMIN_EMAILS` configured. Rollback is in CUTOVER_READINESS section 7. Do not delete `preview/`; legacy retirement is a later milestone, after stabilization.

@@ -12,11 +12,11 @@ Branch:
 
 Last verified migration-code checkpoint:
 
-`6ab4395cad21d1b0a7832a821ea5803d946fdef9`
+`6d94bad8f30ca9d6405d0767c81080e700966081`
 
 Checkpoint commit:
 
-`fix: preserve admin video class parity before cutover`
+`build: switch production frontend to React Vite`
 
 Repository HEAD rule:
 
@@ -35,11 +35,11 @@ Working tree at the checkpoint:
 
 Production cutover:
 
-`READY FOR MANUAL AUTH CHECK` — then explicit cutover approval (see .agent/CUTOVER_READINESS.md sections 6 and 8)
+`LOCAL CUTOVER DONE (6d94bad)` — Express/Firebase Hosting/Docker serve `frontend/dist`; external deployment NOT performed (separate milestone)
 
 Legacy source of truth:
 
-`preview/index.html`
+`preview/index.html` (no longer served; kept unchanged as rollback source)
 
 React/Vite sandbox:
 
@@ -132,7 +132,11 @@ Phase 6 (Global shell): COMPLETE
 ### Final integration
 
 - P6A final regression with fixes `9b8f4c5` (Reading narrow grid), `17df31a` (tutor restore storage), P6B `d67e4e8` (document head/icons) — COMPLETE
-- P6C admin-only Video Class preview parity (`6ab4395`) — COMPLETE; real Google sign-in — MANUAL TEST REQUIRED
+- P6C admin-only Video Class preview parity (`6ab4395`) — COMPLETE; real Google sign-in — PASS (manual, user-reported 10/10)
+
+### Cutover
+
+- P7 local/repository production cutover (`6d94bad`) — COMPLETE; external deploy NOT performed
 
 ---
 
@@ -140,23 +144,23 @@ Phase 6 (Global shell): COMPLETE
 
 Milestone:
 
-`P6C FINAL PRE-CUTOVER GATE`
+`P7 LOCAL/REPOSITORY PRODUCTION CUTOVER`
 
 Status:
 
-`COMPLETE` (manual real-auth check pending)
+`COMPLETE`
 
 Commit:
 
-`6ab4395cad21d1b0a7832a821ea5803d946fdef9`
+`6d94bad8f30ca9d6405d0767c81080e700966081`
 
 Commit message:
 
-`fix: preserve admin video class parity before cutover`
+`build: switch production frontend to React Vite`
 
 Runtime acceptance:
 
-`PASS` (see MIGRATION_LOG P6C)
+`PASS` (see MIGRATION_LOG P7 and CUTOVER_READINESS section 9)
 
 ---
 
@@ -164,21 +168,21 @@ Runtime acceptance:
 
 Milestone ID:
 
-`P7`
+`P8`
 
 Name:
 
-`PRODUCTION CUTOVER`
+`EXTERNAL DEPLOYMENT`
 
 Status:
 
-`BLOCKED` — requires explicit user approval (AGENTS.md sections 2 and 18). Not started.
+`BLOCKED` — requires a separate explicit approval. Not started.
 
-### Previous: P6C FINAL PRE-CUTOVER GATE (COMPLETE, `6ab4395`; manual auth check pending)
+### Previous: P7 LOCAL/REPOSITORY PRODUCTION CUTOVER (COMPLETE, `6d94bad`)
 
 Next required action:
 
-The user runs the real Google sign-in checklist (`.agent/CUTOVER_READINESS.md` section 8B). After it passes and explicit approval is given, follow section 6.
+Wait for deployment approval. Then follow `.agent/CUTOVER_READINESS.md` section 6 steps 5–6: build with Node 20, deploy to staging, re-run the 8B checklist and smoke tests on staging, promote. Rollback is in section 7.
 
 ---
 
@@ -213,8 +217,8 @@ Current expected high-level sequence:
 9. ~~Global Header / navigation shell~~ — COMPLETE (layout/navigation + auth/profile)
 10. ~~Admin~~ — COMPLETE
 11. ~~Final parity and regression~~ — COMPLETE
-12. Cutover readiness — READY FOR MANUAL AUTH CHECK (admin Video Class parity done)
-13. Production cutover — requires explicit approval
+12. ~~Cutover readiness~~ — COMPLETE (manual real-auth PASS)
+13. Production cutover — LOCAL/REPOSITORY DONE (`6d94bad`); external deployment pending approval
 14. Legacy retirement — only after successful cutover
 
 Actual sequence may change after audits.

@@ -1304,3 +1304,38 @@ Validation: see `.agent/CUTOVER_READINESS.md` section 8A.
 - No Video Class or Admin leak for guests or normal users; no page/console errors other than expected 401s for stub tokens.
 
 Real Google sign-in: MANUAL TEST REQUIRED. No test account; nothing faked. Checklist in `.agent/CUTOVER_READINESS.md` section 8B.
+
+---
+
+## P7 — Local/Repository Production Cutover (no external deploy)
+
+Status:
+
+`COMPLETE`. Result: `CUTOVER IMPLEMENTATION READY FOR DEPLOYMENT`.
+
+Authorization:
+
+The user reported the real Google admin checklist (CUTOVER_READINESS 8B) 10/10 PASS and approved the local cutover only.
+
+Commit:
+
+`6d94bad8f30ca9d6405d0767c81080e700966081`: `build: switch production frontend to React Vite`. Pre-cutover: `3420082c7ea5294f446a02f52432012940689ed8`.
+
+Changes: `server.js` (static + non-/api SPA fallback → `frontend/dist`), `firebase.json` (`public: frontend/dist`), `Dockerfile` (Node 20 frontend-build stage + `COPY --from`), `.dockerignore` (exclude `frontend/node_modules`, `frontend/dist`). `preview/` is unchanged.
+
+Validation: see `.agent/CUTOVER_READINESS.md` section 9.
+
+- **Build:** Node 20.20.2.
+- **localhost:3000:** proven to serve `frontend/dist`. All screens pass at 1440/390 in en and ko. Auth and admin isolation behave as designed. The API, the new 404-for-unknown-/api rule, and the WebSocket work.
+- **Docker:** local build and run PASS.
+- **Errors:** none other than expected 401s from stub tokens.
+
+Not performed:
+
+- firebase deploy
+- Cloud Run deploy
+- image push
+- DNS changes
+- deleting `preview/`
+
+Rollback: `git revert 6d94bad` (details in CUTOVER_READINESS section 7).
