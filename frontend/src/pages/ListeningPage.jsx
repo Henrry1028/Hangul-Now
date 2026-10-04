@@ -16,6 +16,7 @@ function ListeningPage({
   onStudyLevelChange,
   translationState,
   onTranslationStateChange,
+  onToggleTranslation,
   onRecordActivity
 }) {
   const L = lang === 'ko' ? 1 : 0;
@@ -27,8 +28,6 @@ function ListeningPage({
 
   const stateRef = useRef(listeningState);
   stateRef.current = listeningState;
-  const trRef = useRef(translationState);
-  trRef.current = translationState;
   const studyLevelRef = useRef(studyLevel);
   studyLevelRef.current = studyLevel;
 
@@ -233,55 +232,6 @@ function ListeningPage({
     generateListening(level);
   };
 
-  // Shared translation toggle (legacy toggleTranslation). The Conversation branch joins when it migrates.
-  const toggleTranslation = async () => {
-    const next = !trRef.current.trOn;
-    updateTr({ trOn: next, translationError: '' });
-    if (!next) return;
-    const studyTrans = trRef.current.studyTrans || {};
-    const listeningNeed = [];
-    const generated = stateRef.current.genListening;
-    if (generated?.topic && !generated.topicEn && !studyTrans[generated.topic]) listeningNeed.push(generated.topic);
-    const listeningScript = generated?.script?.length ? generated.script : SCRIPT.map((x) => ({ text: x.text, en: x.en }));
-    listeningScript.forEach((line) => { if (line.text && !line.en && !studyTrans[line.text]) listeningNeed.push(line.text); });
-    const listeningQuestions = generated?.questions?.length ? generated.questions : LQ;
-    listeningQuestions.forEach((q) => {
-      if (q.q && !q.en && !studyTrans[q.q]) listeningNeed.push(q.q);
-      (q.opts || []).forEach((option, i) => {
-        if (option && !q.optsEn?.[i] && !studyTrans[option]) listeningNeed.push(option);
-      });
-    });
-    const listeningDictations = generated?.dictations?.length
-      ? generated.dictations
-      : generated?.dictation
-        ? [generated.dictation]
-        : DICTATIONS;
-    listeningDictations.forEach((item) => {
-      if (item?.sentence && !item.en && !studyTrans[item.sentence]) listeningNeed.push(item.sentence);
-    });
-    const need = [...new Set(listeningNeed)];
-    if (!need.length) return;
-    updateTr({ cvTransLoading: true });
-    try {
-      const res = await fetch('/api/translate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lines: need })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `HTTP_${res.status}`);
-      updateTr((prev) => {
-        const studyMap = { ...(prev.studyTrans || {}) };
-        need.forEach((line, i) => {
-          const translated = data.translations?.[i];
-          if (translated) studyMap[line] = translated;
-        });
-        return { studyTrans: studyMap, cvTransLoading: false, translationError: '' };
-      });
-    } catch (err) {
-      updateTr({ cvTransLoading: false, translationError: `영어 번역을 불러오지 못했습니다: ${err?.message || err}` });
-    }
-  };
-
   const submitDictationAt = (index, answer, total) => {
     const st = stateRef.current;
     const value = String((st.dictInputs || {})[index] || '').trim();
@@ -383,7 +333,7 @@ function ListeningPage({
               </button>
             ))}
           </div>
-          <button type="button" onClick={toggleTranslation} style={{ border: '1px solid var(--line3)', background: tr.trOn ? 'var(--accent-soft)' : 'var(--card)', color: tr.trOn ? 'var(--accent-ink)' : 'var(--ink)', borderRadius: '999px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button type="button" onClick={onToggleTranslation} style={{ border: '1px solid var(--line3)', background: tr.trOn ? 'var(--accent-soft)' : 'var(--card)', color: tr.trOn ? 'var(--accent-ink)' : 'var(--ink)', borderRadius: '999px', padding: '8px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {tr.trOn ? (L ? '영어 번역 숨기기' : 'Hide English') : (L ? '영어 번역 보기' : 'Show English')}
           </button>
         </div>

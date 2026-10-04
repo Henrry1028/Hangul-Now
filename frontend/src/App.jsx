@@ -7,11 +7,14 @@ import ReadingPage from './pages/ReadingPage.jsx';
 import WritingPage from './pages/WritingPage.jsx';
 import ListeningPage from './pages/ListeningPage.jsx';
 import RecordPage from './pages/RecordPage.jsx';
+import SpeakingPage from './pages/SpeakingPage.jsx';
 import useAudioReview from './hooks/useAudioReview.js';
+import useTranslationToggle from './hooks/useTranslationToggle.js';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import { INITIAL_WRITING_STATE } from './data/writingData.js';
 import { INITIAL_LISTENING_STATE } from './data/listeningData.js';
 import { INITIAL_RECORD_STATE } from './data/recordData.js';
+import { INITIAL_SPEAKING_STATE } from './data/speakingData.js';
 import './styles/intro.css';
 import './styles/reading.css';
 
@@ -43,10 +46,13 @@ function App() {
   const [recordState, setRecordState] = useState(INITIAL_RECORD_STATE);
   const updateRecordState = useMemo(() => mergeState(setRecordState), []);
   const audioReview = useAudioReview(recordState, updateRecordState);
+  const [speakingState, setSpeakingState] = useState(INITIAL_SPEAKING_STATE);
+  const updateSpeakingState = useMemo(() => mergeState(setSpeakingState), []);
+  const toggleTranslation = useTranslationToggle(translationState, updateTranslationState, listeningState);
 
   const handleNavigate = (target) => {
     console.info('[migration:navigate]', target);
-    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record') {
+    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking') {
       setCurrentPage(target);
     }
   };
@@ -115,6 +121,7 @@ function App() {
           onStudyLevelChange={setStudyLevel}
           translationState={translationState}
           onTranslationStateChange={updateTranslationState}
+          onToggleTranslation={toggleTranslation}
           onRecordActivity={handleRecordActivity}
         />
       )}
@@ -126,6 +133,19 @@ function App() {
           audioReview={audioReview}
           activityState={activityState}
           onNavigate={handleNavigate}
+        />
+      )}
+      {currentPage === 'speaking' && (
+        <SpeakingPage
+          lang="ko"
+          selectedTutorId={selectedTutorId}
+          speakingState={speakingState}
+          onSpeakingStateChange={updateSpeakingState}
+          studyLevel={studyLevel}
+          onStudyLevelChange={setStudyLevel}
+          translationState={translationState}
+          onToggleTranslation={toggleTranslation}
+          onRecordActivity={handleRecordActivity}
         />
       )}
     </>

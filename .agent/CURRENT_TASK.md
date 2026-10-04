@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`IN_PROGRESS`
+`READY_TO_COMMIT`
 
 Baseline migration-code checkpoint:
 
@@ -45,11 +45,11 @@ Migrate Speaking with parity, plus the shared translation toggle hook. Strategy 
 
 - [x] Git state reverified
 - [x] Audit complete (P3A)
-- [ ] Implementation complete
-- [ ] Build PASS
-- [ ] Behavior PASS
-- [ ] Parity PASS
-- [ ] Regression PASS
+- [x] Implementation complete
+- [x] Build PASS
+- [x] Behavior PASS (identical to legacy; shared translation toggle re-verified from Listening)
+- [x] Parity PASS (idle/done identical at 390 and 1440)
+- [x] Regression PASS
 - [ ] Commit/push
 
 ## Exact Next Action
