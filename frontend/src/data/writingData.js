@@ -114,7 +114,7 @@ export const KB_SVG_ROWS = [
     {id:'KeyK', key:'K', ko:'ㅏ', shift:'', w:56, finger:'RM'},
     {id:'KeyL', key:'L', ko:'ㅣ', shift:'', w:56, finger:'RR'},
     {id:'Semicolon', key:';', ko:';', shift:':', w:56, finger:'RP'},
-    {id:'Quote', key:'\'', ko:'\'', shift:'\"', w:56, finger:'RP'},
+    {id:'Quote', key:'\'', ko:'\'', shift:'"', w:56, finger:'RP'},
     {id:'Enter', key:'Enter', ko:'Enter', shift:'', w:132, finger:'RP', isSpecial:true}
   ],
   // Row 3

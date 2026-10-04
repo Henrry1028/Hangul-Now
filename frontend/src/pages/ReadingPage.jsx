@@ -316,7 +316,7 @@ function ReadingPage({
       generationLoadingRef.current = false;
       updateReadingState({ generationLoading: false });
     }
-  }, [updateReadingState]);
+  }, [updateReadingState, userId]);
 
   const handleStudyLevel = (level) => {
     if (studyLevel === level) return;
