@@ -1,9 +1,10 @@
-name: Deploy Hangul Now to Cloud Run
+name: Fullstack Deploy (Firebase Hosting + Cloud Run)
 
 on:
   push:
     branches:
       - main
+      - hardening/post-launch
   workflow_dispatch:
 
 env:
@@ -13,16 +14,17 @@ env:
   SERVICE_ACCOUNT: hangul-now-api-runtime@hnageul-copilot-dev-918.iam.gserviceaccount.com
 
 jobs:
-  test-and-deploy:
-    name: Test, Build & Deploy
+  # ----------------------------------------------------
+  # 1. 프론트엔드 검증, 빌드 및 Firebase Hosting 자동 배포
+  # ----------------------------------------------------
+  deploy-frontend:
+    name: Build & Deploy Frontend (Firebase Hosting)
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 저장소 소스코드 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Node.js 환경 설정 및 프론트엔드 테스트
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -30,26 +32,49 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Run Frontend Unit Tests
+      - name: Run Unit Tests
         run: |
           cd frontend
           npm ci
           npm test
 
-      # 3. Google Cloud 인증
+      - name: Build Production Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
+          projectId: ${{ env.PROJECT_ID }}
+          channelId: live
+        continue-on-error: true
+
+  # ----------------------------------------------------
+  # 2. 백엔드 컨테이너 빌드 및 Google Cloud Run 자동 배포
+  # ----------------------------------------------------
+  deploy-backend:
+    name: Build & Deploy Backend (Cloud Run)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # 4. Google Cloud SDK 설정
       - name: Setup Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      # 5. Cloud Build를 통해 컨테이너 이미지 빌드 및 Artifact Registry 푸시
       - name: Build Container Image via Cloud Build
         run: |
           IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloud-run-source-deploy/${{ env.SERVICE_NAME }}:${{ github.sha }}"
@@ -57,7 +82,6 @@ jobs:
             --region ${{ env.REGION }} \
             --tag "$IMAGE_TAG"
 
-      # 6. Cloud Run에 새 버전 배포
       - name: Deploy to Google Cloud Run
         run: |
           IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloud-run-source-deploy/${{ env.SERVICE_NAME }}:${{ github.sha }}"
@@ -70,7 +94,6 @@ jobs:
             --allow-unauthenticated \
             --set-secrets GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest
 
-      # 7. 배포 완료 후 상태 점검
       - name: Verify Deployment Health
         run: |
           SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} --region ${{ env.REGION }} --format 'value(status.url)')
