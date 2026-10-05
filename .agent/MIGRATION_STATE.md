@@ -43,7 +43,15 @@ Production cutover:
 
 Current production revision:
 
-`hangul-now-api-00003-cis` (release `v1.1.0`, hardening H1) since 2026-10-04T10:47:03Z; rollback target `hangul-now-api-00001-siy` (`v1.0.0-react`).
+`hangul-now-api-00008-bek` (commit `b441773`: Tutor cards, Chat correction sync, H3 Reading latency) at 100% since 2026-10-05; rollback target `hangul-now-api-00006-cud`.
+
+Current production scaling:
+
+`min instances = 1`, `max instances = 1` since 2026-10-05. This removes scale-to-zero cold starts while preserving the single-instance requirement for in-memory state.
+
+Current post-launch product task:
+
+`H3-CONTENT-GENERATION-LATENCY` is COMPLETE and committed in `b441773`. Cloud Build `9e1760e2-1417-4735-86f9-75b1a7fd79ab` produced image `sha256:97d3cb9e...`; candidate `00008-bek` passed Tutor asset, Chat correction, Reading, browser, and log acceptance before production traffic moved to it. ERROR logs 0; HTTP 5xx 0.
 
 Legacy source of truth:
 
@@ -175,6 +183,10 @@ Runtime acceptance:
 ## 3. Current Milestone
 
 None active. **The migration is COMPLETE.**
+
+Latest post-launch product task:
+
+`H2-CHAT-CORRECTION-SYNC` — `COMPLETE` in commit `b441773` and production revision `00008-bek`. The Chat Smart Correction panel consumes the same per-message correction state as the left conversation. Focused desktop/mobile Playwright, staged Vitest, ESLint, and Node 20 production build passed.
 
 Last milestone:
 

@@ -1,5 +1,124 @@
 # Current Task
 
+## Active Product Task — H3
+
+Milestone ID:
+
+`H3-CONTENT-GENERATION-LATENCY`
+
+Milestone Name:
+
+`READING CONTENT GENERATION LATENCY REDUCTION`
+
+Status:
+
+`COMPLETE` (commit `b441773`; production `hangul-now-api-00008-bek`)
+
+Baseline HEAD:
+
+`6479d229501b631f82ed40a746f4d14556d09506`
+
+Expected files:
+
+- `src/contentGenerator.js`
+- `src/learningHistory.js`
+- `server.js`
+- `frontend/src/data/readingData.js`
+- `frontend/src/pages/ReadingPage.jsx`
+- `frontend/src/pages/ReadingPage.test.jsx`
+- `frontend/e2e/smoke.spec.js`
+
+Intended scope:
+
+- Keep one production Cloud Run instance warm.
+- Return the Reading passage before glossary, quiz, and grammar enrichment finishes.
+- Reduce generated payload size while preserving level behavior.
+- Add request timeouts and stage timing logs.
+- Remove one redundant Firestore read for signed-in generation.
+
+First required action:
+
+- Set production `hangul-now-api` minimum instances to 1 while preserving maximum instances at 1.
+
+Result so far:
+
+- Production `hangul-now-api` minimum instances changed from 0 to 1 while maximum remained 1; that scaling-only step did not change traffic.
+- Reading generation now returns the passage first, then enriches glossary, quiz, and grammar in a second request.
+- Reading token budgets were reduced by level, Gemini/API timeouts and stage timing logs were added, and the redundant signed-in Firestore read was removed.
+- Local updated API timing: core 2.49 s, enrichment 2.57 s. The useful passage is visible after the core phase instead of waiting for the entire payload.
+- Isolated production image built successfully from production source `b2274a4` plus only the five runtime Reading changes: `asia-northeast3-docker.pkg.dev/hnageul-copilot-dev-918/cloud-run-source-deploy/hangul-now@sha256:9939ff17c348868cdaec351aa2f4d36d884da9ff8d9f993b5f1e86cbcc6afb1f`.
+- Initial candidate revision `hangul-now-api-00006-cud` passed tag-URL acceptance and served the first H3 rollout.
+- Commit `b441773` combined the Reading work with the approved Tutor and Chat changes; Cloud Build image digest `sha256:97d3cb9ec43f61e40a6f43e9870eb884401457ee99bdd8bdfe8f5eed87aefbb1` deployed as `hangul-now-api-00008-bek`.
+- `hangul-now-api-00008-bek` now serves 100% of production traffic; `00006-cud` remains at 0% for rollback.
+
+Validation:
+
+- Backend syntax checks: PASS.
+- Modified frontend ESLint: PASS.
+- Full Vitest: 29/29 PASS.
+- Node 20 production build: PASS locally and in Cloud Build `142dd773-a4ee-46c2-8aaa-d091785a3524`.
+- Focused Playwright Reading flow: desktop + mobile 2/2 PASS.
+- Isolated deployment artifact: exactly five runtime files changed; `git diff --check` PASS; archive hashes 5/5 match.
+- Candidate and post-traffic production acceptance: health 200, React frontend 200, real core/enrichment generation PASS, ERROR logs 0, HTTP 5xx 0.
+- Production timing after traffic migration: intermediate core 3.95 s, enrichment 4.08 s.
+- Commit release candidate: 9 Tutor/QR assets 200; real correction 4.62 s; Reading core 2.02 s and enrichment 3.07 s; scoped browser checks 5/5; ERROR 0; HTTP 5xx 0.
+
+## Active Product Task
+
+Milestone ID:
+
+`H2-CHAT-CORRECTION-SYNC`
+
+Milestone Name:
+
+`CHAT SMART CORRECTION LIVE SYNC`
+
+Status:
+
+`COMPLETE` (commit `b441773`; production `hangul-now-api-00008-bek`)
+
+Baseline HEAD:
+
+`6479d229501b631f82ed40a746f4d14556d09506`
+
+Expected files:
+
+- `frontend/src/hooks/useChat.js`
+- `frontend/src/pages/ChatPage.jsx`
+- `frontend/src/pages/ChatPage.test.jsx`
+- `frontend/e2e/smoke.spec.js`
+
+Intended scope:
+
+- Replace the right-side static correction examples with the selected tutor chat's actual `/api/correction` results.
+- Keep pending, clean, error, and recent correction states synchronized with the left conversation.
+
+First required action:
+
+- Reuse the existing per-message correction state instead of issuing a second API request.
+
+Result:
+
+- The right Smart Correction panel now renders the selected tutor chat's actual per-message `/api/correction` result.
+- Pending, failed, no-correction-needed, and latest three correction states stay synchronized with the left conversation.
+- The frontend preserves `rule_id` so the live correction can show an appropriate category.
+
+Validation:
+
+- Focused Vitest: 2/2 PASS.
+- Full Vitest: 25/25 PASS.
+- ESLint on `useChat.js`, `ChatPage.jsx`, and `ChatPage.test.jsx`: PASS.
+- Node 20 Vite production build: PASS.
+- Playwright correction sync: desktop + mobile 2/2 PASS with mocked `/api/chat` and `/api/correction` responses.
+
+Known unrelated validation issue:
+
+- The pre-existing full navigation smoke test does not match the current uncommitted header/mobile drawer changes and times out locating or clicking some navigation buttons. The correction sync scenarios pass independently.
+
+Next action:
+
+- None for this bounded task.
+
 ## Task Identity
 
 Milestone ID:

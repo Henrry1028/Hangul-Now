@@ -1496,3 +1496,77 @@ Verification:
 - Secret-bearing zips deleted by the user (verified).
 
 Next candidates: WebSocket `/api/live` identity, review/audio-review owner checks, then items 10–12.
+
+---
+
+## H3 — Reading Content Generation Latency
+
+Status:
+
+`COMPLETE` locally, committed in `b441773`, and deployed to production.
+
+Changes:
+
+- Set production Cloud Run minimum instances to 1 while keeping maximum instances at 1; current revision and traffic did not change.
+- Split Reading generation into a fast core passage phase and a background enrichment phase for words, quiz, and grammar.
+- Reduced level-specific output token budgets and added a 25 s Gemini timeout, a 30 s browser timeout, and stage duration logs.
+- Corrected the signed-in learning-history lookup to use the content kind and reused that read during the write.
+
+Validation:
+
+- Backend syntax checks, modified-source ESLint, full Vitest 29/29, and Node 20 production build PASS.
+- Updated local API: core 2.49 s; enrichment 2.57 s.
+- Focused Playwright Reading test: desktop + mobile 2/2 PASS.
+- Cloud Build `142dd773-a4ee-46c2-8aaa-d091785a3524`: PASS.
+- Candidate image: `asia-northeast3-docker.pkg.dev/hnageul-copilot-dev-918/cloud-run-source-deploy/hangul-now@sha256:9939ff17c348868cdaec351aa2f4d36d884da9ff8d9f993b5f1e86cbcc6afb1f`.
+
+Production:
+
+- Deployed candidate `hangul-now-api-00006-cud` with `--no-traffic --tag rc-h3-reading`.
+- Candidate acceptance: health/frontend PASS; real beginner core 2.56 s and enrichment 3.56 s; desktop/mobile Playwright 2/2; ERROR 0; HTTP 5xx 0.
+- Shifted production traffic to `00006-cud=100`; `00003-cis` remains at 0% for rollback.
+- Post-shift production acceptance: health/frontend PASS; real intermediate core 3.95 s and enrichment 4.08 s; ERROR 0; HTTP 5xx 0.
+- Commit release follow-up: Cloud Build `9e1760e2-1417-4735-86f9-75b1a7fd79ab` produced `sha256:97d3cb9e...`; candidate `00008-bek` passed and now serves 100%. `00006-cud` is the immediate rollback target.
+
+---
+
+## H2 — Chat Smart Correction Live Sync
+
+Status:
+
+`COMPLETE` in commit `b441773` and production revision `hangul-now-api-00008-bek`.
+
+Changes:
+
+- Removed the right-side hard-coded correction examples.
+- Reused each left-chat message's `/api/correction` result for the Smart Correction panel.
+- Added synchronized pending, error, no-correction-needed, and recent-correction states.
+- Preserved `rule_id` in the frontend message correction object for category labels.
+- Added Vitest and mocked Playwright coverage so browser verification does not consume Gemini quota.
+
+Validation:
+
+- Focused Vitest 2/2 PASS; full Vitest 25/25 PASS.
+- Modified-source ESLint PASS.
+- Node 20 Vite production build PASS.
+- Focused Playwright desktop/mobile 2/2 PASS.
+- Full Playwright navigation regression remains blocked by unrelated current header/mobile drawer work; correction-specific scenarios pass.
+
+---
+
+## H4 — Tutor Introduction Cards
+
+Status:
+
+`COMPLETE` in commit `b441773` and production revision `hangul-now-api-00008-bek`.
+
+Changes:
+
+- Updated the Tutor page to photo-led 2-column cards matching the requested introduction format.
+- Kept introduction video controls removed and added tutor greeting audio controls with four packaged voice files.
+- Added four tutor portraits and verified every image/audio asset over the candidate and production service.
+
+Validation:
+
+- Scoped ESLint, Node 20 build, desktop navigation/overflow Playwright, and candidate asset checks PASS.
+- All 9 packaged Tutor/QR assets returned 200; candidate and production ERROR logs 0, HTTP 5xx 0.

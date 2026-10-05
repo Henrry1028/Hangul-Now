@@ -258,3 +258,22 @@ Note: rolling back the app does **not** roll back the Firestore rules (keep them
 - The real admin login on production (`00003-cis`) shows the admin menu and Video Class: **PASS**.
 - Cost guard: `HangulNow monthly (Cloud Run + Gemini)` (budget `b6835b68-b314-481f-978e-39adfe0274ae`) on billing account `01CF5F-1AAF28-0B00D3` (KRW): **₩140,000/month** (≈ $100). Covers both `hnageul-copilot-dev-918` (Cloud Run/Build/Firestore) and `gen-lang-client-0898376857` (the project that owns and bills the Gemini API key). Alerts at 50/90/100% of actual spend plus 100% of forecasted spend, emailed to the billing account admins.
 - The user deleted both local zips that contained the real `.env`. Keys were not rotated (rotate if those archives were ever shared).
+
+## 14. H3 Reading Latency Follow-up — 2026-10-05
+
+- Production service scaling changed to **min 1, max 1**. Revision `hangul-now-api-00003-cis` and its 100% traffic allocation remained unchanged.
+- This removes idle scale-to-zero cold starts and preserves the existing single-instance safety boundary for in-memory state.
+- The Reading two-stage generation change passed local API, unit, build, and desktop/mobile Playwright verification.
+- Cloud Build `142dd773-a4ee-46c2-8aaa-d091785a3524` produced image digest `sha256:9939ff17c348868cdaec351aa2f4d36d884da9ff8d9f993b5f1e86cbcc6afb1f` from production source `b2274a4` plus only five Reading runtime files.
+- Candidate revision `hangul-now-api-00006-cud` was deployed with `--no-traffic --tag rc-h3-reading`, then passed health, frontend, real Reading API, desktop/mobile Playwright, and log checks.
+- Production traffic moved to `hangul-now-api-00006-cud=100`; previous production `hangul-now-api-00003-cis` remains at 0% for rollback.
+- Post-shift production acceptance passed with ERROR logs 0 and HTTP 5xx 0. Intermediate Reading core completed in 3.95 s and enrichment in 4.08 s.
+
+## 15. Commit Release `b441773` — Tutor + Chat + Reading
+
+- Commit `b441773` was pushed to `origin/hardening/post-launch` with final divergence `0 0`.
+- Cloud Build `9e1760e2-1417-4735-86f9-75b1a7fd79ab` built Git archive `b441773`; image digest `sha256:97d3cb9ec43f61e40a6f43e9870eb884401457ee99bdd8bdfe8f5eed87aefbb1`.
+- Candidate `hangul-now-api-00008-bek` (`rc-b441773`) passed health/frontend, 9 Tutor/QR asset checks, real Chat correction, real Reading core/enrichment, desktop navigation, desktop/mobile Chat/Reading, and log checks.
+- Candidate timings: correction 4.62 s; Reading core 2.02 s; Reading enrichment 3.07 s.
+- Production traffic moved to `hangul-now-api-00008-bek=100`; `00006-cud` remains at 0% as the immediate rollback target.
+- Post-shift production acceptance: health 200, React bundle `index-CsxiCJWh.js`, Tutor asset 200, min/max instances 1/1, ERROR logs 0, HTTP 5xx 0.
