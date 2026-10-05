@@ -8,10 +8,219 @@
   height: calc(100vh - 122px);
   min-height: 520px;
   flex: 1;
+  width: 100%;
+  overflow: hidden;
 }
 
 @media (min-width: 860px) {
   .chat-screen {
     height: calc(100vh - 69px);
+    flex-direction: row;
   }
+}
+
+/* 좌측 채팅창 (화면 폭 50%) */
+.chat-main-pane {
+  flex: 1 1 50%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--chat);
+  height: 100%;
+}
+
+@media (min-width: 860px) {
+  .chat-main-pane {
+    border-right: 1px solid var(--line);
+  }
+}
+
+/* 우측 설명 안내창 (화면 폭 50%) */
+.chat-guide-pane {
+  flex: 1 1 50%;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(16px, 2.2vh, 24px) clamp(16px, 2vw, 24px);
+  box-sizing: border-box;
+}
+
+@media (max-width: 859px) {
+  .chat-guide-pane {
+    display: none;
+  }
+}
+
+.chat-guide-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: border-color .15s ease;
+}
+
+.chat-guide-card:hover {
+  border-color: var(--line2);
+}
+
+.chat-guide-card--featured {
+  border: 1.5px solid rgba(62, 155, 106, 0.35);
+  background: linear-gradient(180deg, var(--card) 0%, rgba(62, 155, 106, 0.03) 100%);
+  padding: 20px 20px 22px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.chat-guide-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.chat-guide-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--chip);
+  color: var(--accent-ink);
+  letter-spacing: 0.3px;
+}
+
+.chat-guide-badge--success {
+  background: rgba(62, 155, 106, 0.14);
+  color: #2E7D52;
+}
+
+.chat-correction-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-correction-item {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  transition: all .15s ease;
+}
+
+.chat-correction-item:hover {
+  border-color: var(--line2);
+}
+
+.chat-correction-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--sub);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.chat-correction-diff {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+}
+
+.chat-correction-wrong {
+  color: var(--hot);
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.chat-correction-arrow {
+  color: var(--sub);
+  font-size: 13px;
+}
+
+.chat-correction-right {
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.chat-correction-desc {
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.45;
+}
+
+
+/* 튜터 정보: 채팅창 위 가로 막대 (모바일·사이드바 접힘) */
+.chat-tutor-bar { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid rgba(0,0,0,.08); background: var(--card); flex-wrap: wrap; }
+.chat-tutor-bar .chat-tutor-id { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 140px; }
+.chat-tutor-bar .chat-tutor-actions { display: flex; align-items: center; gap: 8px; }
+
+/* 튜터 정보: 로고 아래 사이드바 상단 카드 */
+.chat-tutor-card {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+.chat-tutor-card .chat-tutor-id { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.chat-tutor-role { font-size: 12px; color: var(--sub); line-height: 1.4; }
+.chat-tutor-card .chat-tutor-actions { display: flex; gap: 6px; }
+.chat-tutor-card .chat-tutor-actions button:first-child { flex: none; }
+.chat-tutor-card .chat-tutor-actions button:last-child { flex: 1 1 auto; min-width: 0; }
+.chat-tutor-card .chat-tutor-actions button { padding: 6px 8px !important; font-size: 12px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 실시간 문장 첨삭: 오른쪽 패널 높이를 채우고, 교정 목록은 카드 안에서 스크롤 */
+@media (min-width: 860px) {
+  .chat-guide-card--featured { flex: 1 1 auto; min-height: 0; }
+  .chat-guide-card--featured .chat-correction-box { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+}
+.chat-guide-card--featured .chat-guide-title { font-size: 16px; }
+.chat-guide-card--featured .chat-correction-item { padding: 14px 16px; gap: 8px; }
+.chat-guide-card--featured .chat-correction-diff { font-size: 15px; }
+.chat-guide-card--featured .chat-correction-desc { font-size: 13px; line-height: 1.55; }
+
+/* 문장 첨삭 아래 QR 코드 2칸 */
+.chat-qr-card { flex: none; padding: 16px 18px; }
+.chat-qr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.chat-qr-slot { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.chat-qr-frame {
+  width: 100%; max-width: 140px; aspect-ratio: 1 / 1;
+  border-radius: 12px; background: #fff; border: 1px solid var(--line);
+  display: grid; place-items: center; overflow: hidden; box-sizing: border-box;
+}
+.chat-qr-frame img { width: 100%; height: 100%; object-fit: contain; padding: 2px; box-sizing: border-box; display: block; }
+.chat-qr-frame.is-empty { background: var(--bg); border: 1.5px dashed var(--line3); }
+.chat-qr-frame.is-empty span { font: 600 12px 'IBM Plex Mono', monospace; color: var(--faint); letter-spacing: .06em; }
+.chat-qr-slot figcaption { font-size: 12.5px; font-weight: 600; color: var(--ink2); text-align: center; line-height: 1.4; }
+.chat-qr-link { font-size: 11.5px; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; text-align: center; word-break: break-all; line-height: 1.4; margin-top: -4px; }
+.chat-qr-link:hover { color: var(--accent); }
+
+/* QR 카드 상단 안내 문구 */
+.chat-qr-card { gap: 14px; }
+.chat-qr-intro { display: flex; flex-direction: column; gap: 6px; text-align: center; padding-bottom: 12px; border-bottom: 1px solid var(--line2); }
+.chat-qr-intro p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--sub); }
+.chat-qr-intro .chat-qr-intro-title { font-size: 15px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
+.chat-qr-intro .chat-qr-intro-strong { font-weight: 700; color: var(--ink2); }
+.chat-qr-intro .chat-qr-intro-tagline { font-weight: 700; color: var(--accent-ink); }
+
+/* 빠른 답장 칩: 가로 스크롤은 유지하고 스크롤바만 숨김 */
+.chat-quick-row { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.chat-quick-row::-webkit-scrollbar { display: none; }
+/* 앱(모바일): 채팅창 위 튜터 막대를 한 단계 압축해 대화 영역을 넓힌다 */
+@media (max-width: 520px) {
+  .chat-tutor-bar { padding: 10px 14px; gap: 8px 10px; }
+  .chat-tutor-bar .chat-tutor-actions button { padding: 5px 11px !important; font-size: 12px !important; }
 }

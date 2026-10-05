@@ -96,15 +96,18 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
             ...prev.msgs,
             [tid]: (prev.msgs[tid] || []).map((message) => {
               if (message.id !== messageId) return message;
-              const next = { ...message, correctionPending: false, correctionError: '' };
+              const next = { ...message, correctionPending: false, correctionError: '', correctionChecked: true };
               if (data.has_error && data.wrong_span && data.fixed) {
                 next.fix = {
                   wrong: String(data.wrong_span).trim(),
                   right: String(data.fixed).trim(),
+                  ruleId: String(data.rule_id || '').trim(),
                   note: [
                     String(data.explanation_en || data.explanation_ko || '').trim(),
                     String(data.explanation_ko || data.explanation_en || '').trim()
-                  ]
+                  ],
+                  // 채팅 말풍선용 한 줄 요점 [en, ko]. 자세한 설명(note)은 '실시간 문장 첨삭' 패널에 영어로 표시한다.
+                  brief: [String(data.brief_en || '').trim(), String(data.brief_ko || '').trim()]
                 };
               }
               return next;
@@ -117,7 +120,7 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
           msgs: {
             ...prev.msgs,
             [tid]: (prev.msgs[tid] || []).map((message) => (message.id === messageId
-              ? { ...message, correctionPending: false, correctionError: err?.name === 'AbortError' ? 'TIMEOUT' : (err?.message || 'ERROR') }
+              ? { ...message, correctionPending: false, correctionChecked: false, correctionError: err?.name === 'AbortError' ? 'TIMEOUT' : (err?.message || 'ERROR') }
               : message))
           }
         }));

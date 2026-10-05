@@ -91,6 +91,7 @@ export const INITIAL_READING_STATE = Object.freeze({
   saved: {},
   generatedReading: null,
   generationLoading: false,
+  generationDetailLoading: false,
   generationError: '',
   quizAnswers: {}
 });

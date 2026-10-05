@@ -778,17 +778,26 @@ app.get("/api/learning/history", identifyUser, async (req, res) => {
 
 // 학습자료 생성 — 듣기 · 읽기 · 말하기 (난이도별, 이미 배운 주제는 제외)
 app.post("/api/content/generate", identifyUser, limitGenerate, async (req, res) => {
+  const startedAt = Date.now();
   try {
-    const { kind, level = "beginner", seenTopics = [] } = req.body || {};
+    const { kind, level = "beginner", seenTopics = [], phase = "full", baseContent = null } = req.body || {};
     const userId = req.user?.uid || null;
     if (!["listening", "reading", "speaking"].includes(kind)) {
       return res.status(400).json({ error: `알 수 없는 kind: ${kind}` });
     }
     if (!LEVEL_SPEC[level]) return res.status(400).json({ error: `알 수 없는 level: ${level}` });
-    res.json(await generateContent({ kind, level, userId, seenTopics }));
+    if (kind !== "reading" && phase !== "full") return res.status(400).json({ error: `지원하지 않는 phase: ${phase}` });
+    if (kind === "reading" && !["full", "core", "enrichment"].includes(phase)) {
+      return res.status(400).json({ error: `지원하지 않는 phase: ${phase}` });
+    }
+    console.info("[/api/content/generate] start", { kind, level, phase, signedIn: Boolean(userId) });
+    const data = await generateContent({ kind, level, userId, seenTopics, phase, baseContent });
+    console.info("[/api/content/generate] success", { kind, level, phase, durationMs: Date.now() - startedAt });
+    res.json(data);
   } catch (err) {
-    console.error("[/api/content/generate]", err.message);
-    res.status(500).json({ error: err.message });
+    const timedOut = /timeout|timed out|aborted/i.test(err?.message || "");
+    console.error("[/api/content/generate] failed", { durationMs: Date.now() - startedAt, error: err.message });
+    res.status(timedOut ? 504 : 500).json({ error: timedOut ? "자료 생성 시간이 초과되었습니다. 다시 시도해 주세요." : err.message });
   }
 });
 

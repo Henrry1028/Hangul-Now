@@ -18,6 +18,29 @@ const FULL_READING_TEXT = DEFAULT_READING_PARAGRAPHS
   .join(' ');
 
 const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
+const GENERATION_TIMEOUT_MS = 30_000;
+
+async function requestReadingGeneration(payload) {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), GENERATION_TIMEOUT_MS);
+  try {
+    const response = await fetch('/api/content/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `서버 응답 ${response.status}`);
+    if (data.error) throw new Error(data.error);
+    return data;
+  } catch (error) {
+    if (error?.name === 'AbortError') throw new Error('자료 생성이 30초를 넘었어요. 다시 시도해 주세요.');
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
 
 function splitGeneratedParagraph(text, words) {
   const source = String(text || '');
@@ -74,6 +97,7 @@ function ReadingPage({
     saved,
     generatedReading,
     generationLoading,
+    generationDetailLoading,
     generationError,
     quizAnswers
   } = state;
@@ -106,23 +130,23 @@ function ReadingPage({
   const readingTranslations = generatedParagraphs
     ? generatedParagraphs.map((paragraph) => paragraph.en || '')
     : DEFAULT_READING_TRANSLATIONS;
-  const readingGlossary = generatedReading?.glossary?.length
-    ? Object.fromEntries(generatedReading.glossary.map((item) => [item.word, {
+  const readingGlossary = generatedReading
+    ? Object.fromEntries((generatedReading.glossary || []).map((item) => [item.word, {
       base: item.word,
       pos: [item.pos || '', item.pos || ''],
       en: item.en || '',
       ex: item.ex || ''
     }]))
     : DEFAULT_READING_GLOSSARY;
-  const readingGrammar = generatedReading?.grammar?.length
-    ? generatedReading.grammar.map((item) => ({
+  const readingGrammar = generatedReading
+    ? (generatedReading.grammar || []).map((item) => ({
       form: item.form,
       explanation: [item.ko || '', item.ko || ''],
       example: item.example || ''
     }))
     : DEFAULT_READING_GRAMMAR;
-  const readingQuestions = generatedReading?.questions?.length
-    ? generatedReading.questions
+  const readingQuestions = generatedReading
+    ? (generatedReading.questions || [])
     : DEFAULT_READING_QUESTIONS;
   const selectedWord = selectedWordKey ? readingGlossary[selectedWordKey] : null;
   const selectedTutor = TUTORS.find((tutor) => tutor.id === selectedTutorId) || TUTORS[0];
@@ -256,9 +280,11 @@ function ReadingPage({
     };
   }, [stopTutorSpeech]);
 
+  const generationBusy = generationLoading || generationDetailLoading;
+
   useEffect(() => {
-    generationLoadingRef.current = generationLoading;
-  }, [generationLoading]);
+    generationLoadingRef.current = generationBusy;
+  }, [generationBusy]);
 
   useEffect(() => {
     if (previousTutorIdRef.current !== selectedTutorId) {
@@ -272,49 +298,74 @@ function ReadingPage({
     if (generationLoadingRef.current) return;
 
     generationLoadingRef.current = true;
-    updateReadingState({ generationLoading: true, generationError: '' });
+    updateReadingState({ generationLoading: true, generationDetailLoading: false, generationError: '' });
 
+    let coreData;
     try {
       const seenTopics = Object.values(loadLearnedTopics('reading'))
         .map((item) => item?.label)
         .filter(Boolean);
-      const payload = JSON.stringify({
+      coreData = await requestReadingGeneration({
         kind: 'reading',
+        phase: 'core',
         level: nextLevel,
         userId,
         seenTopics
       });
-      const request = async () => fetch('/api/content/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-        body: payload
-      });
-
-      let response;
-      try {
-        response = await request();
-      } catch {
-        await new Promise((resolve) => window.setTimeout(resolve, 250));
-        response = await request();
-      }
-
-      if (!response.ok) throw new Error(`서버 응답 ${response.status}`);
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      if (data.topic) {
-        recordLearnedTopic('reading', `${nextLevel}:${data.topic}`, data.topic, userId);
+      if (coreData.topic) {
+        recordLearnedTopic('reading', `${nextLevel}:${coreData.topic}`, coreData.topic, userId);
       }
       updateReadingState({
-        generatedReading: data,
+        generatedReading: {
+          ...coreData,
+          glossary: [],
+          questions: [],
+          grammar: []
+        },
         selectedWordKey: null,
         showTranslation: false,
-        quizAnswers: {}
+        quizAnswers: {},
+        generationLoading: false,
+        generationDetailLoading: true
       });
     } catch (error) {
       updateReadingState({ generationError: `새 자료를 만들지 못했어요: ${error?.message || error}` });
+      generationLoadingRef.current = false;
+      updateReadingState({ generationLoading: false, generationDetailLoading: false });
+      return;
+    }
+
+    try {
+      const details = await requestReadingGeneration({
+        kind: 'reading',
+        phase: 'enrichment',
+        level: nextLevel,
+        baseContent: {
+          topic: coreData.topic,
+          title: coreData.title,
+          paragraphs: coreData.paragraphs
+        }
+      });
+      updateReadingState((current) => ({
+        generatedReading: {
+          ...(current.generatedReading || coreData),
+          ...details,
+          paragraphs: (coreData.paragraphs || []).map((paragraph, index) => ({
+            ...paragraph,
+            words: details.paragraphWords?.[index] || []
+          }))
+        },
+        generationError: '',
+        generationDetailLoading: false
+      }));
+    } catch (error) {
+      updateReadingState({
+        generationError: `본문은 준비됐지만 추가 문제를 만들지 못했어요: ${error?.message || error}`,
+        generationDetailLoading: false
+      });
     } finally {
       generationLoadingRef.current = false;
-      updateReadingState({ generationLoading: false });
+      updateReadingState({ generationLoading: false, generationDetailLoading: false });
     }
   }, [updateReadingState, userId]);
 
@@ -385,7 +436,7 @@ function ReadingPage({
           <span className="reading-subtitle">{generatedReading?.subtitle || t.subtitle}</span>
         </div>
         <div className="reading-generation-controls">
-          {!generationLoading && (
+          {!generationBusy && (
             <button
               type="button"
               className="reading-generate-button"
@@ -396,7 +447,12 @@ function ReadingPage({
           )}
           {generationLoading && (
             <span className="reading-generation-loading">
-              {lang === 'ko' ? '만드는 중…' : 'Generating…'}
+              {lang === 'ko' ? '본문 만드는 중…' : 'Generating passage…'}
+            </span>
+          )}
+          {generationDetailLoading && (
+            <span className="reading-generation-loading">
+              {lang === 'ko' ? '본문 완성 · 문제 준비 중…' : 'Passage ready · adding practice…'}
             </span>
           )}
           <div className="reading-level-selector">
@@ -488,7 +544,12 @@ function ReadingPage({
 
           <div className="reading-quiz">
             <span className="reading-quiz-heading">{t.checkHeading}</span>
-            {readingQuestions.map((question, questionIndex) => (
+            {generationDetailLoading && (
+              <span className="reading-generation-loading">
+                {lang === 'ko' ? '본문을 읽는 동안 문제를 준비하고 있어요.' : 'Practice questions are being prepared while you read.'}
+              </span>
+            )}
+            {!generationDetailLoading && readingQuestions.map((question, questionIndex) => (
               <div className="reading-quiz-question" key={`question-${questionIndex}`}>
                 <span className="reading-quiz-prompt">
                   {questionIndex + 1}. {question.q}{' '}
@@ -566,7 +627,12 @@ function ReadingPage({
 
           <div className="reading-grammar-card">
             <span className="reading-grammar-heading">{t.grammarHeading}</span>
-            {readingGrammar.map((grammar) => (
+            {generationDetailLoading && (
+              <span className="reading-generation-loading">
+                {lang === 'ko' ? '문법 설명 준비 중…' : 'Preparing grammar notes…'}
+              </span>
+            )}
+            {!generationDetailLoading && readingGrammar.map((grammar) => (
               <span className="reading-grammar-item" key={grammar.form}>
                 <b>{grammar.form}</b> — {grammar.explanation[L]}{' '}
                 <span>{grammar.example}</span>

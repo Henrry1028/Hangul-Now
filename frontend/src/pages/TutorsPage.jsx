@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TUTORS, TAGS, TUTORS_TEXT } from '../data/tutorsData.js';
 import '../styles/tutors.css';
 
@@ -9,9 +9,66 @@ function TutorsPage({
   onNavigate
 }) {
   const [filter, setFilter] = useState('all');
+  const [playingTutorId, setPlayingTutorId] = useState(null);
+  const currentAudioRef = React.useRef(null);
 
   const L = lang === 'ko' ? 1 : 0;
   const t = TUTORS_TEXT[lang] || TUTORS_TEXT.ko;
+
+  // 컴포넌트 unmount 시 재생 중인 오디오 중단
+  useEffect(() => {
+    return () => {
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  // 튜터 고품질 원어민 음성 인사말 재생 핸들러
+  const handlePlayGreeting = async (e, tu) => {
+    e.stopPropagation();
+
+    // 현재 재생 중인 튜터를 다시 누르면 멈춤
+    if (playingTutorId === tu.id) {
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
+      }
+      setPlayingTutorId(null);
+      return;
+    }
+
+    // 기존 재생 중인 다른 튜터 오디오 중단
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+
+    setPlayingTutorId(tu.id);
+
+    try {
+      const audioPath = tu.audio || `/assets/tutors/audio/${tu.id}.wav`;
+      const audio = new Audio(audioPath);
+      currentAudioRef.current = audio;
+
+      audio.onended = () => {
+        setPlayingTutorId((prev) => (prev === tu.id ? null : prev));
+        currentAudioRef.current = null;
+      };
+
+      audio.onerror = (err) => {
+        console.error('Audio playback error:', err);
+        setPlayingTutorId((prev) => (prev === tu.id ? null : prev));
+        currentAudioRef.current = null;
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.error('Audio play failed:', err);
+      setPlayingTutorId(null);
+    }
+  };
 
   const filterKeys = ['all', 'daily', 'business', 'topik', 'pron', 'beginner'];
   const filters = filterKeys.map((key) => {
@@ -109,26 +166,20 @@ function TutorsPage({
         })}
       </div>
 
-      {/* 튜터 카드 그리드 */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%,300px),1fr))',
-          gap: '18px'
-        }}
-      >
+      {/* 2x2 튜터 카드 그리드 */}
+      <div className="tutors-grid">
         {tutorList.map((tu) => (
           <div
             key={tu.id}
             style={{
               background: 'var(--card)',
               border: tu.cardBd,
-              borderRadius: '18px',
-              padding: '22px',
+              borderRadius: '20px',
+              padding: '24px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+              gap: '18px',
+              boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
               position: 'relative'
             }}
           >
@@ -136,72 +187,106 @@ function TutorsPage({
               <div
                 style={{
                   position: 'absolute',
-                  top: '14px',
-                  right: '14px',
+                  top: '16px',
+                  right: '16px',
                   background: 'var(--accent)',
                   color: '#fff',
                   fontSize: '11px',
                   fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '999px'
+                  padding: '3px 10px',
+                  borderRadius: '999px',
+                  boxShadow: '0 2px 8px rgba(35,73,63,0.2)'
                 }}
               >
                 {t.myTutorBadge}
               </div>
             )}
-            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
               <div style={{ position: 'relative', flex: 'none' }}>
                 <div
                   style={{
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '22px',
+                    width: '110px',
+                    height: '110px',
+                    borderRadius: '26px',
                     background: tu.color,
                     color: '#1C1F1E',
                     display: 'grid',
                     placeItems: 'center',
                     fontWeight: 700,
-                    fontSize: '16px'
+                    fontSize: '22px',
+                    overflow: 'hidden',
+                    boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
+                    border: '2px solid var(--line)'
                   }}
                 >
-                  {tu.initial}
+                  {tu.photo ? (
+                    <img
+                      src={tu.photo}
+                      alt={tu.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    tu.initial
+                  )}
                 </div>
                 <span
                   style={{
                     position: 'absolute',
-                    right: '-2px',
-                    bottom: '-2px',
-                    width: '18px',
-                    height: '18px',
+                    right: '-3px',
+                    bottom: '-3px',
+                    width: '28px',
+                    height: '28px',
                     borderRadius: '50%',
                     background: tu.genderBg,
                     color: '#fff',
-                    fontSize: '10px',
+                    fontSize: '14px',
                     fontWeight: 700,
                     display: 'grid',
                     placeItems: 'center',
-                    border: '2px solid var(--card)'
+                    border: '2.5px solid var(--card)',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.18)'
                   }}
                 >
                   {tu.genderSymbol}
                 </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '17px', fontWeight: 700 }}>{tu.name}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.01em' }}>{tu.name}</span>
                   <span
                     style={{
                       fontSize: '11.5px',
-                      padding: '1px 6px',
+                      padding: '2px 7px',
                       borderRadius: '4px',
-                      background: 'rgba(0,0,0,0.06)',
+                      background: 'var(--chip)',
+                      color: 'var(--sub)',
                       fontWeight: 600
                     }}
                   >
                     {tu.genderLabel}
                   </span>
+                  {/* 튜터 인사말 목소리 재생 버튼 */}
+                  <button
+                    type="button"
+                    className={`tutor-voice-btn ${playingTutorId === tu.id ? 'is-playing' : ''}`}
+                    onClick={(e) => handlePlayGreeting(e, tu)}
+                    title={playingTutorId === tu.id ? (L ? '음성 멈추기' : 'Stop voice') : (L ? '튜터 인사말 듣기' : 'Listen to greeting voice')}
+                    aria-label={L ? `${tu.name} 튜터 인사말 듣기` : `Listen to ${tu.name}'s greeting voice`}
+                  >
+                    {playingTutorId === tu.id ? (
+                      <span style={{ fontSize: '13px' }}>⏹</span>
+                    ) : (
+                      <span style={{ fontSize: '16px' }} role="img" aria-label="speaker">🔊</span>
+                    )}
+                  </button>
                 </div>
-                <span style={{ fontSize: '13.5px', color: 'var(--sub)' }}>{tu.role}</span>
+                <span style={{ fontSize: '14px', color: 'var(--sub)', fontWeight: 500 }}>{tu.role}</span>
+                {playingTutorId === tu.id && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--accent-ink)', fontWeight: 600, marginTop: '2px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)' }} />
+                    <span>{L ? '인사말 들려주는 중...' : 'Playing greeting...'}</span>
+                  </div>
+                )}
               </div>
             </div>
             <p

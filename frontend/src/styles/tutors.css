@@ -15,3 +15,61 @@
     gap: clamp(10px, 1.4vh, 18px);
   }
 }
+
+/* 2x2 튜터 그리드 레이아웃 */
+.tutors-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
+
+@media (max-width: 768px) {
+  .tutors-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* 튜터 인사말 목소리 재생 버튼 */
+.tutor-voice-btn {
+  background: var(--card);
+  border: 1.5px solid var(--line2);
+  color: var(--accent-ink);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.tutor-voice-btn:hover {
+  transform: scale(1.08);
+  border-color: var(--accent);
+  background: var(--chip);
+  box-shadow: 0 4px 12px rgba(35, 73, 63, 0.15);
+}
+
+.tutor-voice-btn.is-playing {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  animation: pulse-ring 1.4s infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(35, 73, 63, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(35, 73, 63, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(35, 73, 63, 0);
+  }
+}

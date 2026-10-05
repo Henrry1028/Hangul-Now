@@ -29,10 +29,12 @@ export async function getLearned(userId, type) {
 }
 
 /** 학습을 마친 항목을 기록한다. items: [{key, label}] */
-export async function recordLearned(userId, type, items = []) {
+export async function recordLearned(userId, type, items = [], existingItems = null) {
   if (!userId || !items.length) return { recorded: 0 };
   const now = Date.now();
-  const prev = await getLearned(userId, type);
+  const prev = existingItems && typeof existingItems === "object"
+    ? existingItems
+    : await getLearned(userId, type);
   const next = { ...prev };
   for (const it of items) {
     const key = typeof it === "string" ? it : it.key;

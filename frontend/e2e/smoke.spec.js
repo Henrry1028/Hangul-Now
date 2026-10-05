@@ -19,7 +19,10 @@ const screenLabel = (page) => page.locator('.app-main-viewport [data-screen-labe
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
-    try { localStorage.setItem('hn-lang', 'en'); } catch { /* ignore */ }
+    try {
+      localStorage.setItem('hn-lang', 'en');
+      localStorage.setItem('hn-site-access', 'granted_20261028');
+    } catch { /* ignore */ }
   });
 });
 
@@ -58,4 +61,100 @@ test('guests never see admin or Video Class entry points, even with ?admin=1', a
   expect(text).not.toMatch(/👑|LIVE VIDEO CLASS|1:1 Live Class|1:1 Video/);
   await page.goto('/videoclass');
   await expect.poll(() => screenLabel(page)).toBe('01 Landing');
+});
+
+test('chat shows only the correction point; smart correction explains it in English', async ({ page }) => {
+  const problems = [];
+  page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
+  page.on('console', (message) => { if (message.type() === 'error') problems.push(`console: ${message.text()}`); });
+
+  await page.route('**/api/correction', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      has_error: true,
+      original: '어똥에 배달 해요?',
+      wrong_span: '어똥에',
+      fixed: '어떻게',
+      rule_id: 'SPELLING_ERROR',
+      brief_ko: "맞춤법: '어떻게'",
+      brief_en: 'Spelling: 어떻게',
+      explanation_ko: '방법을 묻는 말은 어떻게라고 써요.',
+      explanation_en: 'Use 어떻게 for “how”.'
+    })
+  }));
+  await page.route('**/api/chat', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ reply: '배달 앱으로 주문할 수 있어요.' })
+  }));
+
+  await page.goto('/');
+  await page.locator('button:visible', { hasText: 'Chat' }).filter({ hasNot: page.locator('header') }).last().evaluate((button) => button.click());
+  await expect.poll(() => screenLabel(page)).toBe('04 Chat');
+
+  const chatScreen = page.locator('[data-screen-label="04 Chat"]');
+  await chatScreen.locator('input').fill('어똥에 배달 해요?');
+  await chatScreen.getByRole('button', { name: 'Send' }).click();
+
+  const smartCorrection = chatScreen.locator('[data-correction-source="live-chat"]');
+  await expect(smartCorrection).toContainText('어똥에');
+  await expect(smartCorrection).toContainText('어떻게');
+  await expect(smartCorrection).toContainText('Use 어떻게 for “how”.');
+  await expect(smartCorrection).not.toContainText('친구하고 한강을 가요');
+
+  // 채팅 말풍선 아래에는 짧은 요점만: 자세한 설명은 패널에만 있다.
+  const chatPane = chatScreen.locator('.chat-main-pane');
+  await expect(chatPane).toContainText("맞춤법: '어떻게'");
+  await expect(chatPane).not.toContainText('Use 어떻게 for “how”.');
+  await expect(chatPane).not.toContainText('방법을 묻는 말은 어떻게라고 써요.');
+  expect(problems).toEqual([]);
+});
+
+test('reading shows the passage before practice enrichment finishes', async ({ page }) => {
+  await page.route('**/api/content/generate', async (route) => {
+    const payload = route.request().postDataJSON();
+    if (payload.phase === 'core') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          topic: '시장 방문',
+          title: '주말 시장',
+          subtitle: 'A weekend market visit',
+          paragraphs: [
+            { text: '주말에 시장에 갔어요.', en: 'I went to the market on the weekend.' },
+            { text: '과일을 사고 친구를 만났어요.', en: 'I bought fruit and met a friend.' }
+          ],
+          level: 'beginner',
+          phase: 'core'
+        })
+      });
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        paragraphWords: [['시장'], ['과일']],
+        glossary: [{ word: '시장', pos: 'noun', en: 'market', ex: '시장에 가요 — I go to the market.' }],
+        questions: [{ q: '어디에 갔어요?', en: 'Where did they go?', opts: ['시장', '학교', '회사'], a: 0 }],
+        grammar: [{ form: '-에 가다', ko: '목적지를 나타내요.', example: '시장에 갔어요.' }]
+      })
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('button:visible', { hasText: 'Reading' }).filter({ hasNot: page.locator('header') }).last().evaluate((button) => button.click());
+  await expect.poll(() => screenLabel(page)).toBe('06 Reading');
+
+  const readingScreen = page.locator('[data-screen-label="06 Reading"]');
+  await readingScreen.getByRole('button', { name: 'New material' }).click();
+  await expect(readingScreen).toContainText('주말 시장');
+  await expect(readingScreen).toContainText('Passage ready · adding practice…');
+  await expect(readingScreen).toContainText('Where did they go?');
+  await expect(readingScreen).toContainText('-에 가다');
+  await expect(readingScreen).not.toContainText('Passage ready · adding practice…');
 });

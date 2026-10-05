@@ -130,8 +130,10 @@ export async function analyzeSentenceCorrection(sentence) {
         wrong_span: sentence.includes("홍대에에서") ? "홍대에에서" : "맛있었어서",
         fixed: sentence.includes("홍대에에서") ? "홍대에서" : "맛있어서",
         rule_id: "DUPLICATE_PARTICLE",
+        brief_ko: "조사 '에서'가 겹쳤어요",
+        brief_en: "'에서' is doubled",
         explanation_ko: "장소를 나타내는 조사 '에서'가 중복되었습니다.",
-        explanation_en: "The locative particle '-eseo' was repeated.",
+        explanation_en: "The locative particle '-에서' (at/in) was written twice. A place noun takes the particle only once: 홍대 + 에서 → 홍대에서.",
         cefr_level: "A1"
       };
     }
@@ -151,6 +153,14 @@ export async function analyzeSentenceCorrection(sentence) {
 
 사용자 문장: "${sentence}"
 
+피드백은 두 곳에 나뉘어 표시됩니다. 같은 내용을 반복하지 마세요.
+- brief_ko / brief_en: 채팅 말풍선 아래에 붙는 한 줄 요점. 무엇이 틀렸는지만 짧게. 설명·예문·부가 조언 금지.
+  brief_ko는 25자 이내 한국어, brief_en은 8단어 이내 영어.
+- explanation_en: 오른쪽 '실시간 문장 첨삭' 패널에 표시되는 자세한 영어 설명(2~4문장).
+  왜 틀렸는지, 적용되는 규칙, 올바른 형태가 만들어지는 방식을 설명하고, 필요하면 짧은 예시나
+  더 자연스러운 표현(어휘 선택 등)을 덧붙이세요. 학습자는 영어 사용자입니다.
+- explanation_ko: explanation_en과 같은 내용의 한국어 설명 (오답 노트 저장용).
+
 반드시 다음 JSON 형식으로만 응답하세요:
 {
   "has_error": boolean,
@@ -158,8 +168,10 @@ export async function analyzeSentenceCorrection(sentence) {
   "wrong_span": string (오류가 있는 부분, 오류가 없으면 ""),
   "fixed": string (올바르게 고친 부분, 오류가 없으면 ""),
   "rule_id": string (영문 대문자 코드, 예: DUPLICATE_PARTICLE, TENSE_ERROR, SPELLING_ERROR),
-  "explanation_ko": string (한국어 문법 설명),
-  "explanation_en": string (영어 문법 설명),
+  "brief_ko": string (채팅용 한 줄 요점, 25자 이내),
+  "brief_en": string (채팅용 한 줄 요점의 영어, 8단어 이내),
+  "explanation_ko": string (자세한 한국어 문법 설명),
+  "explanation_en": string (자세한 영어 문법 설명, 2~4문장),
   "cefr_level": "A1" | "A2" | "B1" | "B2" | "C1" | "C2"
 }`;
 

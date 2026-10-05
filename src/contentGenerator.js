@@ -5,9 +5,12 @@
 // ============================================================
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getCoveredTopics, recordLearned } from "./learningHistory.js";
+import { getLearned, recordLearned } from "./learningHistory.js";
 
 const MODEL = process.env.GEMINI_CONTENT_MODEL || "gemini-3.8-flash";
+const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_CONTENT_TIMEOUT_MS) || 25_000;
+const READING_CORE_TOKENS = { beginner: 900, intermediate: 1300, advanced: 1700 };
+const READING_DETAIL_TOKENS = { beginner: 1000, intermediate: 1200, advanced: 1400 };
 
 // 세 영역 공통 난이도 기준 — 어디서든 같은 기준으로 적용된다
 export const LEVEL_SPEC = {
@@ -37,7 +40,7 @@ function genAI() {
   return new GoogleGenerativeAI(key);
 }
 
-async function askJson(prompt, { maxOutputTokens = 2200 } = {}) {
+async function askJson(prompt, { maxOutputTokens = 2200, operation = "content" } = {}) {
   const model = genAI().getGenerativeModel({
     model: MODEL,
     generationConfig: {
@@ -46,9 +49,22 @@ async function askJson(prompt, { maxOutputTokens = 2200 } = {}) {
       thinkingConfig: { thinkingLevel: "LOW" }
     }
   });
-  const res = await model.generateContent(prompt);
-  const raw = res.response.text().trim().replace(/^```json\s*|\s*```$/g, "");
-  return JSON.parse(raw);
+  const startedAt = Date.now();
+  console.info("[content.generate] gemini:start", { operation, model: MODEL, maxOutputTokens });
+  try {
+    const res = await model.generateContent(prompt, { timeout: GEMINI_TIMEOUT_MS });
+    const raw = res.response.text().trim().replace(/^```json\s*|\s*```$/g, "");
+    const parsed = JSON.parse(raw);
+    console.info("[content.generate] gemini:success", { operation, durationMs: Date.now() - startedAt });
+    return parsed;
+  } catch (error) {
+    console.error("[content.generate] gemini:failed", {
+      operation,
+      durationMs: Date.now() - startedAt,
+      error: error?.message || String(error)
+    });
+    throw error;
+  }
 }
 
 function normalizeDictations(data) {
@@ -117,9 +133,9 @@ questions와 dictations는 각각 정확히 3개. opts와 optsEn은 각각 정�
 }
 
 // ── 읽기 ────────────────────────────────────────────────
-export async function generateReading({ level = "beginner", covered = [] }) {
+export async function generateReadingCore({ level = "beginner", covered = [] }) {
   const L = LEVEL_SPEC[level] || LEVEL_SPEC.beginner;
-  const data = await askJson(`너는 한국어 교재를 만드는 30년차 어학당 교사다.
+  return askJson(`너는 한국어 교재를 만드는 30년차 어학당 교사다.
 ${L.ko}(${L.topik}) 학습자를 위한 '읽기 독해' 지문을 하나 만들어라.
 조건: ${L.reading}
 ${avoidBlock(covered)}
@@ -127,14 +143,54 @@ ${avoidBlock(covered)}
 {
   "topic": "주제",
   "title": "지문 제목 (한국어)",
-  "subtitle": "한 줄 영어 요약",
-  "paragraphs": [{"text":"문단 전체 한국어","en":"문단 영어 번역","words":["이 문단에서 뜻을 알아야 할 단어"]}],
-  "glossary": [{"word":"단어","pos":"noun","en":"영어 뜻","ex":"한국어 예문 — 영어 번역"}],
-  "questions": [{"q":"한국어 질문","en":"영어 질문","opts":["보기1","보기2","보기3"],"a":0}],
-  "grammar": [{"form":"-(으)러 가다","ko":"문법 설명 한 줄","example":"예문"}]
+  "subtitle": "아주 짧은 한 줄 영어 요약",
+  "paragraphs": [{"text":"문단 전체 한국어","en":"문단의 간결한 영어 번역"}]
 }
-words에 넣는 단어는 그 문단 text 안에 그대로 등장해야 한다. glossary는 words에 쓴 단어를 모두 포함하라. questions는 2개, grammar는 2개.`, { maxOutputTokens: 2800 });
-  return data;
+본문과 번역만 만들고 단어 설명, 문제, 문법 설명은 만들지 마라.`, {
+    maxOutputTokens: READING_CORE_TOKENS[level] || READING_CORE_TOKENS.beginner,
+    operation: `reading.core.${level}`
+  });
+}
+
+export async function generateReadingEnrichment({ level = "beginner", reading }) {
+  const paragraphs = Array.isArray(reading?.paragraphs)
+    ? reading.paragraphs.slice(0, 3).map((paragraph) => String(paragraph?.text || "").trim().slice(0, 1200)).filter(Boolean)
+    : [];
+  if (!paragraphs.length) throw new Error("읽기 본문이 필요합니다.");
+
+  return askJson(`너는 한국어 교재를 만드는 30년차 어학당 교사다.
+아래 ${LEVEL_SPEC[level]?.ko || LEVEL_SPEC.beginner.ko} 읽기 본문을 바탕으로 학습 보조 자료만 만들어라.
+
+제목: ${String(reading?.title || "").slice(0, 200)}
+본문:
+${paragraphs.map((text, index) => `${index + 1}. ${text}`).join("\n")}
+
+반드시 아래 JSON 형식으로만 답하라.
+{
+  "paragraphWords": [["각 문단에서 꼭 배울 단어 최대 2개"]],
+  "glossary": [{"word":"본문에 실제 등장한 단어","pos":"noun","en":"짧은 영어 뜻","ex":"짧은 한국어 예문 — 영어 번역"}],
+  "questions": [{"q":"한국어 질문","en":"영어 질문","opts":["보기1","보기2","보기3"],"a":0}],
+  "grammar": [{"form":"문법 형태","ko":"문법 설명 한 줄","example":"본문과 연결된 짧은 예문"}]
+}
+paragraphWords는 본문의 문단 수와 같은 개수의 배열이어야 하고 각 배열은 최대 2개 단어만 포함한다.
+모든 단어는 해당 문단에 실제 등장해야 한다. glossary는 paragraphWords의 고유 단어만 포함하고 최대 6개로 제한한다.
+questions는 정확히 2개, grammar는 정확히 2개로 만든다.`, {
+    maxOutputTokens: READING_DETAIL_TOKENS[level] || READING_DETAIL_TOKENS.beginner,
+    operation: `reading.enrichment.${level}`
+  });
+}
+
+export async function generateReading({ level = "beginner", covered = [] }) {
+  const core = await generateReadingCore({ level, covered });
+  const enrichment = await generateReadingEnrichment({ level, reading: core });
+  return {
+    ...core,
+    ...enrichment,
+    paragraphs: (core.paragraphs || []).map((paragraph, index) => ({
+      ...paragraph,
+      words: enrichment.paragraphWords?.[index] || []
+    }))
+  };
 }
 
 // ── 말하기 ──────────────────────────────────────────────
@@ -161,18 +217,37 @@ weakIndex는 text에서 발음이 어려운 글자의 위치(0부터, 공백 포
   return data;
 }
 
-export async function generateContent({ kind, level = "beginner", userId = null, seenTopics = [] }) {
-  // 전역 규칙: 이미 다룬 주제를 프롬프트에서 제외한다
-  const covered = userId ? await getCoveredTopics(userId, 20) : seenTopics.slice(0, 20);
-  const fn = { listening: generateListening, reading: generateReading, speaking: generateSpeaking }[kind];
+export async function generateContent({ kind, level = "beginner", userId = null, seenTopics = [], phase = "full", baseContent = null }) {
+  if (kind === "reading" && phase === "enrichment") {
+    const data = await generateReadingEnrichment({ level, reading: baseContent });
+    return { ...data, level, phase };
+  }
+
+  let learned = null;
+  let covered = seenTopics.slice(0, 20);
+  if (userId) {
+    const historyStartedAt = Date.now();
+    learned = await getLearned(userId, kind);
+    covered = Object.values(learned)
+      .sort((a, b) => (b?.lastAt || 0) - (a?.lastAt || 0))
+      .slice(0, 20)
+      .map((item) => item?.label)
+      .filter(Boolean);
+    console.info("[content.generate] history:read", { kind, durationMs: Date.now() - historyStartedAt, count: covered.length });
+  }
+
+  const fn = kind === "reading" && phase === "core"
+    ? generateReadingCore
+    : { listening: generateListening, reading: generateReading, speaking: generateSpeaking }[kind];
   if (!fn) throw new Error(`알 수 없는 kind: ${kind}`);
   const data = await fn({ level, covered });
 
-  // 만든 주제를 바로 학습 이력에 남겨 다음에는 다른 주제가 나오게 한다
   if (userId && data.topic) {
-    await recordLearned(userId, kind, [{ key: `${level}:${data.topic}`, label: data.topic }]);
+    const saveStartedAt = Date.now();
+    await recordLearned(userId, kind, [{ key: `${level}:${data.topic}`, label: data.topic }], learned);
+    console.info("[content.generate] history:write", { kind, durationMs: Date.now() - saveStartedAt });
   }
-  return { ...data, level };
+  return { ...data, level, phase };
 }
 
 // ── 회화·채팅 번역 (영어 번역 보기 토글용) ───────────────
