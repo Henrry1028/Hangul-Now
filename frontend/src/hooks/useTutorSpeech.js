@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 const TUTOR_ORDER = { jiwoo: 0, minho: 1, seoyeon: 2, haneul: 3 };
 const TUTOR_STYLE = {
@@ -6,32 +6,50 @@ const TUTOR_STYLE = {
   seoyeon: { rate: 0.9, pitch: 1 }, haneul: { rate: 0.78, pitch: 0.92 }
 };
 
+// 동일 세션 내 중복 TTS 호출 방지용 오디오 캐시
+const ttsBlobCache = new Map();
+
 // Legacy playTutorSpeech / stopTutorSpeech / speakWithDeviceVoice for screens whose
-// speech buttons have no visual playing state (Speaking). The same key toggles stop.
+// speech buttons have visual playing/loading state (Speaking, etc.).
 export default function useTutorSpeech(tutorId) {
   const tutorRef = useRef(tutorId);
   tutorRef.current = tutorId;
+  const [speechState, setSpeechState] = useState({ status: 'idle', key: '' });
   const statusRef = useRef({ speechStatus: 'idle', speechKey: '' });
   const requestRef = useRef(null);
   const audioRef = useRef(null);
   const objectUrlRef = useRef(null);
 
-  const stop = (resetState = true) => {
-    if (requestRef.current) { requestRef.current.abort(); requestRef.current = null; }
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.removeAttribute('src');
-      audioRef.current.load();
-      audioRef.current = null;
-    }
-    if (objectUrlRef.current) { URL.revokeObjectURL(objectUrlRef.current); objectUrlRef.current = null; }
-    if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
-    if (resetState) statusRef.current = { speechStatus: 'idle', speechKey: '' };
+  const syncStatus = (status, key = '') => {
+    statusRef.current = { speechStatus: status, speechKey: key };
+    setSpeechState({ status, key });
   };
 
-  const speakWithDeviceVoice = (text, key) => {
+  const stop = useCallback((resetState = true) => {
+    if (requestRef.current) {
+      requestRef.current.abort();
+      requestRef.current = null;
+    }
+    if (audioRef.current) {
+      try {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      } catch {
+        /* ignore */
+      }
+      audioRef.current = null;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    if (resetState) {
+      syncStatus('idle', '');
+    }
+  }, []);
+
+  const speakWithDeviceVoice = useCallback((text, key) => {
     if (typeof window === 'undefined' || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') {
-      statusRef.current = { speechStatus: 'idle', speechKey: '' };
+      syncStatus('idle', '');
       return;
     }
     const id = tutorRef.current;
@@ -41,24 +59,53 @@ export default function useTutorSpeech(tutorId) {
     utterance.lang = 'ko-KR';
     utterance.rate = TUTOR_STYLE[id]?.rate || 0.9;
     utterance.pitch = TUTOR_STYLE[id]?.pitch || 1;
-    const done = () => { if (statusRef.current.speechKey === key) statusRef.current = { speechStatus: 'idle', speechKey: '' }; };
+    const done = () => {
+      if (statusRef.current.speechKey === key) syncStatus('idle', '');
+    };
     utterance.onend = done;
     utterance.onerror = done;
-    statusRef.current = { speechStatus: 'playing', speechKey: key };
+    syncStatus('playing', key);
     window.speechSynthesis.speak(utterance);
-  };
+  }, []);
 
-  const play = async (text, key) => {
+  const play = useCallback(async (text, key) => {
     const speechText = String(text || '').trim();
     if (!speechText) return;
-    if (statusRef.current.speechKey === key && statusRef.current.speechStatus !== 'idle') {
+
+    // 이미 재생 중이면 정지
+    if (statusRef.current.speechKey === key && statusRef.current.speechStatus === 'playing') {
       stop();
       return;
     }
+    // 이미 로딩 중이면 중복 클릭 무시
+    if (statusRef.current.speechKey === key && statusRef.current.speechStatus === 'loading') {
+      return;
+    }
+
     stop(false);
+    syncStatus('loading', key);
+
+    const cacheKey = `${tutorRef.current}:${speechText}`;
+    let objectUrl = ttsBlobCache.get(cacheKey);
+
+    if (objectUrl) {
+      try {
+        const audio = new Audio(objectUrl);
+        audioRef.current = audio;
+        audio.onended = () => { if (statusRef.current.speechKey === key) syncStatus('idle', ''); };
+        audio.onerror = () => { if (statusRef.current.speechKey === key) syncStatus('idle', ''); };
+        await audio.play();
+        syncStatus('playing', key);
+        return;
+      } catch {
+        // 캐시된 URL 만료 시 재요청
+        ttsBlobCache.delete(cacheKey);
+      }
+    }
+
     const controller = new AbortController();
     requestRef.current = controller;
-    statusRef.current = { speechStatus: 'loading', speechKey: key };
+
     try {
       const response = await fetch('/api/tts', {
         method: 'POST',
@@ -69,27 +116,37 @@ export default function useTutorSpeech(tutorId) {
       if (!response.ok) throw new Error(`TTS_HTTP_${response.status}`);
       const audioBlob = await response.blob();
       if (!audioBlob.size) throw new Error('TTS_EMPTY_AUDIO');
-      const objectUrl = URL.createObjectURL(audioBlob);
+
+      objectUrl = URL.createObjectURL(audioBlob);
+      ttsBlobCache.set(cacheKey, objectUrl);
+
       const audio = new Audio(objectUrl);
       requestRef.current = null;
       objectUrlRef.current = objectUrl;
       audioRef.current = audio;
-      audio.onended = () => { if (statusRef.current.speechKey === key) stop(); };
-      audio.onerror = () => { if (statusRef.current.speechKey === key) stop(); };
+
+      audio.onended = () => { if (statusRef.current.speechKey === key) syncStatus('idle', ''); };
+      audio.onerror = () => { if (statusRef.current.speechKey === key) syncStatus('idle', ''); };
+
       await audio.play();
-      statusRef.current = { speechStatus: 'playing', speechKey: key };
+      syncStatus('playing', key);
     } catch (err) {
-      if (controller.signal.aborted) return;
-      console.warn('[Tutor TTS] Cloud voice unavailable; using device Korean voice.', err.message);
+      if (controller.signal?.aborted) return;
+      console.warn('[Tutor TTS] Cloud voice fallback to device voice:', err.message);
       requestRef.current = null;
       stop(false);
       speakWithDeviceVoice(speechText, key);
     }
+  }, [stop, speakWithDeviceVoice]);
+
+  useEffect(() => () => stop(), [stop]);
+
+  return {
+    play,
+    stop,
+    status: speechState.status,
+    activeKey: speechState.key,
+    isPlaying: (k) => speechState.key === k && speechState.status === 'playing',
+    isLoading: (k) => speechState.key === k && speechState.status === 'loading'
   };
-
-  const stopRef = useRef(stop);
-  stopRef.current = stop;
-  useEffect(() => () => stopRef.current(), []);
-
-  return { play, stop };
 }

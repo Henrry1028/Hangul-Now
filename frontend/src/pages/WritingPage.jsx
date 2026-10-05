@@ -1,7 +1,13 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
 import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
 import {
+  CJ_HAND,
+  CJ_MAP,
+  CJ_NUM_KEYS,
+  CJ_ROWS,
+  CJ_SEQ,
+  CJ_VIEWBOX,
   HAND_IMAGE,
   JAMO_KEY_MAP,
   JAMO_SEQ,
@@ -20,6 +26,46 @@ import {
   jamoHint
 } from '../data/writingData.js';
 import '../styles/writing.css';
+
+export function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+export function calcTypingStats(prev, keyName, expectedKey, now = Date.now()) {
+  const isModifierKey = ['Shift', 'ShiftR', 'Ctrl', 'CtrlR', 'Alt', 'AltR', 'Caps', 'Tab'].includes(keyName);
+  if (keyName === expectedKey) {
+    const start = prev.startTime || now;
+    const nextCorrect = prev.correctStrokes + 1;
+    const total = nextCorrect + prev.errorStrokes;
+    const accuracy = Math.round((nextCorrect / total) * 100);
+    const elapsedMinutes = Math.max(0.015, (now - start) / 60000);
+    const currentCpm = Math.round(nextCorrect / elapsedMinutes);
+    return {
+      ...prev,
+      correctStrokes: nextCorrect,
+      cpm: currentCpm,
+      maxCpm: Math.max(prev.maxCpm, currentCpm),
+      accuracy,
+      startTime: start,
+      lastStrokeTime: now,
+      isActive: true
+    };
+  }
+  if (!isModifierKey) {
+    const nextError = prev.errorStrokes + 1;
+    const total = prev.correctStrokes + nextError;
+    const accuracy = total > 0 ? Math.round((prev.correctStrokes / total) * 100) : 100;
+    return {
+      ...prev,
+      errorStrokes: nextError,
+      accuracy,
+      lastStrokeTime: now
+    };
+  }
+  return prev;
+}
 
 // Date-seeded shuffle: same order within a day, a new order the next day.
 function seededShuffle(arr, seed) {
@@ -99,6 +145,9 @@ const kbdStyle = { background: 'var(--seg)', padding: '1px 5px', borderRadius: '
 const guideCardStyle = { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px' };
 const guideStepStyle = { fontSize: '11px', fontWeight: 700, color: 'var(--accent)' };
 const guideTitleStyle = { fontSize: '13.5px', fontWeight: 600, color: 'var(--ink)' };
+const cjGuideGridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,160px),1fr))', gap: '12px' };
+const cjGuideNoteStyle = { fontSize: '13px', color: 'var(--ink2)', lineHeight: 1.5 };
+const cjGuideTipStyle = { fontSize: '12.5px', color: 'var(--sub)', lineHeight: 1.5, background: 'var(--card)', border: '1px dashed var(--line3)', borderRadius: '10px', padding: '9px 12px' };
 const guideBodyStyle = { fontSize: '12.5px', color: 'var(--sub)', lineHeight: 1.5 };
 const delStyle = { color: 'var(--hot)' };
 const insStyle = { color: 'var(--accent-ink)', textDecoration: 'none', background: 'var(--accent-soft)', padding: '0 2px' };
@@ -140,14 +189,223 @@ function HandImage({ side, active, target, opacity }) {
   );
 }
 
+// 📱 스마트폰 양손 파지 인체공학적 엄지 손 그림자 엔진 (PC 키보드 손 그림자와 100% 동일한 실루엣 퀄리티)
+function buildMobileHandGrip(side, targetPos, isTargetActive) {
+  const isLeft = side === 'left';
+  const sign = isLeft ? 1 : -1;
+
+  // 대기 위치: 왼손은 한/영 키 부근 [86, 268], 오른손은 Space 키 부근 [372, 268]
+  const restTip = isLeft ? [86, 268] : [372, 268];
+  const [tx, ty] = isTargetActive && targetPos ? targetPos : restTip;
+
+  // 1. 기저점 B (스마트폰 좌우 측면 베젤 x: 0 또는 516)
+  // 타겟 키의 y 높이에 따라 손바닥/엄지 기저부가 베젤을 따라 유기적으로 승강 (180 ~ 235)
+  const bx = isLeft ? 0 : 516;
+  const by = 205 + (ty - 165) * 0.25;
+
+  const dx = tx - bx;
+  const dy = ty - by;
+  const dist = Math.max(Math.hypot(dx, dy), 1);
+  const ux = dx / dist;
+  const uy = dy / dist;
+
+  // 법선 벡터 (엄지 등쪽 = 윗방향)
+  const nx = -uy * sign;
+  const ny = ux * sign;
+
+  // 인체공학적 엄지 두께 (자연스러운 사람 손가락 해부학 비율)
+  const wTip = 22.0;    // 손끝 돔 반경
+  const wJoint = 24.5;  // 중간 관절 두께
+  const wBase = 32.0;   // 베젤 진입부 손바닥 두께
+
+  // 중간 관절 J (위쪽으로 살짝 볼록한 자연스러운 아치)
+  const jDist = dist * 0.52;
+  const arch = Math.sin(Math.min(dist / 220, 1) * Math.PI) * 10.0 * sign;
+  const jx = bx + ux * jDist + nx * (arch * 0.4);
+  const jy = by + uy * jDist + ny * (arch * 0.4);
+
+  const d2x = tx - jx;
+  const d2y = ty - jy;
+  const dist2 = Math.max(Math.hypot(d2x, d2y), 1);
+  const u2x = d2x / dist2;
+  const u2y = d2y / dist2;
+  const n2x = -u2y * sign;
+  const n2y = u2x * sign;
+
+  // 엄지 등쪽 점들
+  const pBase_top = [bx + nx * wBase, by + ny * wBase];
+  const pJoint_top = [jx + n2x * wJoint, jy + n2y * wJoint];
+  const pTip_top = [tx + n2x * wTip, ty + n2y * wTip];
+
+  // 손끝 둥근 돔 및 정면 점
+  const pTip_front = [tx + u2x * (wTip * 1.05), ty + u2y * (wTip * 1.05)];
+  const pTip_bottom = [tx - n2x * wTip, ty - n2y * wTip];
+
+  // 돔 제어점 (표준 큐빅 베지어 둥근 호)
+  const cTip1 = [pTip_top[0] + u2x * (wTip * 0.58), pTip_top[1] + u2y * (wTip * 0.58)];
+  const cTip2 = [pTip_front[0] + n2x * (wTip * 0.58), pTip_front[1] + n2y * (wTip * 0.58)];
+  const cTip3 = [pTip_front[0] - n2x * (wTip * 0.58), pTip_front[1] - n2y * (wTip * 0.58)];
+  const cTip4 = [pTip_bottom[0] + u2x * (wTip * 0.58), pTip_bottom[1] + u2y * (wTip * 0.58)];
+
+  // 엄지 안쪽(물갈퀴) 점들
+  const pJoint_bottom = [jx - n2x * (wJoint * 0.92), jy - n2y * (wJoint * 0.92)];
+  const pBase_bottom = [bx - nx * (wBase * 0.88), by - ny * (wBase * 0.88)];
+
+  let pathD = '';
+  if (isLeft) {
+    pathD = `
+      M -24 334
+      C -22 295 -14 260 -4 230
+      C 0 216 0 206 ${pBase_top[0].toFixed(1)} ${pBase_top[1].toFixed(1)}
+      C ${(pBase_top[0] + ux * 18).toFixed(1)} ${(pBase_top[1] + uy * 18).toFixed(1)} ${(pJoint_top[0] - u2x * 18).toFixed(1)} ${(pJoint_top[1] - u2y * 18).toFixed(1)} ${pJoint_top[0].toFixed(1)} ${pJoint_top[1].toFixed(1)}
+      C ${(pJoint_top[0] + u2x * 16).toFixed(1)} ${(pJoint_top[1] + u2y * 16).toFixed(1)} ${(pTip_top[0] - u2x * 14).toFixed(1)} ${(pTip_top[1] - u2y * 14).toFixed(1)} ${pTip_top[0].toFixed(1)} ${pTip_top[1].toFixed(1)}
+      C ${cTip1[0].toFixed(1)} ${cTip1[1].toFixed(1)} ${cTip2[0].toFixed(1)} ${cTip2[1].toFixed(1)} ${pTip_front[0].toFixed(1)} ${pTip_front[1].toFixed(1)}
+      C ${cTip3[0].toFixed(1)} ${cTip3[1].toFixed(1)} ${cTip4[0].toFixed(1)} ${cTip4[1].toFixed(1)} ${pTip_bottom[0].toFixed(1)} ${pTip_bottom[1].toFixed(1)}
+      C ${(pTip_bottom[0] - u2x * 14).toFixed(1)} ${(pTip_bottom[1] - u2y * 14).toFixed(1)} ${(pJoint_bottom[0] + u2x * 16).toFixed(1)} ${(pJoint_bottom[1] + u2y * 16).toFixed(1)} ${pJoint_bottom[0].toFixed(1)} ${pJoint_bottom[1].toFixed(1)}
+      C ${(pJoint_bottom[0] - u2x * 18).toFixed(1)} ${(pJoint_bottom[1] - u2y * 18).toFixed(1)} ${(pBase_bottom[0] + ux * 16).toFixed(1)} ${(pBase_bottom[1] + uy * 16).toFixed(1)} ${pBase_bottom[0].toFixed(1)} ${pBase_bottom[1].toFixed(1)}
+      C 2 275 8 305 22 326
+      C 32 334 46 334 68 334
+      L -24 334 Z
+    `;
+  } else {
+    pathD = `
+      M 540 334
+      C 538 295 530 260 520 230
+      C 516 216 516 206 ${pBase_top[0].toFixed(1)} ${pBase_top[1].toFixed(1)}
+      C ${(pBase_top[0] + ux * 18).toFixed(1)} ${(pBase_top[1] + uy * 18).toFixed(1)} ${(pJoint_top[0] - u2x * 18).toFixed(1)} ${(pJoint_top[1] - u2y * 18).toFixed(1)} ${pJoint_top[0].toFixed(1)} ${pJoint_top[1].toFixed(1)}
+      C ${(pJoint_top[0] + u2x * 16).toFixed(1)} ${(pJoint_top[1] + u2y * 16).toFixed(1)} ${(pTip_top[0] - u2x * 14).toFixed(1)} ${(pTip_top[1] - u2y * 14).toFixed(1)} ${pTip_top[0].toFixed(1)} ${pTip_top[1].toFixed(1)}
+      C ${cTip1[0].toFixed(1)} ${cTip1[1].toFixed(1)} ${cTip2[0].toFixed(1)} ${cTip2[1].toFixed(1)} ${pTip_front[0].toFixed(1)} ${pTip_front[1].toFixed(1)}
+      C ${cTip3[0].toFixed(1)} ${cTip3[1].toFixed(1)} ${cTip4[0].toFixed(1)} ${cTip4[1].toFixed(1)} ${pTip_bottom[0].toFixed(1)} ${pTip_bottom[1].toFixed(1)}
+      C ${(pTip_bottom[0] - u2x * 14).toFixed(1)} ${(pTip_bottom[1] - u2y * 14).toFixed(1)} ${(pJoint_bottom[0] + u2x * 16).toFixed(1)} ${(pJoint_bottom[1] + u2y * 16).toFixed(1)} ${pJoint_bottom[0].toFixed(1)} ${pJoint_bottom[1].toFixed(1)}
+      C ${(pJoint_bottom[0] - u2x * 18).toFixed(1)} ${(pJoint_bottom[1] - u2y * 18).toFixed(1)} ${(pBase_bottom[0] + ux * 16).toFixed(1)} ${(pBase_bottom[1] + uy * 16).toFixed(1)} ${pBase_bottom[0].toFixed(1)} ${pBase_bottom[1].toFixed(1)}
+      C 514 275 508 305 494 326
+      C 484 334 470 334 448 334
+      L 540 334 Z
+    `;
+  }
+
+  return { pathD, tipCenter: [tx, ty] };
+}
+
+// 📱 스마트폰 양손 파지 천지인 손 그림자 컴포넌트 (두 번째 첨부 PC 키보드 손 그림자와 동일한 실루엣 퀄리티)
+function CheonjiinHandGrip({ targetKey, opacity = 1 }) {
+  // 실제 사람이 스마트폰을 쥘 때의 인체공학적 키 분담:
+  // 1열(col 0: 1, 4, 7, 한/영) 및 2열(col 1: 2, 5, 8, 0)은 왼손 엄지가 탭! (오른손은 Space 대기)
+  // 3열(col 2: 3, 6, 9) 및 4열(col 3: Delete, Enter, .,?!, Space)은 오른손 엄지가 탭! (왼손은 한/영 대기)
+  const isLeftActive = !!(targetKey && targetKey.col <= 1);
+  const isRightActive = !!(targetKey && targetKey.col >= 2);
+
+  const leftTarget = isLeftActive ? [targetKey.cx, targetKey.cy] : null;
+  const rightTarget = isRightActive ? [targetKey.cx, targetKey.cy] : null;
+
+  const leftGrip = buildMobileHandGrip('left', leftTarget, isLeftActive);
+  const rightGrip = buildMobileHandGrip('right', rightTarget, isRightActive);
+
+  return (
+    <g className="cji-mobile-grip-layer" pointerEvents="none">
+      {/* 📱 왼손 손 그림자 (두 번째 첨부 PC 키보드와 100% 동일한 실루엣 룩앤필) */}
+      <path
+        className="hand-layer"
+        d={leftGrip.pathD}
+        fill="#000000"
+        opacity={(isLeftActive ? 0.36 : 0.11) * opacity}
+        style={{ transition: 'opacity 150ms ease-out' }}
+      />
+
+      {/* 📱 오른손 손 그림자 (두 번째 첨부 PC 키보드와 100% 동일한 실루엣 룩앤필) */}
+      <path
+        className="hand-layer"
+        d={rightGrip.pathD}
+        fill="#000000"
+        opacity={(isRightActive ? 0.36 : 0.11) * opacity}
+        style={{ transition: 'opacity 150ms ease-out' }}
+      />
+    </g>
+  );
+}
+
+// 천지인 탭 진행 상태는 지금 입력 중인 자모 단계에만 유효하다.
+const cjSig = (st, step) => (step ? [st.wTab, st.jLevel, st.reviewMode ? 1 : 0, st.ti, st.wi, st.si, st.L, st.V, st.T, step.stage, step.jamo].join('|') : '');
+
+// 앱(모바일) 화면: 데스크톱 사이드바 기준(860px)과 같은 폭에서 QWERTY 키보드 대신 천지인만 쓴다.
+const APP_VIEW_QUERY = '(max-width: 859px)';
+function useIsAppView() {
+  const [isApp, setIsApp] = useState(() => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia(APP_VIEW_QUERY).matches);
+  useEffect(() => {
+    if (!window.matchMedia) return undefined;
+    const mq = window.matchMedia(APP_VIEW_QUERY);
+    const onChange = () => setIsApp(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return isApp;
+}
+
 function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onWritingStateChange, onRecordActivity, userId = null }) {
   const L = lang === 'ko' ? 1 : 0;
   const t = WRITING_TEXT[lang] || WRITING_TEXT.en;
   const s = writingState;
 
   const stateRef = useRef(writingState);
+  const isAppView = useIsAppView();
+  const appViewRef = useRef(isAppView);
+  appViewRef.current = isAppView;
   stateRef.current = writingState;
   const autoNextRef = useRef(null);
+
+  // ⚡ 타자 연습 실시간 속도 및 정확도 측정 상태
+  const [typingStats, setTypingStats] = useState({
+    correctStrokes: 0,
+    errorStrokes: 0,
+    cpm: 0,          // 현재 타수 (CPM: 타/분)
+    maxCpm: 0,       // 최고 타수
+    accuracy: 100,   // 정확도 (%)
+    elapsedSec: 0,   // 경과 시간 (초)
+    startTime: null, // 시작 시각
+    lastStrokeTime: null,
+    isActive: false
+  });
+
+  const resetTypingStats = useCallback(() => {
+    setTypingStats({
+      correctStrokes: 0,
+      errorStrokes: 0,
+      cpm: 0,
+      maxCpm: 0,
+      accuracy: 100,
+      elapsedSec: 0,
+      startTime: null,
+      lastStrokeTime: null,
+      isActive: false
+    });
+  }, []);
+
+  // 1초 단위 타이머: 경과 시간 및 분당 타수 실시간 갱신
+  useEffect(() => {
+    if (!typingStats.isActive || !typingStats.startTime) return;
+    const interval = setInterval(() => {
+      setTypingStats((prev) => {
+        if (!prev.isActive || !prev.startTime) return prev;
+        const now = Date.now();
+        const elapsedSec = Math.max(1, Math.floor((now - prev.startTime) / 1000));
+        const idleMs = now - (prev.lastStrokeTime || now);
+        const minutes = elapsedSec / 60;
+        let cpm = prev.correctStrokes > 0 ? Math.round(prev.correctStrokes / minutes) : 0;
+        // 장시간(12초 이상) 입력이 없을 경우 타수를 점진적으로 낮춤
+        if (idleMs > 12000) {
+          cpm = Math.max(0, Math.round(cpm * 0.9));
+        }
+        return {
+          ...prev,
+          elapsedSec,
+          cpm,
+          maxCpm: Math.max(prev.maxCpm, cpm)
+        };
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [typingStats.isActive, typingStats.startTime]);
 
   const update = useCallback((patch) => {
     const current = stateRef.current;
@@ -251,6 +509,8 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
     const step = nextStroke(st);
     const expectedKey = step ? JAMO_KEY_MAP[step.jamo]?.key : null;
 
+    setTypingStats((prev) => calcTypingStats(prev, keyName, expectedKey));
+
     if (keyName === expectedKey) {
       // Compound vowels/batchim: the first stroke enters the first jamo, the second completes it.
       update({ [step.stage]: step.value, isKeyError: false });
@@ -263,8 +523,60 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
   };
   const handleVirtualKeyNameRef = useRef(handleVirtualKeyName);
   handleVirtualKeyNameRef.current = handleVirtualKeyName;
+
+  // 모바일 천지인: 자모 하나가 여러 탭(ㅏ = ㅣ+ㆍ, ㅋ = ㄱㅋ×2)이라 단계 안의 탭 진행을 따로 센다.
+  const [cjTap, setCjTap] = useState({ sig: '', n: 0 });
+  const cjTapRef = useRef(cjTap);
+  const setCjProgress = (next) => { cjTapRef.current = next; setCjTap(next); };
+  const handleCjKey = (keyId) => {
+    const st = stateRef.current;
+    const step = nextStroke(st);
+    const sig = cjSig(st, step);
+    const n = cjTapRef.current.sig === sig ? cjTapRef.current.n : 0;
+
+    if (keyId === 'Backspace') {
+      if (n > 0) setCjProgress({ sig, n: n - 1 });
+      else backspaceJamo();
+      return;
+    }
+    if (keyId === 'Enter') {
+      nextTarget();
+      return;
+    }
+    if (keyId === 'Space') {
+      if (isComplete(st)) advance();
+      return;
+    }
+    if (keyId === 'CJ_LANG') return;
+    if (isComplete(st)) {
+      advance();
+      setTimeout(() => handleCjKeyRef.current(keyId), 0);
+      return;
+    }
+
+    const seq = step ? CJ_SEQ[step.jamo] : null;
+    const expectedKey = seq ? seq[n] : null;
+    setTypingStats((prev) => calcTypingStats(prev, keyId, expectedKey));
+    if (keyId === expectedKey) {
+      if (n + 1 >= seq.length) {
+        setCjProgress({ sig: '', n: 0 });
+        update({ [step.stage]: step.value, isKeyError: false });
+      } else {
+        setCjProgress({ sig, n: n + 1 });
+        update({ isKeyError: false });
+      }
+    } else {
+      update({ isKeyError: true });
+      setTimeout(() => {
+        if (stateRef.current.isKeyError) update({ isKeyError: false });
+      }, 500);
+    }
+  };
+  const handleCjKeyRef = useRef(handleCjKey);
+  handleCjKeyRef.current = handleCjKey;
+
   const keyActionsRef = useRef({});
-  keyActionsRef.current = { backspaceJamo, nextTarget, resetTarget, handleVirtualKeyName, update };
+  keyActionsRef.current = { backspaceJamo, nextTarget, resetTarget, handleVirtualKeyName, handleCjKey, update };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -273,6 +585,15 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
       if (!isBuildTab(stateRef.current)) return;
       const actions = keyActionsRef.current;
 
+      if (stateRef.current.kbMode === 'cji' || appViewRef.current) {
+        // 천지인 모드: 숫자키 1~0이 피처폰처럼 천지인 키가 된다.
+        const cjKey = CJ_NUM_KEYS[e.key] || (e.key === 'Backspace' ? 'Backspace' : e.key === 'Enter' ? 'Enter' : e.key === ' ' ? 'Space' : null);
+        if (cjKey) {
+          e.preventDefault();
+          actions.handleCjKey(cjKey);
+          return;
+        }
+      }
       if (e.key === 'Shift') {
         actions.update({ isPhysicalShift: true });
         return;
@@ -332,9 +653,6 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
   const targetIdxLabel = isWordMode
     ? `${(s.wi % curLevelWords.length) + 1} / ${curLevelWords.length}`
     : `${(s.ti % curLevelTargets.length) + 1} / ${curLevelTargets.length}`;
-  const targetPromptText = isWordMode
-    ? (L ? '단어를 한 글자씩 완성해 보세요' : 'Build the word one syllable at a time')
-    : s.L ? (L ? '자음과 모음을 골라 목표 글자를 완성하세요' : 'Select letters to build the target syllable') : (L ? '제시된 목표 글자를 완성해 보세요!' : 'Combine consonants and vowels to make the target letter');
   const JT = [[L ? '없음' : 'none', 0], ['ㄱ', 1], ['ㄴ', 4], ['ㄹ', 8], ['ㅁ', 16], ['ㅇ', 21], ...JT_EXTRA];
   const upTo = (arr) => arr.filter((j) => (j[2] || 0) <= s.jLevel);
 
@@ -364,12 +682,29 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
   else activeStepGuide = L ? '목표 글자를 자모로 조합해 보세요' : 'Assemble the target syllable block';
 
   const keyInfo = (!ok && neededJamo) ? JAMO_KEY_MAP[neededJamo] : null;
-  const activeFingerLabel = ok ? (L ? '완성되었습니다! ➔ 다음 글자' : 'Complete! ➔ Next letter') : (keyInfo ? (L ? `${keyInfo.ko} (${keyInfo.key} 키)` : `${keyInfo.en} (${keyInfo.key} key)`) : (L ? '자유 입력' : 'Free input'));
+  let activeFingerLabel = ok ? (L ? '완성되었습니다! ➔ 다음 글자' : 'Complete! ➔ Next letter') : (keyInfo ? (L ? `${keyInfo.ko} (${keyInfo.key} 키)` : `${keyInfo.en} (${keyInfo.key} key)`) : (L ? '자유 입력' : 'Free input'));
+
+  // 모바일 천지인: 현재 단계 자모의 탭 순서 중 다음에 누를 키.
+  const isCji = isAppView || s.kbMode === 'cji';
+  const cjSeq = step ? CJ_SEQ[step.jamo] : null;
+  const cjN = cjSeq && cjTap.sig === cjSig(s, step) ? cjTap.n : 0;
+  const cjTargetKey = !ok && cjSeq ? CJ_MAP[cjSeq[cjN]] : null;
+  if (isCji && cjTargetKey) {
+    const stageName = { L: L ? '1단계 [초성]' : 'Step 1 [Initial]', V: L ? '2단계 [중성]' : 'Step 2 [Vowel]', T: L ? '3단계 [종성]' : 'Step 3 [Final]' }[step.stage];
+    const compoundNote = step.compound ? `${step.compound} = ${JAMO_SEQ[step.compound].join(' + ')} · ` : '';
+    const tapNote = cjSeq.length > 1 ? `${step.jamo} = ${cjSeq.map((k) => CJ_MAP[k].label).join(' + ')} · ${cjN + 1}/${cjSeq.length}` : '';
+    const note = compoundNote || tapNote ? ` (${compoundNote}${tapNote || step.jamo})` : '';
+    activeStepGuide = L ? `${stageName} ➔ '${cjTargetKey.label}' 키를 누르세요${note}` : `${stageName} ➔ Tap '${cjTargetKey.label}'${note}`;
+    const leftThumb = cjTargetKey.col <= 1;
+    activeFingerLabel = L ? `${leftThumb ? '왼손' : '오른손'} 엄지 ('${cjTargetKey.label}' 키)` : `${leftThumb ? 'Left' : 'Right'} thumb ('${cjTargetKey.label}' key)`;
+  }
 
   const showHandShadow = s.showHandShadow ?? true;
   const showKbGuide = !!s.showKbGuide;
   const isWinTab = (s.kbGuideTab || 'win') === 'win';
   const isMacTab = (s.kbGuideTab || 'win') === 'mac';
+  const showCjGuide = !!s.showCjGuide;
+  const cjGuideTab = s.cjGuideTab || 'samsung';
 
   const jLevels = [[1, L ? '기초' : 'Basic'], [2, L ? '심화' : 'Advanced']];
   const wTabGo = (tab) => () => update({ wTab: tab, L: null, V: null, T: null, isKeyError: false });
@@ -423,24 +758,33 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
     });
   };
 
+  const keyboardFooter = (
+      <div className="writing-keyboard-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--line2)', paddingTop: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: '.08em', color: 'var(--faint)', textTransform: 'uppercase' }}>RECOMMENDED FINGER</span>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-ink)' }}><Interp>{activeFingerLabel}</Interp></span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--sub)' }}>
+          <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#B25353', display: 'inline-block' }} />
+          <span>버건디 키 = 현재 눌러야 할 키 (Target Key)</span>
+        </div>
+      </div>
+  );
+
   const tabStyle = (active) => ({ border: 0, background: active ? 'var(--card)' : 'transparent', borderRadius: '9px', padding: '8px 16px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' });
   const guideTabStyle = (active) => ({ border: 0, background: active ? 'var(--accent)' : 'transparent', color: active ? '#ffffff' : 'var(--ink2)', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' });
 
   return (
-    <div className="writing-screen" data-screen-label="07 Writing">
+    <div className={`writing-screen ${isBuildTab(s) ? 'is-build' : ''}`} data-screen-label="07 Writing">
       <div className="writing-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}><span style={{ font: "500 12px 'IBM Plex Mono',monospace", color: 'var(--hot)', letterSpacing: '.1em' }}>WRITING</span><h1 style={{ margin: 0, font: "500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif", letterSpacing: '-.02em' }}><Interp>{t.wTitle}</Interp></h1></div>
-        <div style={{ display: 'flex', background: 'var(--seg)', borderRadius: '12px', padding: '4px' }}>
-          <button type="button" onClick={wTabGo('jamo')} style={tabStyle(s.wTab === 'jamo')}><Interp>{t.wTab1}</Interp></button>
-          <button type="button" onClick={wTabGo('word')} style={tabStyle(s.wTab === 'word')}><Interp>{t.wTab3}</Interp></button>
-          <button type="button" onClick={wTabGo('sent')} style={tabStyle(s.wTab === 'sent')}><Interp>{t.wTab2}</Interp></button>
-        </div>
       </div>
 
-      {isBuildTab(s) && (
-        <div className="writing-build-content" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="writing-level-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '16px', padding: '12px 18px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* 상단 통합 바: 좌측 레벨 선택 + 우측 글자/단어/문장 탭 버튼 */}
+      <div className="writing-level-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '16px', padding: '10px 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {isBuildTab(s) ? (
+            <>
               <span style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: '.1em', color: 'var(--accent)', textTransform: 'uppercase' }}>LEVEL SELECT</span>
               <div style={{ display: 'flex', background: 'var(--seg)', borderRadius: '10px', padding: '3px' }}>
                 {jLevels.map(([n, label]) => (
@@ -454,39 +798,25 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
                   </button>
                 ))}
               </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--faint)' }} title={learnNote}><Interp>{learnProgress}</Interp></span>
-              <button type="button" onClick={() => update((st) => ({ reviewMode: !st.reviewMode, ti: 0, wi: 0, si: 0, L: null, V: null, T: null }))} title={learnNote} style={{ border: '1px solid var(--line3)', background: s.reviewMode ? 'var(--hot)' : 'transparent', color: s.reviewMode ? '#fff' : 'var(--ink2)', borderRadius: '999px', padding: '6px 13px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>↻ <Interp>{reviewLabel}</Interp></button>
-              <span style={{ fontSize: '12.5px', color: 'var(--faint)' }}><Interp>{targetIdxLabel}</Interp></span>
-              <button type="button" onClick={nextTarget} style={{ border: '1px solid var(--line3)', background: 'var(--card)', color: 'var(--ink)', borderRadius: '8px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span><Interp>{nextLabel}</Interp></span> ➔
-              </button>
-            </div>
-          </div>
+            </>
+          ) : (
+            <span style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: '.1em', color: 'var(--hot)', textTransform: 'uppercase' }}>SENTENCE CORRECTION</span>
+          )}
+        </div>
+
+        {/* 탭 버튼 이동배치 (두 번째 첨부 영역 대체) */}
+        <div className="writing-mode-nav-tabs" style={{ display: 'flex', background: 'var(--seg)', borderRadius: '12px', padding: '4px' }}>
+          <button type="button" onClick={wTabGo('jamo')} style={tabStyle(s.wTab === 'jamo')}><Interp>{t.wTab1}</Interp></button>
+          <button type="button" onClick={wTabGo('word')} style={tabStyle(s.wTab === 'word')}><Interp>{t.wTab3}</Interp></button>
+          <button type="button" onClick={wTabGo('sent')} style={tabStyle(s.wTab === 'sent')}><Interp>{t.wTab2}</Interp></button>
+        </div>
+      </div>
+
+      {isBuildTab(s) && (
+        <div className="writing-build-content" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
           <div className="writing-main-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,320px),1fr))', gap: '24px', alignItems: 'start' }}>
             <div className="writing-target-card" style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '20px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', position: 'relative' }}>
-              <div className="writing-target-header" style={{ background: 'linear-gradient(135deg, rgba(35,73,63,0.08) 0%, rgba(200,80,42,0.06) 100%)', border: '1.5px solid var(--line)', borderRadius: '16px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: '.08em', color: 'var(--hot)', textTransform: 'uppercase' }}>🎯 TARGET LETTER</span>
-                    <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', background: 'var(--chip)', color: 'var(--sub)', fontWeight: 600 }}><Interp>{tg.level}</Interp></span>
-                  </div>
-                  <span style={{ fontSize: '14px', color: 'var(--ink)', fontWeight: 600, lineHeight: 1.4 }}><Interp>{targetPromptText}</Interp></span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', flexWrap: 'wrap' }}>
-                    <span style={{ font: "700 11px 'IBM Plex Mono',monospace", letterSpacing: '.06em', color: 'var(--accent-ink)', background: 'var(--accent-soft)', padding: '2px 8px', borderRadius: '6px' }}>발음 기호</span>
-                    <span style={{ font: "700 16px 'IBM Plex Mono',monospace", color: 'var(--ink)', letterSpacing: '0.04em' }}>[<Interp>{targetPron}</Interp>]</span>
-                    <span style={{ fontSize: '12.5px', color: 'var(--faint)' }}><Interp>{targetMeaning}</Interp></span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flex: 'none', marginLeft: 'auto' }}>
-                  <div className="target-letter-badge" style={{ width: '72px', height: '72px', borderRadius: '18px', background: 'var(--accent)', color: '#fff', display: 'grid', placeItems: 'center', font: "700 46px/1 'Gowun Batang',serif", boxShadow: '0 8px 20px rgba(35,73,63,0.28)', textAlign: 'center' }}>
-                    <Interp>{tg.ch}</Interp>
-                  </div>
-                  <span style={{ font: "700 12px 'IBM Plex Mono',monospace", color: 'var(--accent-ink)', background: 'var(--bg2)', padding: '1px 8px', borderRadius: '6px', border: '1px solid var(--line2)' }}>[<Interp>{getHangulPron(tg.ch)}</Interp>]</span>
-                </div>
-              </div>
 
               {isWordMode && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', padding: '2px 0', flexWrap: 'wrap' }}>
@@ -503,19 +833,34 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
                 </div>
               )}
 
-              <div className="writing-canvas-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '10px 0' }}>
+              <div className="writing-canvas-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '8px 0', width: '100%' }}>
                 <div className="writing-build-stage">
-                  <div className="writing-build-block" style={{ borderRadius: '20px', background: 'var(--bg)', border: `2.5px solid ${ok ? 'var(--accent-ink)' : 'var(--line)'}`, display: 'grid', placeItems: 'center', font: "700 110px/1 'Gowun Batang',serif", position: 'relative', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.04)' }}>
+                  {/* 1. 목표 글자 (녹색 한글 박스) */}
+                  <div className="writing-target-col">
+                    <div className="target-letter-badge" style={{ borderRadius: '20px', background: 'var(--accent)', color: '#fff', display: 'grid', placeItems: 'center', fontFamily: "'Gowun Batang',serif", fontWeight: 700, lineHeight: 1, boxShadow: '0 8px 22px rgba(35,73,63,0.28)', textAlign: 'center' }}>
+                      <Interp>{tg.ch}</Interp>
+                    </div>
+                    <span className="target-letter-pron">[<Interp>{getHangulPron(tg.ch)}</Interp>]</span>
+                  </div>
+
+                  <span className="writing-build-arrow" aria-hidden="true">➔</span>
+
+                  {/* 2. 내가 조합 중인 글자 (물음표 박스) */}
+                  <div className="writing-build-block" style={{ borderRadius: '20px', background: 'var(--bg)', border: `2.5px solid ${ok ? 'var(--accent-ink)' : 'var(--line)'}`, display: 'grid', placeItems: 'center', font: "700 70px/1 'Gowun Batang',serif", position: 'relative', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.04)' }}>
                     <Interp>{composed}</Interp>
                     <span style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px)', backgroundSize: '50% 50%', backgroundPosition: '-1px -1px', opacity: 0.55, pointerEvents: 'none', borderRadius: '18px' }} />
                   </div>
-                  {showJeongCelebration && (
-                    <img className="jeong-celebration" src={poseData.src} alt={poseData.alt[L]} />
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: jamoMsgC }}><Interp>{jamoMsg}</Interp></span>
-                  <span style={{ fontSize: '12.5px', color: 'var(--faint)' }}><Interp>{tg.en}</Interp></span>
+
+                  {/* 3. 물음표 오른쪽 공간: 안내 텍스트 & 정이 축하 슬롯 */}
+                  <div className="writing-build-info" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: '6px', minWidth: '140px', paddingLeft: '8px', flex: 1 }}>
+                    <span style={{ fontSize: '15.5px', fontWeight: 700, color: jamoMsgC, lineHeight: 1.35 }}><Interp>{jamoMsg}</Interp></span>
+                    <span style={{ fontSize: '13.5px', color: 'var(--sub)', fontWeight: 500, lineHeight: 1.4 }}><Interp>{tg.en}</Interp></span>
+                    {showJeongCelebration && (
+                      <div className="writing-jeong-slot" style={{ marginTop: '4px' }}>
+                        <img className="jeong-celebration" src={poseData.src} alt={poseData.alt[L]} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -557,27 +902,68 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
 
           <div className="writing-keyboard-card" style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '22px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 6px 20px rgba(0,0,0,0.03)' }}>
             <div className="writing-keyboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid var(--line2)', paddingBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--accent)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '15px' }}>⌨️</div>
-                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink)' }}>한컴 타자 키보드</span>
-                  <span style={{ fontSize: '12px', color: 'var(--sub)' }}>QWERTY 키보드 위 손가락 그림자 위치로 한글 2벌식 타자를 익혀요</span>
+              <div className="writing-kb-mode">
+                <div className="writing-kb-mode-tabs" role="tablist" aria-label={L ? '키보드 종류' : 'Keyboard type'}>
+                  {!isAppView && <button type="button" role="tab" aria-selected={!isCji} className={!isCji ? 'is-active' : ''} onClick={() => update({ kbMode: 'hancom' })}>⌨️ {L ? '한컴 타자 키보드' : 'PC Keyboard (2-Set)'}</button>}
+                  <button type="button" role="tab" aria-selected={isCji} className={isCji ? 'is-active' : ''} onClick={() => update({ kbMode: 'cji', showKbGuide: false })}>📱 {L ? '모바일 천지인' : 'Mobile Cheonjiin'}</button>
                 </div>
+                <span className="writing-kb-mode-desc">
+                  {isCji
+                    ? (L ? 'ㅣ·ㆍ·ㅡ 세 획으로 모음을, 같은 키를 여러 번 눌러 자음을 만들어요 (숫자키 1~0으로도 입력)' : 'Build vowels from ㅣ·ㆍ·ㅡ and tap a key repeatedly for consonants (number keys 1–0 work too)')
+                    : (L ? 'QWERTY 키보드 위 손가락 그림자 위치로 한글 2벌식 타자를 익혀요' : 'Learn Korean 2-Set typing by following the finger shadows on a QWERTY keyboard')}
+                </span>
               </div>
+
+              {/* ⚡ 실시간 타자 속도 대시보드 */}
+              <div className="writing-typing-dashboard">
+                <div className="typing-stat-pill stat-speed" title={L ? '현재 분당 타수' : 'Current typing speed'}>
+                  <span className="stat-pill-icon">⚡</span>
+                  <span className="stat-pill-label">{L ? '타수' : 'Speed'}</span>
+                  <span className="stat-pill-num">{typingStats.cpm}</span>
+                  <span className="stat-pill-unit">{L ? '타/분' : 'CPM'}</span>
+                </div>
+                <div className="typing-stat-pill stat-acc" title={L ? '타자 정확도' : 'Typing accuracy'}>
+                  <span className="stat-pill-icon">🎯</span>
+                  <span className="stat-pill-label">{L ? '정확도' : 'Acc'}</span>
+                  <span className="stat-pill-num">{typingStats.accuracy}%</span>
+                </div>
+                <div className="typing-stat-pill stat-max" title={L ? '이번 세션 최고 타수' : 'Highest speed'}>
+                  <span className="stat-pill-icon">🏆</span>
+                  <span className="stat-pill-label">{L ? '최고' : 'Max'}</span>
+                  <span className="stat-pill-num">{typingStats.maxCpm}</span>
+                </div>
+                <div className="typing-stat-pill stat-time" title={L ? '연습 시간' : 'Elapsed time'}>
+                  <span className="stat-pill-icon">⏱️</span>
+                  <span className="stat-pill-num">{formatTime(typingStats.elapsedSec)}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={resetTypingStats}
+                  className="typing-stat-reset-btn"
+                  title={L ? '타자 속도 및 기록 초기화' : 'Reset speed & accuracy stats'}
+                >
+                  ↺ {L ? '리셋' : 'Reset'}
+                </button>
+              </div>
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <button type="button" onClick={() => update((st) => ({ showHandShadow: !st.showHandShadow }))} style={{ border: '1px solid var(--line3)', background: 'var(--bg2)', color: 'var(--ink)', borderRadius: '999px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all .15s' }}>
                   <span>🖐️</span>
                   <span>손 그림자</span>
                 </button>
-                <button type="button" onClick={() => update((st) => ({ showKbGuide: !st.showKbGuide }))} style={{ border: '1px solid var(--accent)', background: 'rgba(35,73,63,0.08)', color: 'var(--accent-ink)', borderRadius: '999px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all .15s' }}>
+                {!isCji && <button type="button" onClick={() => update((st) => ({ showKbGuide: !st.showKbGuide }))} style={{ border: '1px solid var(--accent)', background: 'rgba(35,73,63,0.08)', color: 'var(--accent-ink)', borderRadius: '999px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all .15s' }}>
                   <span>🌐</span>
                   <span>QWERTY Korean Setup Guide</span>
-                </button>
+                </button>}
+                {isCji && <button type="button" onClick={() => update((st) => ({ showCjGuide: !st.showCjGuide }))} aria-expanded={showCjGuide} style={{ border: '1px solid var(--accent)', background: 'rgba(35,73,63,0.08)', color: 'var(--accent-ink)', borderRadius: '999px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all .15s' }}>
+                  <span>📱</span>
+                  <span>Cheonjiin Keyboard Setup Guide</span>
+                </button>}
               </div>
             </div>
 
-            {showKbGuide && (
-              <div style={{ background: 'var(--bg2)', border: '1.5px solid var(--accent)', borderRadius: '18px', padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(35,73,63,0.08)' }}>
+            {showKbGuide && !isCji && (
+              <div className="writing-kb-guide" style={{ background: 'var(--bg2)', border: '1.5px solid var(--accent)', borderRadius: '18px', padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(35,73,63,0.08)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -612,18 +998,139 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
               </div>
             )}
 
-            {!showKbGuide && (
+            {showCjGuide && isCji && (
+              <div className="writing-kb-guide" style={{ background: 'var(--bg2)', border: '1.5px solid var(--accent)', borderRadius: '18px', padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(35,73,63,0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: '1 1 420px', minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ font: "700 16px 'Newsreader',serif", color: 'var(--ink)' }}>📱 How to Set Up the Korean Cheonjiin Keyboard</span>
+                      <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: 'var(--accent)', color: '#fff', fontWeight: 700 }}>Samsung · Android · iPhone</span>
+                    </div>
+                    <span style={{ fontSize: '13px', color: 'var(--sub)', lineHeight: 1.5 }}>If you are learning Korean, try using the Cheonjiin (10-Key) keyboard. You do not need to change your phone's main language to Korean. You can simply add a Korean keyboard and switch to it whenever you need it.</span>
+                  </div>
+                  <div style={{ display: 'flex', background: 'var(--seg)', borderRadius: '10px', padding: '3px', flexWrap: 'wrap' }}>
+                    <button type="button" onClick={() => update({ cjGuideTab: 'samsung' })} style={guideTabStyle(cjGuideTab === 'samsung')}>📱 Samsung Galaxy</button>
+                    <button type="button" onClick={() => update({ cjGuideTab: 'android' })} style={guideTabStyle(cjGuideTab === 'android')}>🤖 Other Android</button>
+                    <button type="button" onClick={() => update({ cjGuideTab: 'ios' })} style={guideTabStyle(cjGuideTab === 'ios')}>🍎 iPhone</button>
+                  </div>
+                </div>
+
+                {cjGuideTab === 'samsung' && (
+                  <>
+                    <span style={cjGuideNoteStyle}>On most Samsung Galaxy phones, you do not need to download an additional app. You can use the built-in <b>Samsung Keyboard</b>.</span>
+                    <div style={cjGuideGridStyle}>
+                      <GuideCard step="STEP 1" title="Open Settings">Open the <b>Settings</b> app.</GuideCard>
+                      <GuideCard step="STEP 2" title="General Management">Tap <b>General management</b>.</GuideCard>
+                      <GuideCard step="STEP 3" title="Keyboard Settings">Open <b>Samsung Keyboard settings</b>.</GuideCard>
+                      <GuideCard step="STEP 4" title="Languages and Types">Select <b>Languages and types</b>.</GuideCard>
+                      <GuideCard step="STEP 5" title="Add Korean">Add or enable <b>Korean (한국어)</b>.</GuideCard>
+                      <GuideCard step="STEP 6" title="Choose Cheonjiin">Choose <b>Cheonjiin / 3×4</b> as the Korean keyboard layout.</GuideCard>
+                    </div>
+                    <span style={cjGuideTipStyle}>🌐 You can now tap the <b>globe icon</b> on the keyboard to switch between English and Korean.</span>
+                  </>
+                )}
+
+                {cjGuideTab === 'android' && (
+                  <>
+                    <span style={cjGuideNoteStyle}>For other Android phones, <b>Gboard</b> is usually the easiest option.</span>
+                    <div style={cjGuideGridStyle}>
+                      <GuideCard step="DOWNLOAD FIRST" title="Install Gboard">Open the <b>Google Play Store</b>, search for <b>Gboard – the Google Keyboard</b>, and install the app on your phone.</GuideCard>
+                      <GuideCard step="STEP 1" title="Open Gboard Settings">Open <b>Gboard Settings</b>.</GuideCard>
+                      <GuideCard step="STEP 2" title="Add Keyboard">Tap <b>Languages</b> → <b>Add keyboard</b>.</GuideCard>
+                      <GuideCard step="STEP 3" title="Select Korean">Select <b>Korean (한국어)</b>.</GuideCard>
+                      <GuideCard step="STEP 4" title="Choose 10-Key">If available, choose the <b>10-Key</b> or <b>Cheonjiin-style</b> layout.</GuideCard>
+                      <GuideCard step="STEP 5" title="Done">Tap <b>Done</b>.</GuideCard>
+                    </div>
+                    <span style={cjGuideTipStyle}>※ The available Korean keyboard layouts may vary depending on your phone model and Gboard version.</span>
+                  </>
+                )}
+
+                {cjGuideTab === 'ios' && (
+                  <>
+                    <span style={cjGuideNoteStyle}>On iPhone, you do not need to download an additional keyboard app from the App Store. The Korean <b>10-Key</b> keyboard is built into iOS.</span>
+                    <div style={cjGuideGridStyle}>
+                      <GuideCard step="STEP 1" title="Open Settings">Open <b>Settings</b>.</GuideCard>
+                      <GuideCard step="STEP 2" title="Keyboards">Go to <b>General</b> → <b>Keyboard</b> → <b>Keyboards</b>.</GuideCard>
+                      <GuideCard step="STEP 3" title="Add New Keyboard">Tap <b>Add New Keyboard</b>.</GuideCard>
+                      <GuideCard step="STEP 4" title="Select Korean">Select <b>Korean (한국어)</b>.</GuideCard>
+                      <GuideCard step="STEP 5" title="Choose 10-Key">Choose <b>10-Key</b>.</GuideCard>
+                      <GuideCard step="STEP 6" title="Done">Tap <b>Done</b>.</GuideCard>
+                    </div>
+                    <span style={cjGuideTipStyle}>🌐 When typing, tap the <b>globe icon</b> to switch between English and Korean.</span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {isCji && !showCjGuide && (
               <>
                 <div className="writing-keyboard-viewport" style={{ position: 'relative', background: 'var(--bg)', border: '1px solid var(--line2)', borderRadius: '18px', padding: '16px 12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.02)', width: '100%' }}>
-                  <div style={{ width: '100%', maxWidth: '980px', position: 'relative', height: '38px', marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
-                    <div style={{ position: 'absolute', left: '21.7%', transform: 'translateX(-50%)', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#0F172A', color: '#FFFFFF', padding: '7px 16px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(15,23,42,0.35), 0 0 0 1px rgba(255,255,255,0.15)', border: '1.5px solid #38BDF8', whiteSpace: 'nowrap', zIndex: 2 }}>
-                      <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#38BDF8', boxShadow: '0 0 8px #38BDF8' }} />
-                      <span style={{ fontSize: '13.5px', fontWeight: 700, letterSpacing: '-0.01em', color: '#FFFFFF' }}><Interp>{activeStepGuide}</Interp></span>
+                  <div className="writing-cji-bubble-row" style={{ width: '100%', position: 'relative', height: '38px', marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="writing-cji-bubble" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#0F172A', color: '#FFFFFF', padding: '7px 16px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(15,23,42,0.35), 0 0 0 1px rgba(255,255,255,0.15)', border: '1.5px solid #38BDF8', whiteSpace: 'nowrap', maxWidth: '100%', zIndex: 2 }}>
+                      <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#38BDF8', boxShadow: '0 0 8px #38BDF8', flex: 'none' }} />
+                      <span style={{ fontSize: '13.5px', fontWeight: 700, letterSpacing: '-0.01em', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis' }}><Interp>{activeStepGuide}</Interp></span>
                       <div style={{ position: 'absolute', bottom: '-7px', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid #0F172A' }} />
                     </div>
                   </div>
-                  <div id="virtual-keyboard-root" style={{ width: '100%', maxWidth: '980px', display: 'flex', justifyContent: 'center' }}>
-                    <svg viewBox="0 26 980 334" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxWidth: '960px', display: 'block' }}>
+                  <div className="writing-cji-root">
+                    <svg viewBox="-36 0 588 350" xmlns="http://www.w3.org/2000/svg" role="group" aria-label={L ? '천지인 키패드' : 'Cheonjiin keypad'}>
+                      <defs>
+                        <filter id="cjKeyShadow" x="-10%" y="-10%" width="120%" height="130%">
+                          <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.06)" />
+                        </filter>
+                      </defs>
+                      {/* 스마트폰 기기 외곽 프레임 */}
+                      <rect x="4" y="4" width="508" height="324" rx="24" fill="var(--bg)" stroke="var(--line2)" strokeWidth="1.5" opacity="0.8" />
+                      {/* 천지인 키패드 디스플레이 영역 */}
+                      <rect x="10" y="10" width={CJ_VIEWBOX.w - 20} height={CJ_VIEWBOX.h - 20} rx="20" fill="var(--card)" stroke="var(--line2)" strokeWidth="1.5" />
+                      <g className="keys-layer">
+                        {CJ_ROWS.map((row) => row.map((k) => {
+                          const isTarget = !!cjTargetKey && k.key === cjTargetKey.key;
+                          let fill = k.isSpecial ? 'var(--chip)' : 'var(--card)';
+                          let stroke = 'var(--line2)';
+                          let strokeWidth = '1';
+                          let labelColor = k.isSpecial ? 'var(--ink2)' : 'var(--ink)';
+                          let subColor = 'var(--faint)';
+                          if (isTarget) {
+                            fill = isError ? '#E53935' : '#B25353';
+                            stroke = isError ? '#B71C1C' : '#8E3636';
+                            strokeWidth = '2';
+                            labelColor = '#FFFFFF';
+                            subColor = 'rgba(255,255,255,0.85)';
+                          }
+                          const sub = k.sub ? k.sub[L ? 0 : 1] : null;
+                          return (
+                            <g key={k.key} className={`key-node ${isTarget ? (isError ? 'key-error' : 'key-target') : ''}`} onClick={() => handleCjKey(k.key)} style={{ cursor: 'pointer' }}>
+                              <rect x={k.x} y={k.y} width={k.w} height={k.h} rx="12" ry="12" fill={fill} stroke={stroke} strokeWidth={strokeWidth} filter="url(#cjKeyShadow)" />
+                              {k.num && <text x={k.x + 11} y={k.y + 17} fontFamily="'IBM Plex Mono', monospace" fontSize="11" fontWeight="600" fill={subColor}>{k.num}</text>}
+                              <text x={k.cx} y={sub ? k.cy - 2 : k.cy + 8} textAnchor="middle" fontFamily="'Pretendard', sans-serif" fontSize={k.isSpecial ? (k.label.length > 2 ? '15' : '20') : '24'} fontWeight="700" fill={labelColor}>{k.label}</text>
+                              {sub && <text x={k.cx} y={k.cy + 18} textAnchor="middle" fontFamily="'Pretendard', sans-serif" fontSize="11.5" fontWeight="600" fill={subColor}>{sub}</text>}
+                            </g>
+                          );
+                        }))}
+                      </g>
+                      {showHandShadow && !ok && (
+                        <CheonjiinHandGrip targetKey={cjTargetKey} opacity={1} />
+                      )}
+                    </svg>
+                  </div>
+                </div>
+                {keyboardFooter}
+              </>
+            )}
+
+            {!isCji && !showKbGuide && (
+              <>
+                <div className="writing-keyboard-viewport" style={{ position: 'relative', background: 'var(--bg)', border: '1px solid var(--line2)', borderRadius: '18px', padding: '6px 12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.02)', width: '100%', maxWidth: '964px', margin: '0 auto' }}>
+                  <div style={{ width: '100%', maxWidth: '940px', position: 'relative', height: '36px', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ position: 'absolute', left: '21.7%', transform: 'translateX(-50%)', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#0F172A', color: '#FFFFFF', padding: '6px 14px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(15,23,42,0.35), 0 0 0 1px rgba(255,255,255,0.15)', border: '1.5px solid #38BDF8', whiteSpace: 'nowrap', zIndex: 2 }}>
+                      <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#38BDF8', boxShadow: '0 0 8px #38BDF8' }} />
+                      <span style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.01em', color: '#FFFFFF' }}><Interp>{activeStepGuide}</Interp></span>
+                      <div style={{ position: 'absolute', bottom: '-7px', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid #0F172A' }} />
+                    </div>
+                  </div>
+                  <div id="virtual-keyboard-root" style={{ width: '100%', maxWidth: '940px', display: 'flex', justifyContent: 'center' }}>
+                    <svg viewBox="0 26 980 334" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxWidth: '940px', display: 'block' }}>
                       <defs>
                         <filter id="kbKeyShadow" x="-10%" y="-10%" width="120%" height="130%">
                           <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.06)" />
@@ -662,9 +1169,9 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
                               style={{ cursor: 'pointer' }}
                             >
                               <rect x={k.x} y={k.y} width={k.w} height={k.h} rx="7" ry="7" fill={fill} stroke={stroke} strokeWidth={strokeWidth} filter="url(#kbKeyShadow)" />
-                              <text x={k.cx} y={k.isSpecial ? k.cy + 5 : k.y + 22} textAnchor="middle" fontFamily="'Pretendard', sans-serif" fontSize={k.isSpecial ? '12' : '15'} fontWeight="700" fill={textKoColor}>{displayKo}</text>
+                              <text x={k.cx} y={k.isSpecial ? k.cy + 5 : k.y + 23} textAnchor="middle" fontFamily="'Pretendard', sans-serif" fontSize={k.isSpecial ? (k.ko.length > 4 ? '11' : '13') : '17.5'} fontWeight="700" fill={textKoColor}>{displayKo}</text>
                               {!k.isSpecial && (
-                                <text x={k.cx} y={k.y + 40} textAnchor="middle" fontFamily="'Pretendard', monospace" fontSize="11" fontWeight="600" fill={textEnColor}>{displayEn}</text>
+                                <text x={k.cx} y={k.y + 40} textAnchor="middle" fontFamily="'Pretendard', monospace" fontSize="12" fontWeight="600" fill={textEnColor}>{displayEn}</text>
                               )}
                             </g>
                           );
@@ -680,16 +1187,7 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
                   </div>
                 </div>
 
-                <div className="writing-keyboard-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--line2)', paddingTop: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: '.08em', color: 'var(--faint)', textTransform: 'uppercase' }}>RECOMMENDED FINGER</span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-ink)' }}><Interp>{activeFingerLabel}</Interp></span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--sub)' }}>
-                    <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#B25353', display: 'inline-block' }} />
-                    <span>버건디 키 = 현재 눌러야 할 키 (Target Key)</span>
-                  </div>
-                </div>
+                {keyboardFooter}
               </>
             )}
           </div>

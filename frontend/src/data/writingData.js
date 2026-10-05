@@ -223,6 +223,62 @@ export const JAMO_SEQ = {
   'ㄾ':['ㄹ','ㅌ'], 'ㄿ':['ㄹ','ㅍ'], 'ㅀ':['ㄹ','ㅎ'], 'ㅄ':['ㅂ','ㅅ']
 };
 
+// ── 모바일 천지인 자판 ──
+// 4열 키패드. num = 피처폰 천지인 숫자키(물리 키보드 1~0으로도 입력), col 0은 왼손 엄지, 나머지는 오른손 엄지.
+const CJ_KEY_W = 108;
+const CJ_KEY_H = 62;
+const CJ_GAP = 8;
+const CJ_START_X = 30;
+const CJ_START_Y = 30;
+export const CJ_ROWS = [
+  [{ key: 'CJ_I', label: 'ㅣ', num: '1' }, { key: 'CJ_DOT', label: 'ㆍ', num: '2' }, { key: 'CJ_EU', label: 'ㅡ', num: '3' }, { key: 'Backspace', label: '⌫', sub: ['지우기', 'Delete'], isSpecial: true }],
+  [{ key: 'CJ_GK', label: 'ㄱㅋ', num: '4' }, { key: 'CJ_NR', label: 'ㄴㄹ', num: '5' }, { key: 'CJ_DT', label: 'ㄷㅌ', num: '6' }, { key: 'Enter', label: '↵', sub: ['다음', 'Next'], isSpecial: true }],
+  [{ key: 'CJ_BP', label: 'ㅂㅍ', num: '7' }, { key: 'CJ_SH', label: 'ㅅㅎ', num: '8' }, { key: 'CJ_JC', label: 'ㅈㅊ', num: '9' }, { key: 'CJ_PUNCT', label: '.,?!', isSpecial: true }],
+  [{ key: 'CJ_LANG', label: '한/영', isSpecial: true }, { key: 'CJ_OM', label: 'ㅇㅁ', num: '0' }, { key: 'Space', label: '␣', sub: ['띄어쓰기', 'Space'], isSpecial: true, span: 2 }]
+];
+export const CJ_MAP = {};
+export const CJ_NUM_KEYS = {};
+CJ_ROWS.forEach((row, r) => {
+  let col = 0;
+  row.forEach((k) => {
+    const span = k.span || 1;
+    k.col = col;
+    k.x = CJ_START_X + col * (CJ_KEY_W + CJ_GAP);
+    k.y = CJ_START_Y + r * (CJ_KEY_H + CJ_GAP);
+    k.w = CJ_KEY_W * span + CJ_GAP * (span - 1);
+    k.h = CJ_KEY_H;
+    k.cx = k.x + k.w / 2;
+    k.cy = k.y + k.h / 2;
+    CJ_MAP[k.key] = k;
+    if (k.num) CJ_NUM_KEYS[k.num] = k.key;
+    col += span;
+  });
+});
+export const CJ_VIEWBOX = { w: 2 * CJ_START_X + 4 * CJ_KEY_W + 3 * CJ_GAP, h: 2 * CJ_START_Y + 4 * CJ_KEY_H + 3 * CJ_GAP };
+
+// 자모 하나를 천지인으로 입력하는 탭 순서. 이중모음·겹받침은 JAMO_SEQ 단계별로 나뉘어 들어온다(ㅘ = ㅗ 단계 + ㅏ 단계).
+const I = 'CJ_I', D = 'CJ_DOT', E = 'CJ_EU';
+const tap = (k, n) => Array(n).fill(k);
+export const CJ_SEQ = {
+  'ㄱ': tap('CJ_GK', 1), 'ㅋ': tap('CJ_GK', 2), 'ㄲ': tap('CJ_GK', 3),
+  'ㄴ': tap('CJ_NR', 1), 'ㄹ': tap('CJ_NR', 2),
+  'ㄷ': tap('CJ_DT', 1), 'ㅌ': tap('CJ_DT', 2), 'ㄸ': tap('CJ_DT', 3),
+  'ㅂ': tap('CJ_BP', 1), 'ㅍ': tap('CJ_BP', 2), 'ㅃ': tap('CJ_BP', 3),
+  'ㅅ': tap('CJ_SH', 1), 'ㅎ': tap('CJ_SH', 2), 'ㅆ': tap('CJ_SH', 3),
+  'ㅈ': tap('CJ_JC', 1), 'ㅊ': tap('CJ_JC', 2), 'ㅉ': tap('CJ_JC', 3),
+  'ㅇ': tap('CJ_OM', 1), 'ㅁ': tap('CJ_OM', 2),
+  'ㅣ': [I], 'ㅡ': [E],
+  'ㅏ': [I, D], 'ㅑ': [I, D, D], 'ㅓ': [D, I], 'ㅕ': [D, D, I],
+  'ㅗ': [D, E], 'ㅛ': [D, D, E], 'ㅜ': [E, D], 'ㅠ': [E, D, D],
+  'ㅐ': [I, D, I], 'ㅒ': [I, D, D, I], 'ㅔ': [D, I, I], 'ㅖ': [D, D, I, I]
+};
+
+// 천지인 엄지 그림자: 손 PNG의 엄지 끝(이미지 비율 좌표)을 목표 키 중심에 맞춘다. rest = 대기 위치의 엄지 끝.
+export const CJ_HAND = Object.freeze({
+  left: { src: '/assets/hand_realistic_left_v2.png', size: 300, tip: [0.8375, 0.534], rest: [70, 330] },
+  right: { src: '/assets/hand_realistic_right_v2.png', size: 300, tip: [0.1625, 0.534], rest: [446, 330] }
+});
+
 // ── 손 그림자: 이전에 확정한 실제 사람 손 비율의 고해상도 PNG 실루엣 ──
 export const HAND_IMAGE = Object.freeze({
   left: {
@@ -315,6 +371,9 @@ export const INITIAL_WRITING_STATE = Object.freeze({
   showHandShadow: true,
   showKbGuide: false,
   kbGuideTab: 'win',
+  kbMode: 'hancom',
+  showCjGuide: false,
+  cjGuideTab: 'samsung',
   wText: '지난 주말에 친구를 만났어요. 우리는 홍대에 떡볶이를 먹었어요. 정말 맛있었어서 또 가고 싶어요.',
   wChecked: false
 });

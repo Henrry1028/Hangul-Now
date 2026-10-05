@@ -9,10 +9,15 @@
 [data-theme="dark"] .hand-layer{filter:brightness(0) invert(1)}
 .finger-active{fill:rgba(178,83,83,0.72) !important;stroke:#8E3636 !important;stroke-width:1.8 !important}
 @keyframes jeongCelebrate{0%{opacity:0;transform:translateY(12px) scale(.88) rotate(-4deg)}55%{opacity:1;transform:translateY(-5px) scale(1.04) rotate(2deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
-.writing-build-stage{display:grid;grid-template-columns:190px minmax(120px,150px);align-items:end;justify-content:center;gap:16px}
-.writing-build-block{width:190px;height:190px}
+.writing-build-stage{display:flex;align-items:center;justify-content:center;gap:14px;position:relative}
+.writing-target-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
+.target-letter-badge{width:72px;height:72px;font-size:46px}
+.target-letter-pron{font:700 12px 'IBM Plex Mono',monospace;color:var(--accent-ink);background:var(--bg2);padding:1px 8px;border-radius:6px;border:1px solid var(--line2);white-space:nowrap}
+.writing-build-arrow{color:var(--faint);font-size:18px;flex:none}
+.writing-build-block{width:150px;height:150px;font-size:90px!important;flex:none}
+.writing-jeong-slot{width:96px;flex:none;display:flex;align-items:flex-end;justify-content:center;align-self:stretch}
 .jeong-celebration{width:100%;max-height:178px;object-fit:contain;object-position:center bottom;pointer-events:none;filter:drop-shadow(0 12px 18px rgba(0,0,0,.24));animation:jeongCelebrate .55s cubic-bezier(.2,.8,.2,1) both}
-@media(max-width:520px){.writing-build-stage{grid-template-columns:166px 96px;gap:8px}.writing-build-block{width:166px!important;height:166px!important;font-size:96px!important}.jeong-celebration{max-height:150px}}
+@media(max-width:520px){.writing-build-stage{gap:8px}.target-letter-badge{width:56px;height:56px;font-size:36px}.writing-build-block{width:120px!important;height:120px!important;font-size:72px!important}.writing-jeong-slot{position:absolute;right:-6px;bottom:0;width:80px}.jeong-celebration{max-height:120px}}
 @media(prefers-reduced-motion:reduce){.jeong-celebration{animation:none}}
 
 .writing-screen {
@@ -25,26 +30,89 @@
   gap: 24px;
 }
 
+/* ------------------------------------------------------------ */
+/* ⚡ 실시간 타자 속도 대시보드 (전역 스타일)                   */
+/* ------------------------------------------------------------ */
+.writing-typing-dashboard {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--seg);
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 3px 8px;
+  flex-wrap: wrap;
+}
+.typing-stat-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 2px 5px;
+  font-family: 'IBM Plex Mono', 'Pretendard', monospace;
+}
+.stat-pill-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+.stat-pill-label {
+  font-size: 11px;
+  color: var(--faint);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.stat-pill-num {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.stat-pill-unit {
+  font-size: 10px;
+  color: var(--faint);
+  font-weight: 600;
+}
+.stat-speed .stat-pill-num { color: var(--accent-ink); }
+.stat-acc .stat-pill-num { color: #0984E3; }
+.stat-max .stat-pill-num { color: #D35400; }
+.stat-time .stat-pill-num { color: var(--ink); font-variant-numeric: tabular-nums; }
+.typing-stat-reset-btn {
+  border: 1px solid var(--line2);
+  background: var(--card);
+  color: var(--sub);
+  border-radius: 7px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+.typing-stat-reset-btn:hover {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--accent);
+}
+
 @media (min-width: 860px) {
   /* ------------------------------------------------------------ */
-  /* 🌟 [07 Writing] 쓰기 연습: 스크롤 0px 완전 일체형 레이아웃   */
+  /* 🌟 [07 Writing] 쓰기 연습: 조화로운 밸런스 & 키보드 대형화  */
   /* ------------------------------------------------------------ */
   .writing-screen {
-    height: 100% !important;
-    max-height: calc(100vh - 60px) !important;
-    padding: 8px 18px !important;
-    gap: 6px !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    padding: 12px 18px 24px !important;
+    gap: 10px !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important;
-    justify-content: space-between !important;
+    overflow-y: auto !important;
     box-sizing: border-box !important;
   }
   .writing-page-header {
     min-height: 34px !important;
     max-height: 36px !important;
     flex: none !important;
-    gap: 8px !important;
+    gap: 10px !important;
     margin: 0 !important;
     align-items: center !important;
   }
@@ -75,58 +143,52 @@
   .writing-build-content {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
-    flex: 1 1 0 !important;
+    gap: 10px !important;
+    flex: 1 1 auto !important;
     min-height: 0 !important;
-    overflow: hidden !important;
-    justify-content: space-between !important;
   }
 
   .writing-level-bar {
-    min-height: 30px !important;
-    max-height: 32px !important;
-    padding: 2px 10px !important;
-    border-radius: 9px !important;
+    min-height: 32px !important;
+    padding: 3px 10px !important;
+    border-radius: 10px !important;
     flex: none !important;
     gap: 8px !important;
   }
   .writing-level-bar span { font-size: 11px !important; }
   .writing-level-bar button { padding: 3px 8px !important; font-size: 11px !important; }
 
-  /* 🌟 메인 2단 그리드: 좌측(목표글자/조합) + 우측(자모선택) -> 넉넉한 공간 확보 (300px~360px) */
+  /* 🌟 메인 2단 그리드: 좌측(목표글자) + 우측(자음모음) 밸런스 최적화 */
   .writing-main-grid {
     display: grid !important;
-    grid-template-columns: minmax(310px, 1fr) minmax(380px, 1.35fr) !important;
+    grid-template-columns: minmax(310px, 1fr) minmax(400px, 1.4fr) !important;
     gap: 10px !important;
     align-items: stretch !important;
-    flex: 1 1 auto !important;
-    min-height: 280px !important;
-    max-height: 360px !important;
-    overflow: hidden !important;
+    flex: none !important;
+    min-height: auto !important;
+    max-height: none !important;
   }
 
   .writing-target-card, .writing-jamo-card {
-    height: 100% !important;
+    height: auto !important;
     min-height: 0 !important;
-    padding: 10px 14px !important;
+    padding: 8px 12px !important;
     border-radius: 14px !important;
     box-sizing: border-box !important;
   }
 
-  /* 🌟 좌측: 목표 글자 카드 (식별성 극대화 및 겹침 제로) */
+  /* 🎯 좌측: 목표 글자 카드 */
   .writing-target-card {
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    overflow: hidden !important;
     gap: 6px !important;
   }
 
-  /* 🎯 TARGET LETTER 헤더 박스: 가독성 극대화 및 선명한 식별 */
   .writing-target-header {
-    padding: 8px 12px !important;
+    padding: 6px 10px !important;
     gap: 8px !important;
-    border-radius: 12px !important;
+    border-radius: 11px !important;
     flex-wrap: nowrap !important;
     flex: none !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;
@@ -134,7 +196,7 @@
     z-index: 2 !important;
   }
   .writing-target-header > div:first-child {
-    gap: 3px !important;
+    gap: 2px !important;
     min-width: 0 !important;
     flex: 1 !important;
   }
@@ -145,12 +207,14 @@
     text-overflow: ellipsis !important;
   }
   .target-letter-badge {
-    width: 48px !important;
-    height: 48px !important;
-    border-radius: 12px !important;
-    font-size: 30px !important;
-    box-shadow: 0 4px 12px rgba(35,73,63,0.2) !important;
+    width: 96px !important;
+    height: 96px !important;
+    border-radius: 18px !important;
+    font-size: 60px !important;
+    box-shadow: 0 6px 18px rgba(35,73,63,0.22) !important;
   }
+  .writing-target-col { gap: 4px !important; }
+  .target-letter-pron { font-size: 12px !important; }
 
   /* 단어 모드 진행 표시줄 */
   .writing-word-progress {
@@ -161,14 +225,14 @@
     flex: none !important;
   }
   .writing-word-progress span {
-    font-size: 26px !important;
+    font-size: 24px !important;
     padding: 0 4px !important;
   }
 
-  /* 🎯 중앙 조합 캔버스 영역: 헤더와 겹치지 않고 정갈하게 분리 */
+  /* 🎯 중앙 조합 캔버스 영역 */
   .writing-canvas-section {
-    gap: 6px !important;
-    padding: 4px 0 !important;
+    gap: 4px !important;
+    padding: 6px 0 !important;
     min-height: 0 !important;
     flex: 1 1 auto !important;
     display: flex !important;
@@ -177,42 +241,57 @@
     justify-content: center !important;
     position: relative !important;
     z-index: 1 !important;
+    width: 100% !important;
   }
   .writing-build-stage {
-    display: grid !important;
-    grid-template-columns: 80px 72px !important;
-    gap: 10px !important;
+    display: flex !important;
+    gap: 12px !important;
     align-items: center !important;
     justify-content: center !important;
+    width: 100% !important;
+  }
+  .writing-build-arrow {
+    font-size: 20px !important;
+    margin: 0 2px !important;
   }
   .writing-build-block {
-    width: 80px !important;
-    height: 80px !important;
-    font-size: 50px !important;
-    border-radius: 14px !important;
+    width: 108px !important;
+    height: 108px !important;
+    font-size: 70px !important;
+    border-radius: 18px !important;
     box-shadow: inset 0 2px 6px rgba(0,0,0,0.05), 0 3px 10px rgba(0,0,0,0.04) !important;
   }
-  .jeong-celebration {
-    max-height: 76px !important;
-  }
-  .writing-canvas-section > div:last-child {
-    gap: 2px !important;
-    margin-top: 2px !important;
+  .writing-build-info {
     display: flex !important;
     flex-direction: column !important;
-    align-items: center !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+    padding-left: 8px !important;
+    min-width: 130px !important;
+    flex: 1 !important;
   }
-  .writing-canvas-section > div:last-child span:first-child {
-    font-size: 13.5px !important;
+  .writing-build-info span:first-child {
+    font-size: 15px !important;
     font-weight: 700 !important;
+    line-height: 1.35 !important;
   }
-  .writing-canvas-section > div:last-child span:last-child {
-    font-size: 11.5px !important;
+  .writing-build-info span:nth-child(2) {
+    font-size: 13px !important;
+    color: var(--sub) !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+  }
+  .writing-jeong-slot {
+    width: 68px !important;
+  }
+  .jeong-celebration {
+    max-height: 68px !important;
   }
 
   /* 하단 액션 버튼 */
   .writing-actions {
-    padding-top: 6px !important;
+    padding-top: 4px !important;
     gap: 8px !important;
     border-top: 1px solid var(--line2) !important;
     flex: none !important;
@@ -224,13 +303,12 @@
     font-weight: 600 !important;
   }
 
-  /* 🌟 우측: 자모 선택기 (심화 선택 시에도 스크롤바 0px 보장) */
+  /* 🌟 우측: 자모 선택기 (크기 29px로 컴팩트하게 정돈하여 밸런스 유지) */
   .writing-jamo-card {
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    overflow: hidden !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
   .writing-jamo-row {
     gap: 3px !important;
@@ -249,12 +327,13 @@
     align-items: center !important;
   }
   .writing-jamo-key {
-    min-width: 26px !important;
-    height: 26px !important;
-    border-radius: 6px !important;
-    font-size: 12.5px !important;
-    padding: 0 2px !important;
-    line-height: 26px !important;
+    min-width: 29px !important;
+    height: 29px !important;
+    border-radius: 7px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 0 3px !important;
+    line-height: 29px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -263,91 +342,248 @@
   .writing-jamo-note { display: none !important; }
 
   /* ------------------------------------------------------------ */
-  /* 🌟 한컴 타자 키보드 카드: 컴팩트 슬림 핏 (높이 약 205px)    */
+  /* 🌟 한컴 타자 키보드 카드: 대형화 및 선명한 식별성 확보      */
   /* ------------------------------------------------------------ */
   .writing-keyboard-card {
-    flex: 0 0 auto !important;
-    height: clamp(195px, 28vh, 215px) !important;
-    max-height: 215px !important;
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: none !important;
     display: flex !important;
     flex-direction: column !important;
-    padding: 5px 12px 3px !important;
-    gap: 2px !important;
-    border-radius: 14px !important;
-    overflow: hidden !important;
-    justify-content: space-between !important;
+    padding: 8px 14px 6px !important;
+    gap: 6px !important;
+    border-radius: 16px !important;
     box-sizing: border-box !important;
   }
   .writing-keyboard-header {
-    min-height: 24px !important;
-    max-height: 25px !important;
-    padding-bottom: 2px !important;
-    gap: 6px !important;
+    min-height: 30px !important;
+    max-height: none !important;
+    padding-bottom: 4px !important;
+    gap: 8px !important;
     flex: none !important;
     border-bottom: 1px solid var(--line2) !important;
   }
-  .writing-keyboard-header > div:first-child > div:first-child {
-    width: 20px !important;
-    height: 20px !important;
+  .writing-keyboard-header > div:last-child button {
+    padding: 3px 8px !important;
     font-size: 11px !important;
-    border-radius: 5px !important;
   }
-  .writing-keyboard-header > div:first-child > div:last-child span:first-child {
-    font-size: 12px !important;
-    font-weight: 700 !important;
-  }
-  .writing-keyboard-header > div:first-child > div:last-child span:last-child {
-    display: none !important;
-  }
-  .writing-keyboard-header button {
-    padding: 2px 7px !important;
-    font-size: 10.5px !important;
-  }
+  .writing-kb-mode { gap: 3px !important; }
+  .writing-kb-mode-tabs button { padding: 4px 10px !important; font-size: 12px !important; }
+  .writing-kb-mode-desc { font-size: 11px !important; }
 
   .writing-keyboard-viewport {
-    flex: 1 1 0 !important;
-    min-height: 0 !important;
-    padding: 1px 2px !important;
-    border-radius: 8px !important;
+    flex: 1 1 auto !important;
+    min-height: 240px !important;
+    padding: 6px 12px 8px !important;
+    border-radius: 16px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     overflow: hidden !important;
+    max-width: 964px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
   }
   .writing-keyboard-viewport > div:first-child {
-    height: 22px !important;
+    height: 30px !important;
     margin-bottom: 2px !important;
     flex: none !important;
+    max-width: 940px !important;
+    width: 100% !important;
   }
   .writing-keyboard-viewport > div:first-child > div {
-    padding: 2px 8px !important;
-    font-size: 11px !important;
-    border-radius: 6px !important;
+    padding: 3px 10px !important;
+    font-size: 12px !important;
+    border-radius: 7px !important;
   }
   #virtual-keyboard-root {
-    flex: 1 1 0 !important;
-    min-height: 0 !important;
-    height: 100% !important;
+    flex: 1 1 auto !important;
+    min-height: 200px !important;
     width: 100% !important;
+    max-width: 940px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
+  .writing-cji-root {
+    flex: 1 1 auto !important;
+    min-height: 200px !important;
+  }
   #virtual-keyboard-root svg {
-    max-height: 100% !important;
-    max-width: 720px !important;
+    max-height: 340px !important;
+    max-width: 940px !important;
     width: 100% !important;
     height: auto !important;
     object-fit: contain !important;
+    display: block !important;
   }
 
   .writing-keyboard-footer {
-    min-height: 16px !important;
-    max-height: 17px !important;
-    padding-top: 1px !important;
-    gap: 6px !important;
+    min-height: 18px !important;
+    max-height: none !important;
+    padding-top: 4px !important;
+    gap: 8px !important;
     flex: none !important;
   }
-  .writing-keyboard-footer span { font-size: 9.5px !important; }
+  .writing-keyboard-footer span { font-size: 10.5px !important; }
 }
+
+/* 키보드 종류 탭 (한컴 타자 키보드 / 모바일 천지인) */
+.writing-kb-mode { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.writing-kb-mode-tabs { display: inline-flex; align-self: flex-start; background: var(--seg); border-radius: 10px; padding: 3px; gap: 2px; }
+.writing-kb-mode-tabs button {
+  border: 0; background: transparent; color: var(--ink2);
+  border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: background .15s ease, color .15s ease;
+}
+.writing-kb-mode-tabs button.is-active { background: var(--accent); color: #fff; }
+.writing-kb-mode-desc { font-size: 12px; color: var(--sub); line-height: 1.4; }
+
+/* 천지인 키패드: 휴대폰 자판 비율로 가운데 정렬 */
+.writing-cji-root { width: 100%; max-width: 520px; display: flex; justify-content: center; }
+.writing-cji-root svg { width: 100%; height: auto; display: block; }
+
+/* 데스크톱: 자모·단어 쓰기 화면을 스크롤 없이 한 화면에 맞추고, 남는 높이만큼 키보드가 줄어든다 */
+@media (min-width: 860px) and (min-height: 600px) {
+  .writing-screen.is-build {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    padding-bottom: 12px !important;
+  }
+  .writing-screen.is-build .writing-build-content { flex: 1 1 auto !important; min-height: 0 !important; }
+  .writing-screen.is-build .writing-keyboard-card { flex: none !important; height: auto !important; min-height: 0 !important; }
+  .writing-screen.is-build .writing-keyboard-viewport { flex: none !important; height: auto !important; min-height: 0 !important; max-width: 964px !important; margin: 0 auto !important; width: 100% !important; }
+  .writing-screen.is-build #virtual-keyboard-root,
+  .writing-screen.is-build .writing-cji-root { flex: none !important; height: auto !important; min-height: 0 !important; width: 100% !important; }
+  .writing-screen.is-build #virtual-keyboard-root { max-width: 940px !important; }
+  .writing-screen.is-build .writing-cji-root { max-width: 520px !important; display: flex !important; justify-content: center !important; }
+  .writing-screen.is-build #virtual-keyboard-root svg {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 940px !important;
+    max-height: 340px !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+  .writing-screen.is-build .writing-cji-root svg {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 520px !important;
+    display: block !important;
+  }
+}
+/* 낮은 데스크톱 화면: 배지·안내문과 겹치는 줄을 숨겨 키보드 높이를 확보 */
+@media (min-width: 860px) and (min-height: 600px) and (max-height: 900px) {
+  .writing-screen.is-build .writing-target-header > div:first-child > div:last-child { display: none !important; }
+  .writing-screen.is-build .writing-kb-mode-desc { display: none !important; }
+  .writing-screen.is-build .writing-canvas-section { padding: 0 !important; }
+  .writing-screen.is-build .writing-keyboard-viewport { padding-top: 4px !important; padding-bottom: 4px !important; }
+}
+@media (max-width: 520px) {
+  .writing-cji-bubble-row { height: auto !important; min-height: 38px; }
+  .writing-cji-bubble { white-space: normal !important; text-align: left; }
+}
+/* 설치 가이드 패널: 한 화면 맞춤 모드에서는 카드 안에서 스크롤 */
+@media (min-width: 860px) and (min-height: 600px) {
+  .writing-screen.is-build .writing-keyboard-card:has(.writing-kb-guide) { flex: 1 1 0 !important; }
+  .writing-screen.is-build .writing-kb-guide { flex: 0 1 auto !important; min-height: 0 !important; overflow-y: auto !important; }
+}
+
+/* 앱(모바일) 쓰기: 목표 글자 → 조합 칸을 한 줄에, 안내 문구는 그 아래 가운데로. 모드 탭은 한 줄 */
+@media (max-width: 520px) {
+  .writing-build-stage { flex-wrap: wrap !important; gap: 10px !important; }
+  .writing-build-info { flex: 1 1 100% !important; align-items: center !important; text-align: center; padding-left: 0 !important; min-width: 0 !important; }
+  .writing-jeong-slot { position: static !important; width: 80px !important; }
+  .target-letter-badge { width: 64px !important; height: 64px !important; font-size: 40px !important; }
+  .writing-build-block { width: 110px !important; height: 110px !important; font-size: 64px !important; }
+  .writing-mode-nav-tabs { width: 100%; box-sizing: border-box; }
+  .writing-mode-nav-tabs button { flex: 1 1 0; min-width: 0; padding: 8px 4px !important; font-size: 13px !important; white-space: nowrap; }
+}
+@media (max-width: 520px) {
+  .writing-target-card, .writing-jamo-card, .writing-keyboard-card { padding: 16px !important; }
+  .writing-keyboard-viewport { padding: 10px 6px !important; }
+}
+/* 앱(태블릿 포함, <860px): 카드가 좁아도 목표 글자 → 조합 칸은 한 줄, 안내 문구는 아래로 */
+@media (max-width: 859px) {
+  .writing-build-stage { flex-wrap: wrap !important; }
+  .writing-build-info { flex: 1 1 100% !important; align-items: center !important; text-align: center; padding-left: 0 !important; min-width: 0 !important; }
+  .writing-jeong-slot { position: static !important; }
+}
+
+/* 💻 노트북(세로 820px 이하) 전용 한눈에 쏙 들어오는 컴팩트 보정 */
+@media (max-height: 820px) and (min-width: 860px) {
+  .writing-screen {
+    padding: 6px 14px 10px !important;
+    gap: 6px !important;
+    overflow-y: hidden !important;
+  }
+  .writing-page-header {
+    min-height: 28px !important;
+    max-height: 30px !important;
+    gap: 8px !important;
+  }
+  .writing-page-header h1 {
+    font-size: 16px !important;
+  }
+  .writing-build-content {
+    gap: 6px !important;
+  }
+  .writing-level-bar {
+    min-height: 26px !important;
+    padding: 2px 8px !important;
+    gap: 6px !important;
+  }
+  .writing-level-bar span {
+    font-size: 10.5px !important;
+  }
+  .writing-level-bar button {
+    padding: 2px 6px !important;
+    font-size: 10.5px !important;
+  }
+  .writing-main-grid {
+    gap: 6px !important;
+  }
+  .writing-target-card, .writing-jamo-card {
+    padding: 6px 10px !important;
+    gap: 4px !important;
+    border-radius: 12px !important;
+  }
+  .writing-target-header {
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+  }
+  .target-letter-badge {
+    width: 68px !important;
+    height: 68px !important;
+    font-size: 40px !important;
+    border-radius: 14px !important;
+  }
+  .writing-build-block {
+    width: 100px !important;
+    height: 100px !important;
+    font-size: 60px !important;
+    border-radius: 16px !important;
+  }
+  .writing-build-stage {
+    gap: 8px !important;
+  }
+  .writing-jeong-slot {
+    width: 76px !important;
+  }
+  .jeong-celebration {
+    max-height: 120px !important;
+  }
+  .writing-screen.is-build .writing-cji-root svg {
+    max-height: 240px !important;
+    width: auto !important;
+    margin: 0 auto !important;
+  }
+  .writing-screen.is-build .writing-keyboard-viewport {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+}
+

@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 
 const SCREENS = [
   ['Today', '02 Today'],
-  ['Curriculum', '03 Tutors'],
+  ['Tutors', '03 Tutors'],
   ['Chat', '04 Chat'],
   ['Listening', '05 Listening'],
   ['Reading', '06 Reading'],
@@ -45,8 +45,17 @@ test('every navigation target renders without errors or overflow', async ({ page
 
   await page.goto('/');
   await expect.poll(() => screenLabel(page)).toBe('01 Landing');
+  // Home(랜딩)에는 사이드바·서브내비가 없으므로 랜딩 CTA로 앱에 들어간 뒤 메뉴를 돈다.
+  await page.getByRole('button', { name: 'Take the 5-min level check' }).click();
+  await expect.poll(() => screenLabel(page)).toBe('02 Today');
+  // 보이는 내비게이션(헤더 메뉴·데스크톱 사이드바·모바일 서브내비)에서만 찾는다. 튜터는 데스크톱에선 헤더에만 있다.
+  const nav = page.locator('.desktop-header-nav, #app-sidebar, .mobile-subnav-bar');
   for (const [label, screen] of SCREENS) {
-    await page.locator('button:visible', { hasText: label }).filter({ hasNot: page.locator('header') }).last().click();
+    // 튜터·자료실 화면엔 사이드바가 없으므로, 메뉴가 안 보이면 헤더의 '학습(Learn)'으로 돌아간다.
+    if (!(await nav.locator('button:visible', { hasText: label }).count())) {
+      await page.locator('.desktop-header-nav button:visible', { hasText: 'Learn' }).click();
+    }
+    await nav.locator('button:visible', { hasText: label }).first().click();
     await expect.poll(() => screenLabel(page), { message: `${label} → ${screen}` }).toBe(screen);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     expect(overflow, `${screen} horizontal overflow`).toBe(false);
@@ -157,4 +166,24 @@ test('reading shows the passage before practice enrichment finishes', async ({ p
   await expect(readingScreen).toContainText('Where did they go?');
   await expect(readingScreen).toContainText('-에 가다');
   await expect(readingScreen).not.toContainText('Passage ready · adding practice…');
+});
+
+test('writing shows only the Cheonjiin keypad in the app layout (<860px)', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Take the 5-min level check' }).click();
+  await expect.poll(() => screenLabel(page)).toBe('02 Today');
+  await page.locator('button:visible', { hasText: 'Writing' }).filter({ hasNot: page.locator('header') }).last().click();
+  await expect.poll(() => screenLabel(page)).toBe('07 Writing');
+
+  const isApp = await page.evaluate(() => window.matchMedia('(max-width: 859px)').matches);
+  const writing = page.locator('[data-screen-label="07 Writing"]');
+  if (isApp) {
+    await expect(writing.locator('.writing-cji-root')).toBeVisible();
+    await expect(writing.locator('#virtual-keyboard-root')).toHaveCount(0);
+    await expect(writing.getByRole('tab', { name: /PC Keyboard/ })).toHaveCount(0);
+    await expect(writing.getByText('QWERTY Korean Setup Guide')).toHaveCount(0);
+  } else {
+    await expect(writing.getByRole('tab', { name: /PC Keyboard/ })).toBeVisible();
+    await expect(writing.getByRole('tab', { name: /Mobile Cheonjiin/ })).toBeVisible();
+  }
 });

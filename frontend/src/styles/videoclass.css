@@ -1,0 +1,112 @@
+/* 1:1 화상수업 튜터 목록: 사진 | 소개 | 가격·예약 3단 카드 */
+.vc-tutor-section { display: flex; flex-direction: column; gap: 14px; }
+.vc-tutor-section-title { margin: 0; font-size: clamp(19px, 2.2vw, 24px); font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+.vc-tutor-list { display: flex; flex-direction: column; gap: 16px; }
+
+.vc-tutor-card {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 240px;
+  gap: 22px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.vc-tutor-card:hover { border-color: var(--line3); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05); }
+
+.vc-tutor-photo { position: relative; width: 150px; height: 150px; }
+.vc-tutor-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; display: block; }
+.vc-tutor-online { position: absolute; right: 6px; bottom: 6px; width: 12px; height: 12px; border-radius: 50%; background: #27AE60; border: 2px solid var(--card); }
+
+.vc-tutor-info { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.vc-tutor-name { margin: 0 0 2px; font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+.vc-tutor-meta { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--sub); min-width: 0; }
+.vc-tutor-meta svg { flex: none; color: var(--faint); }
+.vc-tutor-meta span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vc-tutor-pill {
+  align-self: flex-start; max-width: 100%;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 600; color: var(--ink);
+  background: linear-gradient(90deg, rgba(35, 73, 63, 0.12), rgba(200, 80, 42, 0.12));
+  padding: 3px 8px; border-radius: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vc-tutor-desc { margin: 4px 0 0; font-size: 14px; line-height: 1.65; color: var(--ink2); }
+.vc-tutor-desc b { color: var(--ink); font-weight: 700; }
+.vc-tutor-desc.is-clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.vc-tutor-more { align-self: flex-start; border: 0; background: none; padding: 0; font-size: 14px; font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.vc-tutor-days { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink2); margin-top: 4px; }
+
+.vc-tutor-side { display: flex; flex-direction: column; gap: 14px; }
+.vc-tutor-price { display: flex; flex-direction: column; gap: 2px; }
+.vc-tutor-price strong { font-size: 26px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; line-height: 1.1; }
+.vc-tutor-price span { font-size: 14px; color: var(--sub); }
+.vc-tutor-stats { display: flex; gap: 22px; }
+.vc-tutor-stat { display: flex; flex-direction: column; gap: 1px; }
+.vc-tutor-stat strong { font-size: 18px; font-weight: 800; color: var(--ink); }
+.vc-tutor-stat span { font-size: 12.5px; color: var(--sub); }
+.vc-tutor-book {
+  margin-top: auto;
+  border: 2px solid var(--ink); background: var(--accent); color: #fff;
+  border-radius: 10px; padding: 11px 14px; font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: filter .15s ease, transform .1s ease;
+}
+.vc-tutor-book:hover { filter: brightness(1.1); }
+.vc-tutor-book:active { transform: translateY(1px); }
+.vc-tutor-sub-price { font-size: 12.5px; color: var(--faint); text-align: center; margin-top: -6px; }
+
+/* 태블릿: 가격·예약을 소개 아래로 */
+@media (max-width: 900px) {
+  .vc-tutor-card { grid-template-columns: 120px minmax(0, 1fr); }
+  .vc-tutor-photo { width: 120px; height: 120px; }
+  .vc-tutor-side { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px 24px; border-top: 1px solid var(--line2); padding-top: 16px; }
+  .vc-tutor-book { grid-column: 1 / -1; margin-top: 0; }
+  .vc-tutor-sub-price { grid-column: 1 / -1; }
+}
+/* 모바일: 사진을 작게 */
+@media (max-width: 560px) {
+  .vc-tutor-card { grid-template-columns: 76px minmax(0, 1fr); gap: 14px; padding: 16px; }
+  .vc-tutor-photo { width: 76px; height: 76px; }
+  .vc-tutor-name { font-size: 17px; }
+  .vc-tutor-side { grid-template-columns: 1fr; }
+  .vc-tutor-pill { white-space: normal; }
+}
+
+/* 카드 + 오른쪽 소개 영상: 목록 폭이 충분할 때만 나란히, 좁으면 영상이 카드 아래로 */
+.vc-tutor-list { container-type: inline-size; }
+.vc-tutor-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+.vc-tutor-video {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 12px; display: flex; flex-direction: column; gap: 8px; max-width: 360px; box-sizing: border-box;
+}
+.vc-tutor-video-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #111; }
+.vc-tutor-video-frame iframe,
+.vc-tutor-video-frame video,
+.vc-tutor-video-poster { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.vc-tutor-video-frame video { object-fit: cover; }
+.vc-tutor-video-poster { padding: 0; background: #111; cursor: pointer; }
+.vc-tutor-video-poster img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease, opacity .25s ease; }
+.vc-tutor-video-poster:hover img { transform: scale(1.03); opacity: .92; }
+.vc-tutor-video-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #fff; border: 2px solid #fff;
+  display: grid; place-items: center; padding-left: 3px; box-sizing: border-box;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); transition: transform .15s ease;
+}
+.vc-tutor-video-poster:hover .vc-tutor-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.vc-tutor-video-poster:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.vc-tutor-video-caption { font-size: 12.5px; font-weight: 600; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@container (min-width: 980px) {
+  .vc-tutor-row { grid-template-columns: minmax(0, 1fr) 260px; }
+  .vc-tutor-video { max-width: none; }
+  .vc-tutor-card { grid-template-columns: 120px minmax(0, 1fr) 190px; gap: 18px; padding: 22px; }
+  .vc-tutor-photo { width: 120px; height: 120px; }
+}
+@container (min-width: 1100px) {
+  .vc-tutor-row { grid-template-columns: minmax(0, 1fr) 300px; }
+  .vc-tutor-card { grid-template-columns: 140px minmax(0, 1fr) 210px; gap: 22px; padding: 24px; }
+  .vc-tutor-photo { width: 140px; height: 140px; }
+}

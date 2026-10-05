@@ -434,3 +434,8 @@
     gap: 12px;
   }
 }
+
+/* 앱(<860px): 1열 그리드에서 span 2가 암묵 열을 만들어 카드가 화면 밖으로 넘치므로 행 전체를 차지하게 한다 */
+@media (max-width: 859px) {
+  .reading-passage-card { grid-column: 1 / -1; }
+}

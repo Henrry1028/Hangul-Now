@@ -58,3 +58,10 @@
     gap: clamp(10px, 1.4vh, 18px);
   }
 }
+
+/* 앱(모바일): 보기 탭은 아이콘 위·글자 아래로, 지표 숫자는 한 줄에 */
+@media (max-width: 520px) {
+  .record-view-tabs { width: 100%; box-sizing: border-box; }
+  .record-view-tabs button { flex: 1 1 0; min-width: 0; flex-direction: column !important; gap: 2px !important; padding: 8px 4px !important; font-size: 12px !important; line-height: 1.25 !important; text-align: center; justify-content: center !important; }
+  .record-stat-value { font-size: 24px !important; white-space: nowrap; }
+}

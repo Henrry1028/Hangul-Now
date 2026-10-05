@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
 import { profileInterests } from '../data/profileData.js';
 import OnboardingModal from './OnboardingModal.jsx';
+import AccountMenu from './AccountMenu.jsx';
 import '../styles/shell.css';
 
 const MenuIcon = ({ size = 20 }) => (
@@ -13,18 +14,26 @@ const MenuIcon = ({ size = 20 }) => (
 );
 
 const SHELL_TEXT = {
-  en: { navHow: 'How it works', navTutors: 'Curriculum', navAbout: 'About us', startFree: 'Start free', themeTitle: 'Toggle dark mode', login: 'Log in', navVideoClass: '1:1 Video', profileEdit: 'Edit profile & interests', profileInterests: 'My interests' },
-  ko: { navHow: '학습 방법', navTutors: '커리큘럼', navAbout: '회사 소개', startFree: '무료로 시작', themeTitle: '다크 모드 전환', login: '로그인', navVideoClass: '화상수업', profileEdit: '프로필·관심사 수정 (Edit Profile)', profileInterests: '내 관심사 (My Interests)' }
+  en: { navHow: 'Home', navLearn: 'Learn', navResources: 'Resources', navTutors: 'Tutors', navAbout: 'About us', startFree: 'Start free', themeTitle: 'Toggle dark mode', navVideoClass: '1:1 Video', profileEdit: 'Edit profile & interests', profileInterests: 'My interests' },
+  ko: { navHow: 'Home', navLearn: '학습', navResources: '자료실', navTutors: '튜터', navAbout: '회사 소개', startFree: '무료로 시작', themeTitle: '다크 모드 전환', navVideoClass: '화상수업', profileEdit: '프로필·관심사 수정 (Edit Profile)', profileInterests: '내 관심사 (My Interests)' }
 };
 
 // Legacy navDef (preview/index.html 6665-6670). The Video Class group is admin-only: it is
 // appended only for a server-verified admin (AGENTS.md section 14 keeps it from general users).
+// 헤더 '학습'은 오늘의 학습으로 이동하고, 사이드바의 학습 화면에 있는 동안 굵게 표시된다.
+// 사이드바 없이 전체 폭으로 보여 주는 화면 (헤더 메뉴의 독립 화면들)
+const NO_SIDEBAR_PAGES = ['intro', 'tutors', 'resources', 'videoclass', 'about', 'admin'];
+// 데스크톱 사이드바에서 그룹 제목(학습 / 4대 영역 연습)을 숨기는 그룹
+const SIDEBAR_HIDDEN_LABELS = ['learn', 'practice'];
+const SIDEBAR_EXCLUDED = ['tutors', 'about', 'videoclass', 'resources'];
+const LEARN_PAGES = ['home', 'chat', 'listening', 'reading', 'writing', 'speaking', 'conversation', 'record'];
+
 function navDefs(L, videoClassAccess) {
   return [
-    { label: L ? '학습' : 'LEARN', items: [['home', L ? '오늘의 학습' : 'Today', '오'], ['tutors', L ? '커리큘럼' : 'Curriculum', '커'], ['chat', L ? '튜터 채팅' : 'Chat', '대']] },
-    { label: L ? '4대 영역 연습' : 'PRACTICE', items: [['listening', L ? '듣기 연습' : 'Listening', '듣'], ['reading', L ? '읽기 독해' : 'Reading', '읽'], ['writing', L ? '쓰기 조합' : 'Writing', '쓰'], ['speaking', L ? '말하기 코치' : 'Speaking', '말'], ['conversation', L ? '실시간 회화' : 'Conversation', '회']] },
-    { label: L ? '나의 기록' : 'YOU', items: [['record', L ? '학습 기록' : 'My progress', '기'], ['about', L ? '서비스 소개' : 'About us', '소']] },
-    ...(videoClassAccess ? [{ label: L ? '화상 수업 매칭' : 'LIVE VIDEO CLASS', items: [['videoclass', L ? '1:1 화상수업' : '1:1 Live Class', '화']] }] : [])
+    { id: 'learn', label: L ? '학습' : 'LEARN', items: [['home', L ? '오늘의 학습' : 'Today', '오'], ['tutors', L ? '튜터' : 'Tutors', '튜'], ['chat', L ? '튜터 채팅' : 'Chat', '대']] },
+    { id: 'practice', label: L ? '4대 영역 연습' : 'PRACTICE', items: [['listening', L ? '듣기 연습' : 'Listening', '듣'], ['reading', L ? '읽기 독해' : 'Reading', '읽'], ['writing', L ? '쓰기 조합' : 'Writing', '쓰'], ['speaking', L ? '말하기 코치' : 'Speaking', '말'], ['conversation', L ? '실시간 회화' : 'Conversation', '회']] },
+    { id: 'you', label: L ? '나의 기록' : 'YOU', items: [['record', L ? '학습 기록' : 'My progress', '기'], ['resources', L ? '자료실' : 'Resources', '자'], ['about', L ? '서비스 소개' : 'About us', '소']] },
+    ...(videoClassAccess ? [{ id: 'videoclass', label: L ? '화상 수업 매칭' : 'LIVE VIDEO CLASS', items: [['videoclass', L ? '1:1 화상수업' : '1:1 Live Class', '화']] }] : [])
   ];
 }
 
@@ -40,9 +49,9 @@ const GoogleIcon = () => (
 );
 
 function AppShell({
-  lang, theme, page, wide, selectedTutorId, unreadTotal,
+  lang, theme, page, wide, selectedTutorId,
   sidebarCollapsed, sidebarWidth, onToggleSidebar, onSidebarWidth,
-  onNavigate, onSetLang, onToggleTheme, auth, onGoAdmin, videoClassAccess, onGoVideoClass, children
+  onNavigate, onSetLang, onToggleTheme, auth, onGoAdmin, videoClassAccess, onGoVideoClass, sidebarFooter = null, children
 }) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const L = lang === 'ko' ? 1 : 0;
@@ -60,12 +69,17 @@ function AppShell({
     genderBg: raw.gender === 'female' ? '#E06B82' : '#4B7BEC'
   };
   const groups = navDefs(L, videoClassAccess);
+  // 데스크톱 사이드바(학습 메뉴)에는 학습 화면만: 튜터·자료실·서비스 소개·1:1 화상수업은 헤더 메뉴로 이동한다.
+  // 모바일 ☰ 메뉴·서브내비에는 그대로 유지. 항목이 모두 빠진 그룹(화상 수업 매칭)은 숨긴다.
+  const sidebarGroups = groups
+    .map((g) => ({ ...g, items: g.items.filter(([k]) => !SIDEBAR_EXCLUDED.includes(k)) }))
+    .filter((g) => g.items.length > 0);
   const userName = auth.profile?.nickname || auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'Learner';
   const userInitial = (auth.currentUser?.displayName || auth.currentUser?.email || 'U')[0].toUpperCase();
   const interestLabels = profileInterests(auth.profile).map((item) => `${item.icon} ${L ? item.ko : item.en}`).join('  ');
   const navItem = ([k, label, glyph]) => {
     const active = page === k;
-    return { k, label, glyph, active, hasBadge: k === 'chat' && unreadTotal > 0 };
+    return { k, label, glyph, active };
   };
 
   // Legacy initSidebarResize: drag 180-460px, double-click restores 240px, both persisted.
@@ -123,15 +137,23 @@ function AppShell({
     <div className="app-root-shell" style={{ height: '100dvh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <OnboardingModal lang={lang} auth={auth} />
       <header className="marketing-header" style={{ position: 'sticky', top: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '8px clamp(16px,3vw,36px)', borderBottom: '1px solid var(--line)', background: 'var(--bg)', flexWrap: 'nowrap', flex: 'none', height: '60px', boxSizing: 'border-box' }}>
-        <button type="button" onClick={go('intro')} aria-label="Hangul Now home" style={{ display: 'flex', alignItems: 'center', border: 0, background: 'none', cursor: 'pointer', padding: 0 }}>
-          <img className="brand-logo brand-logo--header brand-logo--light" src="/assets/logo-new.png?v=2" alt="Hangul Now" />
-          <img className="brand-logo brand-logo--header brand-logo--dark" src="/assets/logo-new-dark.png?v=2" alt="Hangul Now" />
-        </button>
+        <div className="header-brand-group">
+          {/* 모바일(앱) 버전: 햄버거 메뉴는 로고 왼쪽 */}
+          <button type="button" className="mobile-menu-btn" onClick={() => setMobileDrawerOpen(true)} aria-label="메뉴 열기" aria-expanded={mobileDrawerOpen} style={{ border: '1.5px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', width: '36px', height: '36px', borderRadius: '10px', placeItems: 'center', cursor: 'pointer', flex: 'none' }}>
+            <MenuIcon />
+          </button>
+          <button type="button" onClick={go('intro')} aria-label="Hangul Now home" style={{ display: 'flex', alignItems: 'center', border: 0, background: 'none', cursor: 'pointer', padding: 0 }}>
+            <img className="brand-logo brand-logo--header brand-logo--light" src="/assets/logo-new.png?v=2" alt="Hangul Now" />
+            <img className="brand-logo brand-logo--header brand-logo--dark" src="/assets/logo-new-dark.png?v=2" alt="Hangul Now" />
+          </button>
+        </div>
 
         {/* 데스크톱 전용 헤더 내비게이션 */}
         <nav className="marketing-header__nav desktop-header-nav">
-          <button type="button" onClick={go('intro')} style={{ border: 0, background: 'none', color: 'var(--sub)', fontSize: '14px', cursor: 'pointer' }}>{t.navHow}</button>
-          <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'none', color: 'var(--sub)', fontSize: '14px', cursor: 'pointer' }}>{t.navTutors}</button>
+          <button type="button" onClick={go('intro')} style={{ border: 0, background: 'none', color: page === 'intro' ? 'var(--ink)' : 'var(--sub)', fontSize: '14px', cursor: 'pointer', fontWeight: page === 'intro' ? '700' : '400' }}>{t.navHow}</button>
+          <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'none', color: page === 'tutors' ? 'var(--ink)' : 'var(--sub)', fontSize: '14px', cursor: 'pointer', fontWeight: page === 'tutors' ? '700' : '400' }}>{t.navTutors}</button>
+          <button type="button" onClick={go('home')} style={{ border: 0, background: 'none', color: LEARN_PAGES.includes(page) ? 'var(--ink)' : 'var(--sub)', fontSize: '14px', cursor: 'pointer', fontWeight: LEARN_PAGES.includes(page) ? '700' : '400' }}>{t.navLearn}</button>
+          <button type="button" onClick={go('resources')} style={{ border: 0, background: 'none', color: page === 'resources' ? 'var(--ink)' : 'var(--sub)', fontSize: '14px', cursor: 'pointer', fontWeight: page === 'resources' ? '700' : '400' }}>{t.navResources}</button>
           {videoClassAccess && (
             <button type="button" onClick={onGoVideoClass} title="1:1 화상 한국어 수업 매칭 플랫폼 (관리자 전용 미리보기)" style={{ border: 0, background: 'none', color: 'var(--ink)', fontSize: '14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '3px 8px', borderRadius: '8px', transition: 'all .15s ease' }}>
               <span style={{ fontWeight: 600 }}>{t.navVideoClass}</span>
@@ -154,8 +176,7 @@ function AppShell({
               <span>Admin</span>
             </button>
           )}
-          {!auth.currentUser && <button type="button" onClick={auth.login} style={{ border: 0, background: 'none', color: 'var(--ink)', fontSize: '14px', cursor: 'pointer' }}>{t.login}</button>}
-          <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'var(--solid)', color: 'var(--on-solid)', padding: '10px 18px', borderRadius: '999px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>{t.startFree}</button>
+          <AccountMenu lang={lang} auth={auth} userName={userName} userInitial={userInitial} interestLabels={interestLabels} onNavigate={(target) => go(target)()} />
         </nav>
 
         {/* 모바일 전용 헤더 액션 영역 */}
@@ -168,9 +189,6 @@ function AppShell({
             {theme === 'dark'
               ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
               : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>}
-          </button>
-          <button type="button" onClick={() => setMobileDrawerOpen(true)} aria-label="메뉴 열기" style={{ border: '1.5px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', width: '36px', height: '36px', borderRadius: '10px', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
-            <MenuIcon />
           </button>
         </div>
       </header>
@@ -192,8 +210,8 @@ function AppShell({
                 </button>
               </div>
               <div onClick={go('chat')} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '13px', background: tutor.color, color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '13px', fontWeight: 700, flex: 'none', position: 'relative' }}>
-                  {tutor.initial}
+                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: tutor.color, color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '13px', fontWeight: 700, flex: 'none', position: 'relative', overflow: 'hidden' }}>
+                  {tutor.photo ? <img src={tutor.photo} alt={tutor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : tutor.initial}
                   <span style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '15px', height: '15px', borderRadius: '50%', background: tutor.genderBg, color: '#fff', fontSize: '9px', fontWeight: 700, display: 'grid', placeItems: 'center', border: '1.5px solid var(--card)' }}>{tutor.genderSymbol}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, minWidth: 0 }}>
@@ -213,7 +231,6 @@ function AppShell({
                       <span style={{ width: '26px', height: '26px', borderRadius: '6px', border: `1px solid ${n.active ? 'rgba(245,242,235,.35)' : 'var(--line3)'}`, display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none', background: 'rgba(255,255,255,0.06)' }}>{n.glyph}</span>
                       <span style={{ fontWeight: n.active ? '600' : '500' }}>{n.label}</span>
                     </div>
-                    {n.hasBadge && <span style={{ background: '#C25E3E', color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '10px', fontWeight: 700 }}>{unreadTotal}</span>}
                   </button>
                 ))}
               </div>
@@ -237,44 +254,43 @@ function AppShell({
                   <span>{L ? 'Google 로그인' : 'Sign in with Google'}</span>
                 </button>
               )}
-              <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'var(--solid)', color: 'var(--on-solid)', padding: '12px 18px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', textAlign: 'center' }}>
-                {t.startFree}
-              </button>
             </div>
           </div>
         </div>
       </div>
 
       <div className="app-body-container" style={{ display: 'flex', flex: 1, minHeight: 0, height: 'calc(100dvh - 62px)', background: 'var(--bg)', position: 'relative', overflow: 'hidden' }}>
-        {wide && (
+        {/* Home·튜터·자료실·화상수업·회사 소개·관리자 콘솔 화면에서는 왼쪽 사이드바를 띄우지 않는다 */}
+        {wide && !NO_SIDEBAR_PAGES.includes(page) && (
           <>
             {sidebarCollapsed && (
               <button type="button" onClick={onToggleSidebar} title="사이드바 열기 (Ctrl + B)" className="sidebar-open-floating-btn" style={{ border: '1.5px solid var(--line)', background: 'var(--card)', color: 'var(--ink)' }}>
                 <SidebarIcon size={20} />
               </button>
             )}
-            <aside ref={asideRef} id="app-sidebar" className={`app-sidebar ${sidebarCollapsed ? 'is-collapsed' : ''}`} style={{ width: `${sidebarWidth}px`, flex: 'none', height: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
+            <aside ref={asideRef} id="app-sidebar" className={`app-sidebar ${sidebarCollapsed ? 'is-collapsed' : ''} ${sidebarFooter ? 'has-footer-slot' : ''}`} style={{ width: `${sidebarWidth}px`, flex: 'none', height: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', padding: '2px 2px 8px', borderBottom: '1px solid var(--line2)', marginBottom: '4px', flex: 'none' }}>
                 <button type="button" onClick={onToggleSidebar} title="사이드바 접기 (Ctrl + B)" className="sidebar-toggle-btn" style={{ border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all .15s ease' }}>
                   <SidebarIcon size={18} />
                 </button>
               </div>
-              {groups.map((g) => (
+              {sidebarGroups.map((g) => (
                 <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ font: "500 10.5px 'IBM Plex Mono',monospace", letterSpacing: '.12em', color: 'var(--faint)', padding: '0 10px 6px' }}>{g.label}</span>
+                  {!SIDEBAR_HIDDEN_LABELS.includes(g.id) && <span style={{ font: "500 10.5px 'IBM Plex Mono',monospace", letterSpacing: '.12em', color: 'var(--faint)', padding: '0 10px 6px' }}>{g.label}</span>}
                   {g.items.map(navItem).map((n) => (
                     <button type="button" key={n.k} onClick={go(n.k)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', border: 0, background: n.active ? 'var(--accent)' : 'transparent', color: n.active ? '#F5F2EB' : 'var(--ink2)', padding: '8px 10px', borderRadius: '10px', fontSize: '13.5px', cursor: 'pointer', width: '100%', textAlign: 'left', position: 'relative', transition: 'all .15s ease' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0, flex: 1 }}>
                         <span style={{ width: '24px', height: '24px', borderRadius: '6px', border: `1px solid ${n.active ? 'rgba(245,242,235,.35)' : 'var(--line3)'}`, display: 'grid', placeItems: 'center', fontSize: '11px', fontWeight: 700, flex: 'none', background: 'rgba(255,255,255,0.06)' }}>{n.glyph}</span>
                         <span style={{ fontWeight: n.active ? '600' : '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.label}</span>
                       </div>
-                      {n.hasBadge && <span style={{ background: '#C25E3E', color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '10px', fontWeight: 700 }}>{unreadTotal}</span>}
                     </button>
                   ))}
                 </div>
               ))}
               <div style={{ marginTop: 'auto', borderTop: '1px solid var(--line)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '14px', padding: '11px 12px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                {/* 페이지가 넘겨준 하단 영역(채팅 화면의 튜터 정보)이 있으면 '내 전담 튜터' 카드·관리자 콘솔 대신 표시 */}
+                {sidebarFooter && <div className="sidebar-footer-slot">{sidebarFooter}</div>}
+                {!sidebarFooter && <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '14px', padding: '11px 12px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: '.08em', color: 'var(--accent)', textTransform: 'uppercase' }}>{L ? '내 전담 튜터' : 'MY TUTOR'}</span>
                     <button type="button" onClick={go('tutors')} style={{ border: 0, background: 'none', color: 'var(--sub)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '2px' }}>
@@ -282,8 +298,8 @@ function AppShell({
                     </button>
                   </div>
                   <div onClick={go('chat')} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '13px', background: tutor.color, color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '13px', fontWeight: 700, flex: 'none', position: 'relative' }}>
-                      {tutor.initial}
+                    <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: tutor.color, color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '13px', fontWeight: 700, flex: 'none', position: 'relative', overflow: 'hidden' }}>
+                      {tutor.photo ? <img src={tutor.photo} alt={tutor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : tutor.initial}
                       <span style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '15px', height: '15px', borderRadius: '50%', background: tutor.genderBg, color: '#fff', fontSize: '9px', fontWeight: 700, display: 'grid', placeItems: 'center', border: '1.5px solid var(--card)' }}>{tutor.genderSymbol}</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, minWidth: 0 }}>
@@ -291,36 +307,8 @@ function AppShell({
                       <span style={{ fontSize: '11.5px', color: 'var(--sub)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tutor.role}</span>
                     </div>
                   </div>
-                </div>
-                {auth.currentUser ? (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '4px 6px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0, flex: 1 }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#D7DCE3', color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none', overflow: 'hidden' }}>
-                          {auth.currentUser.photoURL ? <img src={auth.currentUser.photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : userInitial}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, minWidth: 0 }}>
-                          <span style={{ fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</span>
-                          <span style={{ fontSize: '11px', color: 'var(--faint)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{auth.currentUser.email}</span>
-                        </div>
-                      </div>
-                      <button type="button" onClick={auth.logout} title="로그아웃" style={{ border: 0, background: 'none', color: 'var(--faint)', fontSize: '13px', cursor: 'pointer', padding: '2px 4px', flex: 'none' }}>✕</button>
-                    </div>
-                    {auth.profile?.onboarded && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '6px 8px', borderRadius: '10px', background: 'var(--chip)' }}>
-                        <span style={{ font: "600 10.5px 'IBM Plex Mono',monospace", letterSpacing: '.06em', color: 'var(--faint)' }}>{t.profileInterests}</span>
-                        <span style={{ fontSize: '11.5px', lineHeight: 1.5, color: 'var(--ink2)' }}>{interestLabels}</span>
-                      </div>
-                    )}
-                    <button type="button" onClick={auth.openOnboarding} style={{ border: 0, background: 'none', color: 'var(--accent-ink)', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', padding: '2px 8px', textAlign: 'left' }}>✎ {t.profileEdit}</button>
-                  </>
-                ) : (
-                  <button type="button" onClick={auth.login} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', padding: '8px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background .15s' }}>
-                    <GoogleIcon />
-                    <span>{L ? 'Google 계정으로 로그인' : 'Sign in with Google'}</span>
-                  </button>
-                )}
-                {auth.isAdmin && (
+                </div>}
+                {!sidebarFooter && auth.isAdmin && (
                   <button type="button" onClick={onGoAdmin} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1.5px solid #D4AF37', background: 'linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(35,73,63,0.18) 100%)', color: 'var(--ink)', padding: '9px 12px', borderRadius: '12px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', width: '100%', marginTop: '6px', transition: 'all .15s ease', boxShadow: '0 3px 10px rgba(212,175,55,0.12)' }}>
                     <span>👑</span>
                     <span>관리자 콘솔 (Admin)</span>

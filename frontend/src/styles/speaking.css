@@ -19,3 +19,35 @@
     max-width: 920px;
   }
 }
+
+/* 💻 노트북(세로 820px 이하) 전용 한눈에 쏙 들어오는 컴팩트 보정 */
+@media (max-height: 820px) and (min-width: 860px) {
+  .speaking-screen {
+    padding: 6px 16px 12px !important;
+    gap: 10px !important;
+    max-width: 920px !important;
+  }
+  .speaking-screen > div:first-child h1 {
+    font-size: 22px !important;
+  }
+  .speaking-screen > div:nth-child(2) {
+    padding: 16px 20px !important;
+    gap: 12px !important;
+    border-radius: 18px !important;
+  }
+  .speaking-screen > div:nth-child(2) span[style*="Gowun Batang"] {
+    font-size: clamp(26px, 3.8vw, 38px) !important;
+  }
+  .speaking-screen > div:nth-child(2) div[style*="IBM Plex Mono"] {
+    font-size: 18px !important;
+    padding: 5px 16px !important;
+    border-radius: 10px !important;
+  }
+  .speaking-screen button[style*="height: 64px"],
+  .speaking-screen button[style*="height:64px"] {
+    min-width: 52px !important;
+    height: 52px !important;
+    padding: 0 12px !important;
+    font-size: 12.5px !important;
+  }
+}

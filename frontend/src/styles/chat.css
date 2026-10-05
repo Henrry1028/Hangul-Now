@@ -169,7 +169,7 @@
 .chat-tutor-bar .chat-tutor-id { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 140px; }
 .chat-tutor-bar .chat-tutor-actions { display: flex; align-items: center; gap: 8px; }
 
-/* 튜터 정보: 로고 아래 사이드바 상단 카드 */
+/* 튜터 정보: 사이드바 하단 카드 (채팅 화면) */
 .chat-tutor-card {
   display: flex; flex-direction: column; gap: 8px;
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
@@ -224,3 +224,26 @@
   .chat-tutor-bar { padding: 10px 14px; gap: 8px 10px; }
   .chat-tutor-bar .chat-tutor-actions button { padding: 5px 11px !important; font-size: 12px !important; }
 }
+
+/* 💻 노트북(세로 820px 이하) 전용 한눈에 쏙 들어오는 컴팩트 보정 */
+@media (max-height: 820px) and (min-width: 860px) {
+  .chat-guide-pane {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+  }
+  .chat-guide-card {
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+  .chat-guide-card--featured {
+    padding: 14px 14px 16px !important;
+  }
+  .chat-guide-card--featured .chat-correction-item {
+    padding: 10px 12px !important;
+    gap: 6px !important;
+  }
+  .chat-quick-row {
+    padding: 6px 10px 0 !important;
+  }
+}
+

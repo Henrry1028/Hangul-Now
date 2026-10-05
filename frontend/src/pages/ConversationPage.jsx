@@ -112,7 +112,7 @@ function ConversationPage({ lang = 'ko', selectedTutorId = 'jiwoo', conversation
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--accent-soft)', border: '1px solid var(--line2)', borderRadius: '12px', padding: '10px 16px' }}>
-        <span style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: '.08em', color: 'var(--accent-ink)', flex: 'none' }}>{t.cvLevelLabel}</span>
+        <span style={{ font: "700 11.5px 'Pretendard',sans-serif", color: 'var(--accent-ink)', flex: 'none', whiteSpace: 'nowrap' }}>{t.cvLevelLabel}</span>
         <span style={{ fontSize: '13px', lineHeight: 1.5, color: 'var(--ink2)' }}>{levelDesc}</span>
       </div>
 

@@ -493,8 +493,8 @@ app.post("/api/writing/feedback", limitChat, async (req, res) => {
 // ============================================================
 app.post("/api/speaking/assess", limitChat, async (req, res) => {
   try {
-    const { targetSentence, romanization, userTranscript } = req.body;
-    const assessment = await evaluatePronunciation({ targetSentence, romanization, userTranscript });
+    const { targetSentence, romanization, pron, userTranscript, level } = req.body || {};
+    const assessment = await evaluatePronunciation({ targetSentence, romanization, pron, userTranscript, level });
     res.json(assessment);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -891,6 +891,11 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
           uid: u.uid,
           email: u.email || "비공개",
           displayName: u.displayName || fsData.displayName || (u.email ? u.email.split("@")[0] : "Learner"),
+          nickname: fsData.nickname || "",
+          nationality: fsData.nationality || "",
+          nationalityName: fsData.nationalityName || "",
+          gender: fsData.gender || "",
+          interests: Array.isArray(fsData.interests) ? fsData.interests : [],
           photoURL: u.photoURL || fsData.photoURL || "",
           selectedTutorId: fsData.selectedTutorId || "jiwoo",
           level: fsData.level || "beginner",
@@ -902,12 +907,17 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
         };
       });
     } else {
-      // 로컬/테스트용 시뮬레이션 회원 데이터
+      // 로컬/테스트용 시뮬레이션 회원 데이터 (온보딩 프로필 항목 포함)
       combinedUsers = [
         {
           uid: "demo_admin_01",
           email: req.adminUser?.email || "admin@hangulnow.com",
           displayName: "관리자 (Admin)",
+          nickname: "henry",
+          nationality: "US",
+          nationalityName: "United States",
+          gender: "male",
+          interests: ["kdrama", "kpop", "food", "travel", "work"],
           photoURL: "",
           selectedTutorId: "jiwoo",
           level: "advanced",
@@ -921,6 +931,11 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
           uid: "demo_user_02",
           email: "sarah.j@gmail.com",
           displayName: "Sarah Jenkins",
+          nickname: "Sarah",
+          nationality: "GB",
+          nationalityName: "United Kingdom",
+          gender: "female",
+          interests: ["kdrama", "daily", "beauty"],
           photoURL: "",
           selectedTutorId: "jiwoo",
           level: "intermediate",
@@ -934,6 +949,11 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
           uid: "demo_user_03",
           email: "kenji.sato@yahoo.co.jp",
           displayName: "Kenji Sato",
+          nickname: "Ken",
+          nationality: "JP",
+          nationalityName: "Japan",
+          gender: "male",
+          interests: ["sports", "food", "tech"],
           photoURL: "",
           selectedTutorId: "minho",
           level: "beginner",
@@ -947,6 +967,11 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
           uid: "demo_user_04",
           email: "elena.ro@outlook.com",
           displayName: "Elena Rostova",
+          nickname: "Lena",
+          nationality: "RU",
+          nationalityName: "Russia",
+          gender: "female",
+          interests: ["culture", "study", "travel"],
           photoURL: "",
           selectedTutorId: "seoyeon",
           level: "beginner",
@@ -960,6 +985,11 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
           uid: "demo_user_05",
           email: "marcus.lee@apple.com",
           displayName: "Marcus Lee",
+          nickname: "Marcus",
+          nationality: "CA",
+          nationalityName: "Canada",
+          gender: "male",
+          interests: ["tech", "work", "daily"],
           photoURL: "",
           selectedTutorId: "minho",
           level: "intermediate",
@@ -973,6 +1003,11 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
           uid: "demo_user_06",
           email: "chloe.dupont@paris.fr",
           displayName: "Chloé Dupont",
+          nickname: "Chloe",
+          nationality: "FR",
+          nationalityName: "France",
+          gender: "female",
+          interests: ["food", "beauty", "culture"],
           photoURL: "",
           selectedTutorId: "jiwoo",
           level: "beginner",
@@ -986,6 +1021,11 @@ app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
           uid: "demo_user_07",
           email: "david.wilson@gmail.com",
           displayName: "David Wilson",
+          nickname: "Dave",
+          nationality: "AU",
+          nationalityName: "Australia",
+          gender: "male",
+          interests: ["sports", "travel", "relation"],
           photoURL: "",
           selectedTutorId: "seoyeon",
           level: "advanced",

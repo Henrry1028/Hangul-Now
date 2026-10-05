@@ -10,6 +10,8 @@
 
 /* 모바일 전용 헤더 및 내비게이션 */
 .mobile-header-actions { display: none; }
+.header-brand-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mobile-menu-btn { display: none; }
 .desktop-header-nav { display: flex; align-items: center; gap: 20px; font-size: 14px; }
 
 @media(max-width: 860px) {
@@ -25,6 +27,7 @@
     gap: 8px !important;
   }
   .desktop-header-nav { display: none !important; }
+  .mobile-menu-btn { display: grid !important; }
   .mobile-header-actions {
     display: flex !important;
     align-items: center !important;
@@ -40,7 +43,7 @@
   backdrop-filter: blur(4px);
   z-index: 2000;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -53,11 +56,11 @@
   width: min(85vw, 330px);
   height: 100%;
   background: var(--bg);
-  border-left: 1px solid var(--line);
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.25);
+  border-right: 1px solid var(--line);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
-  transform: translateX(100%);
+  transform: translateX(-100%);
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
   box-sizing: border-box;
@@ -138,6 +141,36 @@ html, body { height: 100% !important; margin: 0 !important; overflow: hidden !im
   }
 }
 
+/* 💻 노트북 & 컴팩트 데스크톱 화면 최적화 (세로 820px 이하 또는 가로 1366px 이하) */
+@media (max-height: 820px) and (min-width: 860px) {
+  .marketing-header {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    padding: 4px clamp(12px, 2vw, 24px) !important;
+  }
+  .brand-logo--header {
+    height: 32px !important;
+    max-height: 34px !important;
+  }
+  .app-body-container {
+    height: calc(100vh - 52px) !important;
+    height: calc(100dvh - 52px) !important;
+  }
+  .desktop-header-nav {
+    gap: 14px !important;
+    font-size: 13.5px !important;
+  }
+  .home-screen, .tutors-screen, .listening-screen, .reading-screen, .speaking-screen, .conversation-screen, .record-screen {
+    padding: clamp(8px, 1.2vh, 14px) clamp(12px, 1.8vw, 24px) !important;
+    gap: clamp(8px, 1.2vh, 14px) !important;
+  }
+  .app-sidebar {
+    padding: 10px 10px !important;
+    gap: 10px !important;
+  }
+}
+
 .app-sidebar {
   position: sticky;
   top: 69px;
@@ -207,4 +240,76 @@ html, body { height: 100% !important; margin: 0 !important; overflow: hidden !im
   border-color: var(--accent) !important;
   color: var(--accent-ink) !important;
   transform: scale(1.05);
+}
+
+/* 헤더 계정 버튼 + 하위 메뉴 */
+.account-menu { position: relative; }
+.account-menu__trigger {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  font-size: 13.5px; font-weight: 600; cursor: pointer; padding: 6px 14px; border-radius: 999px;
+  transition: all .15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.account-menu__trigger.is-user {
+  border: 1.5px solid var(--line); background: var(--card);
+  padding: 4px 12px 4px 5px; font-size: 13.5px; font-weight: 600; gap: 8px;
+}
+.account-menu__trigger:hover {
+  background: var(--chip);
+  border-color: var(--accent);
+}
+.account-menu__trigger[aria-expanded="true"] { border-color: var(--accent); }
+.account-menu__trigger-label { max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-menu__avatar {
+  border-radius: 50%; background: #D7DCE3; color: #1C1F1E;
+  display: grid; place-items: center; font-weight: 700; flex: none; overflow: hidden;
+}
+.account-menu__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.account-menu__panel {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 1100;
+  width: 264px; box-sizing: border-box;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+  padding: 8px; display: flex; flex-direction: column;
+  animation: account-menu-in .16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes account-menu-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.account-menu__profile { display: flex; align-items: center; gap: 11px; padding: 10px 10px 12px; border-bottom: 1px solid var(--line2); margin-bottom: 6px; }
+.account-menu__profile--guest { flex-direction: column; align-items: stretch; gap: 8px; }
+.account-menu__profile-text { display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }
+.account-menu__name { font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-menu__email { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.account-menu__guest-hint { font-size: 12px; color: var(--sub); }
+.account-menu__login {
+  border: 0; background: var(--solid); color: var(--on-solid);
+  padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.account-menu__list { display: flex; flex-direction: column; gap: 1px; }
+.account-menu__list--footer { border-top: 1px solid var(--line2); margin-top: 6px; padding-top: 6px; }
+.account-menu__item {
+  display: flex; align-items: center; gap: 11px; width: 100%; box-sizing: border-box;
+  border: 0; background: none; color: var(--ink2); text-decoration: none;
+  padding: 9px 10px; border-radius: 9px; font-size: 14px; font-weight: 500; text-align: left; cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.account-menu__item svg { color: var(--sub); flex: none; }
+.account-menu__item:hover, .account-menu__item:focus-visible { background: var(--chip); color: var(--ink); outline: none; }
+.account-menu__item--danger, .account-menu__item--danger svg { color: var(--hot); }
+.account-menu__item--danger:hover { background: var(--hot-soft); color: var(--hot); }
+
+/* 사이드바 하단 슬롯(채팅 화면 튜터 정보): 하단 카드가 잘리지 않도록 기존 69px 오프셋을 없앤다 */
+.app-sidebar.has-footer-slot { top: 0 !important; overflow-x: hidden !important; }
+.sidebar-footer-slot { flex: none; }
+
+/* 앱(모바일) 헤더: 좁은 폰(≤400px)에서 '한국어'가 두 줄로 꺾이지 않게 */
+.mobile-header-actions button { white-space: nowrap; }
+@media (max-width: 400px) {
+  .marketing-header { padding: 0 12px !important; }
+  .header-brand-group { gap: 8px; }
+  .brand-logo--header { height: 24px !important; max-height: 26px !important; }
+  .mobile-header-actions { gap: 6px !important; }
+  .mobile-header-actions button { padding-left: 6px !important; padding-right: 6px !important; }
+  .mobile-header-actions .theme-toggle-btn { width: 32px; height: 32px; padding: 0 !important; }
+  .mobile-menu-btn { width: 34px !important; height: 34px !important; }
 }

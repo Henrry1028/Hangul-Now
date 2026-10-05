@@ -165,7 +165,7 @@ function RecordPage({ lang = 'ko', recordState, onRecordStateChange, audioReview
           <span style={{ font: "500 12px 'IBM Plex Mono',monospace", color: 'var(--hot)', letterSpacing: '.1em' }}>LEARNING ANALYTICS &amp; RANKING</span>
           <h1 style={{ margin: 0, font: "500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif", letterSpacing: '-.02em' }}>{t.recH1}</h1>
         </div>
-        <div style={{ display: 'flex', background: 'var(--seg)', borderRadius: '12px', padding: '4px', gap: '2px' }}>
+        <div className="record-view-tabs" style={{ display: 'flex', background: 'var(--seg)', borderRadius: '12px', padding: '4px', gap: '2px' }}>
           <button type="button" onClick={() => update({ recordViewTab: 'activity' })} style={segButton(view === 'activity')}><span>⚡</span><span>{L ? '실시간 학습 기록' : 'Activity Feed'}</span></button>
           <button type="button" onClick={() => update({ recordViewTab: 'analytics' })} style={segButton(s.recordViewTab === 'analytics')}><span>📊</span><span>{L ? '학습 분석 & 캘린더' : 'Analytics & Calendar'}</span></button>
           <button type="button" onClick={() => update({ recordViewTab: 'ranking' })} style={segButton(s.recordViewTab === 'ranking')}><span>🏆</span><span>{L ? '랭킹 & 업적' : 'Leaderboard & Badges'}</span></button>
@@ -176,7 +176,7 @@ function RecordPage({ lang = 'ko', recordState, onRecordStateChange, audioReview
         {stats.map((st) => (
           <div key={st.label} style={{ padding: '20px 16px 20px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '13px', color: 'var(--faint)' }}>{st.label}</span>
-            <span style={{ font: "500 32px 'Newsreader','Gowun Batang',serif" }}>{st.value}</span>
+            <span className="record-stat-value" style={{ font: "500 32px 'Newsreader','Gowun Batang',serif" }}>{st.value}</span>
             <span style={{ fontSize: '12.5px', color: 'var(--sub)' }}>{st.sub}</span>
           </div>
         ))}

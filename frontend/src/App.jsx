@@ -3,6 +3,8 @@ import SitePasswordGate from './components/SitePasswordGate.jsx';
 import AppShell from './components/AppShell.jsx';
 import IntroPage from './pages/IntroPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
+import NoticePage from './pages/NoticePage.jsx';
+import ResourcesPage from './pages/ResourcesPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import TutorsPage from './pages/TutorsPage.jsx';
 import ReadingPage from './pages/ReadingPage.jsx';
@@ -10,7 +12,7 @@ import WritingPage from './pages/WritingPage.jsx';
 import ListeningPage from './pages/ListeningPage.jsx';
 import RecordPage from './pages/RecordPage.jsx';
 import SpeakingPage from './pages/SpeakingPage.jsx';
-import ChatPage from './pages/ChatPage.jsx';
+import ChatPage, { ChatTutorHeader } from './pages/ChatPage.jsx';
 import ConversationPage from './pages/ConversationPage.jsx';
 import AdminPage, { buildAdminView } from './pages/AdminPage.jsx';
 import VideoClassPage, { VideoClassModals } from './pages/VideoClassPage.jsx';
@@ -107,7 +109,11 @@ function App() {
   const [adminFilter, setAdminFilter] = useState('all');
 
   const handleNavigate = (target) => {
-    if (target === 'intro' || target === 'about' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking' || target === 'chat' || target === 'conversation') {
+    if (target === 'admin') {
+      handleGoAdmin();
+      return;
+    }
+    if (target === 'intro' || target === 'about' || target === 'notice' || target === 'resources' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking' || target === 'chat' || target === 'conversation') {
       setCurrentPage(target);
       const viewport = document.querySelector('.app-main-viewport');
       if (viewport) viewport.scrollTop = 0;
@@ -244,7 +250,8 @@ function App() {
   });
   const toggleTranslation = useTranslationToggle(translationState, updateTranslationState, listeningState, conversation.state.cvTurns);
 
-  const unreadTotal = Object.values(chatState.unread || {}).reduce((a, b) => a + b, 0);
+  // 채팅 화면 + 데스크톱 사이드바가 열려 있으면 튜터 정보를 사이드바 하단(관리자 콘솔 자리)으로 옮긴다.
+  const chatTutorInSidebar = currentPage === 'chat' && wide && !sidebarCollapsed;
 
   return (
     <SitePasswordGate>
@@ -254,7 +261,6 @@ function App() {
       page={currentPage}
       wide={wide}
       selectedTutorId={selectedTutorId}
-      unreadTotal={unreadTotal}
       sidebarCollapsed={sidebarCollapsed}
       sidebarWidth={sidebarWidth}
       onToggleSidebar={handleToggleSidebar}
@@ -266,12 +272,21 @@ function App() {
       onGoAdmin={handleGoAdmin}
       videoClassAccess={videoClass.access}
       onGoVideoClass={handleGoVideoClass}
+      sidebarFooter={chatTutorInSidebar ? (
+        <ChatTutorHeader variant="sidebar" lang={lang} selectedTutorId={selectedTutorId} chatState={chatState} chat={chat} onNavigate={handleNavigate} />
+      ) : null}
     >
       {currentPage === 'intro' && (
         <IntroPage lang={lang} onNavigate={handleNavigate} />
       )}
       {currentPage === 'about' && (
         <AboutPage lang={lang} onNavigate={handleNavigate} />
+      )}
+      {currentPage === 'resources' && (
+        <ResourcesPage lang={lang} />
+      )}
+      {currentPage === 'notice' && (
+        <NoticePage lang={lang} />
       )}
       {currentPage === 'home' && (
         <HomePage
@@ -357,6 +372,7 @@ function App() {
           chatState={chatState}
           chat={chat}
           onNavigate={handleNavigate}
+          tutorInSidebar={chatTutorInSidebar}
         />
       )}
       {currentPage === 'conversation' && (
@@ -375,6 +391,7 @@ function App() {
             adminSearch,
             adminFilter,
             currentUser: auth.currentUser,
+            userProfile: auth.profile,
             selectedTutorId,
             userXp: activityState.userXp
           })}

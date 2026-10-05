@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import '../styles/videoclass.css';
 
 // Legacy "10 Video Class Platform" (preview/index.html 3220-3525) and its modals (731-972).
 // Styles are the legacy inline strings as the legacy template runtime renders them: its
@@ -69,6 +70,98 @@ function deriveBooking(b, effectiveAdmin, vc) {
   };
 }
 
+const won = (n) => (typeof n === 'number' ? `₩${n.toLocaleString('ko-KR')}` : '');
+const CapIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5z" /><path d="M6 12v5c3 2 9 2 12 0v-5" /></svg>
+);
+const LangIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 5c.5 3 3 6 6 7.5M11 5c-.5 3-3 6.5-7 8" /><path d="m13 21 4-9 4 9M14.5 18h5" /></svg>
+);
+const CalendarIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+);
+
+// 튜터 소개 영상 주소 → 재생 방식. 서버는 YouTube만 embed 주소로 바꿔 주므로 Vimeo·파일은 여기서 처리한다.
+export function tutorVideoSource(t) {
+  const url = String((t && (t.embedVideoUrl || t.videoUrl)) || '').trim();
+  if (!url) return null;
+  const yt = url.match(/(?:youtube\.com\/(?:embed\/|watch\?v=|v\/|shorts\/)|youtu\.be\/)([\w-]{11})/i);
+  if (yt) return { kind: 'youtube', id: yt[1], thumb: `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`, embed: `https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0` };
+  const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (vm) return { kind: 'vimeo', id: vm[1], thumb: null, embed: `https://player.vimeo.com/video/${vm[1]}?autoplay=1` };
+  if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url) && /^https?:\/\//i.test(url)) return { kind: 'file', src: url };
+  return null;
+}
+
+// 카드 오른쪽 소개 영상: 썸네일 + ▶ 를 누르면 그 자리에서 재생 (미리 iframe을 띄우지 않는다)
+function TutorVideo({ tutor: t }) {
+  const [playing, setPlaying] = useState(false);
+  const src = tutorVideoSource(t);
+  if (!src) return null;
+  const poster = src.thumb || t.photoURL;
+  return (
+    <aside className="vc-tutor-video" aria-label={`${t.name} 소개 영상`}>
+      <div className="vc-tutor-video-frame">
+        {src.kind === 'file' ? (
+          <video src={src.src} poster={t.photoURL} controls preload="metadata" />
+        ) : playing ? (
+          <iframe title={`${t.name} 소개 영상`} src={src.embed} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+        ) : (
+          <button type="button" className="vc-tutor-video-poster" onClick={() => setPlaying(true)} aria-label={`${t.name} 소개 영상 재생`}>
+            {poster && <img src={poster} alt="" loading="lazy" />}
+            <span className="vc-tutor-video-play" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
+            </span>
+          </button>
+        )}
+      </div>
+      <span className="vc-tutor-video-caption">▶ {t.name} 소개 영상</span>
+    </aside>
+  );
+}
+
+// 튜터 소개 카드: 사진 | 이름·언어·전문분야·소개 | 수업료·평점·예약
+function TutorCard({ tutor: t, onBook }) {
+  const [expanded, setExpanded] = useState(false);
+  const languages = t.languages || [];
+  const langText = languages.slice(0, 2).join(', ') + (languages.length > 2 ? ` +${languages.length - 2}` : '');
+  const highlight = (t.specialties || []).slice(0, 3).join(', ');
+  const days = (t.availableDays || []).join(' · ');
+  return (
+    <article className="vc-tutor-card">
+      <div className="vc-tutor-photo">
+        <img src={t.photoURL} alt={t.name} />
+        <span className="vc-tutor-online" title="온라인" />
+      </div>
+
+      <div className="vc-tutor-info">
+        <h3 className="vc-tutor-name">{t.name}</h3>
+        <div className="vc-tutor-meta"><CapIcon /><span>한국어</span></div>
+        {langText && <div className="vc-tutor-meta" title={languages.join(', ')}><LangIcon /><span>구사 언어: {langText}</span></div>}
+        {highlight && <span className="vc-tutor-pill" title={highlight}>✨ {highlight}</span>}
+        <p className={`vc-tutor-desc ${expanded ? '' : 'is-clamped'}`}>
+          {t.shortIntro && <b>{t.shortIntro}</b>}{t.shortIntro && t.bio ? ' — ' : ''}{t.bio}
+        </p>
+        <button type="button" className="vc-tutor-more" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>{expanded ? '접기' : '자세히 보기'}</button>
+        {days && <span className="vc-tutor-days"><CalendarIcon /> {days} 수업 가능</span>}
+      </div>
+
+      <div className="vc-tutor-side">
+        <div className="vc-tutor-price">
+          <strong>{won(t.pricePerSession?.min50)}</strong>
+          <span>50분 수업</span>
+        </div>
+        <div className="vc-tutor-stats">
+          <div className="vc-tutor-stat"><strong>{t.rating} ★</strong><span>리뷰 {t.reviewCount}개</span></div>
+          <div className="vc-tutor-stat"><strong>{t.lessonsCompleted}</strong><span>완료 수업</span></div>
+        </div>
+        <button type="button" className="vc-tutor-book" onClick={onBook}>수업 예약</button>
+        {t.pricePerSession?.min30 != null && <span className="vc-tutor-sub-price">30분 수업 {won(t.pricePerSession.min30)}</span>}
+      </div>
+    </article>
+  );
+}
+
 function VideoClassPage({ vc }) {
   const s = vc.state;
   const set = (field) => (e) => vc.update({ [field]: e.target.value });
@@ -125,51 +218,17 @@ function VideoClassPage({ vc }) {
             <span style={sx('font-size:12px;color:var(--faint)')}>FR-002 타임존 자동 변환 &amp; 이중 예약 방지 잠금 적용됨</span>
           </div>
 
-          <div style={sx('display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px')}>
-            {(s.vcTutors || []).map((t) => (
-              <div key={t.id} style={sx('background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:18px;box-shadow:0 4px 14px rgba(0,0,0,0.03);transition:transform .15s ease,box-shadow .15s ease')}>
-                <div style={sx('display:flex;flex-direction:column;gap:14px')}>
-                  <div style={sx('display:flex;align-items:center;gap:14px')}>
-                    <div style={sx('position:relative;width:56px;height:56px;flex:none')}>
-                      <img src={t.photoURL} alt={t.name} style={sx('width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid var(--line)')} />
-                      <span title="온라인" style={sx('position:absolute;bottom:0;right:0;width:14px;height:14px;background:#27AE60;border:2px solid var(--card);border-radius:50%')} />
-                    </div>
-                    <div style={sx('display:flex;flex-direction:column;gap:3px;min-width:0')}>
-                      <h3 style={sx('margin:0;font-size:16px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>{t.name}</h3>
-                      <div style={sx('display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)')}>
-                        <span style={sx('color:#F2C94C;font-weight:700')}>★ {t.rating}</span>
-                        <span>· 리뷰 {t.reviewCount}개</span>
-                        <span>· 완료 {t.lessonsCompleted}회</span>
-                      </div>
-                    </div>
-                  </div>
-                  <p style={sx('margin:0;font-size:13px;font-weight:600;color:var(--accent);line-height:1.4')}>“{t.shortIntro}”</p>
-                  <p style={sx('margin:0;font-size:12.5px;color:var(--sub);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden')}>{t.bio}</p>
-                  <div style={sx('display:flex;flex-wrap:wrap;gap:6px')}>
-                    {(t.specialties || []).slice(0, 3).map((sp) => (
-                      <span key={sp} style={sx('font-size:11px;padding:3px 8px;border-radius:6px;background:rgba(35,73,63,0.08);color:var(--accent);font-weight:600')}>#{sp}</span>
-                    ))}
-                  </div>
+          <section className="vc-tutor-section">
+            <h2 className="vc-tutor-section-title">목표와 일정에 맞는 한국어 튜터</h2>
+            <div className="vc-tutor-list">
+              {(s.vcTutors || []).map((t) => (
+                <div key={t.id} className="vc-tutor-row">
+                  <TutorCard tutor={t} onBook={() => vc.openArrangeModal(t)} />
+                  <TutorVideo tutor={t} />
                 </div>
-                <div style={sx('display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line2);padding-top:14px')}>
-                  <div style={sx('display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub)')}>
-                    <span>수업료 (회당)</span>
-                    <span style={sx('font-weight:700;color:var(--ink);font-size:13.5px')}>50분 ₩{t.pricePerSession?.min50}</span>
-                  </div>
-                  <div style={sx('display:grid;grid-template-columns:1fr 1fr;gap:8px')}>
-                    <button type="button" onClick={() => vc.openVideoModal(t)} style={sx('display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer')}>
-                      <span>▶</span>
-                      <span>소개 영상</span>
-                    </button>
-                    <button type="button" onClick={() => vc.openArrangeModal(t)} style={sx('display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:var(--accent);color:#fff;padding:10px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer')}>
-                      <span>🗓️</span>
-                      <span>수업 예약</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </section>
         </div>
       )}
 

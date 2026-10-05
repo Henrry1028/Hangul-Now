@@ -66,7 +66,7 @@ function correctionTag(ruleId, L) {
 }
 
 // 채팅 상대 튜터 정보 + 튜터 변경 / 영어 번역 토글.
-// variant="bar": 채팅창 위 가로 막대 (모바일·사이드바 접힘), variant="sidebar": 로고 아래 사이드바 상단 카드.
+// variant="bar": 채팅창 위 가로 막대 (모바일·사이드바 접힘), variant="sidebar": 사이드바 하단 카드.
 export function ChatTutorHeader({ lang = 'ko', selectedTutorId = 'jiwoo', chatState, chat, onNavigate, variant = 'bar' }) {
   const L = lang === 'ko' ? 1 : 0;
   const t = CHAT_TEXT[lang] || CHAT_TEXT.en;

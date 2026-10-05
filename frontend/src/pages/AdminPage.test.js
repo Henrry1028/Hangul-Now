@@ -26,8 +26,35 @@ describe('buildAdminView (legacy admin console derivations)', () => {
   });
 
   it('falls back to the signed-in user row and legacy KPI defaults without dashboard data', () => {
-    const v = buildAdminView({ adminData: null, adminSearch: '', adminFilter: 'all', currentUser: { uid: 'me', displayName: 'Me', email: 'me@x.com' }, selectedTutorId: 'jiwoo', userXp: 2840 });
+    const v = buildAdminView({
+      adminData: null,
+      adminSearch: '',
+      adminFilter: 'all',
+      currentUser: { uid: 'me', displayName: 'Me', email: 'me@x.com' },
+      userProfile: { nickname: 'henry', nationality: 'US', gender: 'male', interests: ['kdrama', 'food'] },
+      selectedTutorId: 'jiwoo',
+      userXp: 2840
+    });
     expect(v.users).toHaveLength(1);
+    expect(v.users[0]).toMatchObject({
+      nickname: 'henry',
+      gender: '남성',
+      nationalityCode: 'US'
+    });
+    expect(v.users[0].nationality).toContain('미국');
+    expect(v.users[0].interests).toHaveLength(2);
     expect([v.aiCalls, v.aiCost, v.jiwoo]).toEqual([142, '0.048', 2]);
+  });
+
+  it('searches by nickname, nationality, and interests', () => {
+    const profileUsers = [
+      { uid: 'u1', displayName: 'User One', nickname: 'henry', nationality: 'US', gender: 'male', interests: ['kdrama', 'kpop'], email: 'u1@x.com', selectedTutorId: 'jiwoo', level: 'beginner', xp: 500, createdAt: now, lastLoginAt: now, isActiveToday: true },
+      { uid: 'u2', displayName: 'User Two', nickname: 'sarah', nationality: 'GB', gender: 'female', interests: ['food', 'travel'], email: 'u2@x.com', selectedTutorId: 'minho', level: 'intermediate', xp: 800, createdAt: now, lastLoginAt: now, isActiveToday: true }
+    ];
+    const base = { adminData: { users: profileUsers, summary }, currentUser: null, selectedTutorId: 'jiwoo', userXp: 0 };
+    expect(buildAdminView({ ...base, adminSearch: 'henry', adminFilter: 'all' }).users.map((u) => u.uid)).toEqual(['u1']);
+    expect(buildAdminView({ ...base, adminSearch: '미국', adminFilter: 'all' }).users.map((u) => u.uid)).toEqual(['u1']);
+    expect(buildAdminView({ ...base, adminSearch: 'kpop', adminFilter: 'all' }).users.map((u) => u.uid)).toEqual(['u1']);
+    expect(buildAdminView({ ...base, adminSearch: 'travel', adminFilter: 'all' }).users.map((u) => u.uid)).toEqual(['u2']);
   });
 });
