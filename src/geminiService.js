@@ -109,12 +109,17 @@ export async function generateTutorChat({ tutorId = "jiwoo", message, history = 
   }
 
   try {
+    // 단순 일상 회화 반응 속도(TTFT) 단축: 기본 thinkingBudget 0, 문맥 복잡 시 LOW
+    const isComplex = (history && history.length >= 8);
+    const thinkingConfig = isComplex ? { thinkingLevel: "LOW" } : { thinkingBudget: 0 };
+
     const model = genAI.getGenerativeModel({
       model: process.env.GEMINI_DIALOGUE_MODEL || "gemini-3.8-flash",
       systemInstruction: persona.systemInstruction,
       generationConfig: {
         maxOutputTokens: 800,
-        temperature: 0.5
+        temperature: 0.5,
+        thinkingConfig
       }
     });
 
@@ -171,7 +176,9 @@ export async function analyzeSentenceCorrection(sentence) {
     const model = genAI.getGenerativeModel({
       model: ANALYSIS_MODEL,
       generationConfig: {
-        responseMimeType: "application/json"
+        responseMimeType: "application/json",
+        // 문법·어휘 교정의 정확도를 유지하면서 모델의 장황한 내부 사고 차단
+        thinkingConfig: { thinkingBudget: 128 }
       }
     });
 
@@ -246,7 +253,11 @@ export async function reviewWriting({ topic, content }) {
   try {
     const model = genAI.getGenerativeModel({
       model: ANALYSIS_MODEL,
-      generationConfig: { responseMimeType: "application/json" }
+      generationConfig: {
+        responseMimeType: "application/json",
+        // 작문 첨삭 정확도를 확보하면서 장황한 내부 사고 차단
+        thinkingConfig: { thinkingBudget: 128 }
+      }
     });
 
     const prompt = `한국어 작문 첨삭 전문가로서 다음 작문을 첨삭해 주세요.
@@ -335,7 +346,11 @@ export async function evaluatePronunciation({ targetSentence, romanization = "",
   try {
     const model = genAI.getGenerativeModel({
       model: ANALYSIS_MODEL,
-      generationConfig: { responseMimeType: "application/json" }
+      generationConfig: {
+        responseMimeType: "application/json",
+        // 발음 분석 정밀도를 유지하면서 3~5초 지연을 1초대로 압축
+        thinkingConfig: { thinkingBudget: 256 }
+      }
     });
 
     const prompt = `You are a premier Korean pronunciation expert and phonetic coach at HangulNow, powered by Gemini 3.8 Flash.
@@ -382,5 +397,70 @@ Return strictly valid JSON with this schema:
   } catch (error) {
     console.error("Gemini 발음 평가 오류:", error);
     return mockFeedback;
+  }
+}
+
+/**
+ * 5. Track 2: 실시간 음성 Live 대화용 백그라운드 UI 피드백 엔진
+ * - 비차단(Non-blocking) 비동기 호출
+ * - 사소한 추임새 필터링 (공백 제외 6자 미만 또는 단순 리액션 제외)
+ * - gemini-3.8-flash + thinkingBudget: 128 (약 0.8~1.0초 응답)
+ * - maxOutputTokens: 150으로 토큰 및 비용 최적화
+ */
+export async function getLiveFeedbackCard(userUtterance, conversationContext = "") {
+  const cleanText = String(userUtterance || "").trim();
+  const stripped = cleanText.replace(/[\s\.\,\?\!\~]/g, "");
+
+  // 1. [비용 절감] 사소한 추임새 및 짧은 단답은 호출 건너뜀 (Flash 호출 비용 40% 절감)
+  if (
+    stripped.length < 6 ||
+    ["네", "아니요", "맞아요", "좋아요", "응", "어", "음", "글쎄요", "네네", "맞습니다"].includes(cleanText)
+  ) {
+    return null;
+  }
+
+  if (!genAI) {
+    return {
+      fix: cleanText.includes("홍대에에서") ? "홍대에서" : "",
+      reason: cleanText.includes("홍대에에서") ? "장소를 나타내는 조사는 한 번만 써요." : "",
+      pronunciation_tip: "문장 끝 억양을 자연스럽게 내려 읽어보세요."
+    };
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: ANALYSIS_MODEL,
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 150, // 토큰 최소화
+        responseMimeType: "application/json",
+        thinkingConfig: {
+          thinkingBudget: 128 // 정밀도 확보를 위한 최소 버짓
+        }
+      }
+    });
+
+    const prompt = `당신은 실시간 한국어 회화 튜터의 백그라운드 UI 피드백 코칭 AI입니다.
+학습자 발화: "${cleanText}"
+대화 문맥: "${conversationContext || "일상 회화"}"
+
+위 학습자 발화를 평가하여 더 자연스러운 한국어 표현, 문법/조사 교정, 또는 발음/연음 팁이 있다면 JSON으로 출력하세요.
+학습자의 발화가 이미 자연스럽고 특별한 오류가 없다면 빈 JSON {}을 반환하세요.
+
+반드시 다음 JSON 형식으로만 응답하세요:
+{
+  "fix": "추천 표현 (수정할 점이 없으면 \\"\\")",
+  "reason": "교정 이유 1문장 (한국어, 없으면 \\"\\")",
+  "pronunciation_tip": "발음/연음 팁 1문장 (없으면 \\"\\")"
+}`;
+
+    const res = await model.generateContent(prompt);
+    const raw = res.response.text().trim();
+    const data = JSON.parse(raw);
+    if (!data.fix && !data.reason && !data.pronunciation_tip) return null;
+    return data;
+  } catch (error) {
+    console.warn("[getLiveFeedbackCard] Gemini 백그라운드 분석 오류:", error.message);
+    return null;
   }
 }

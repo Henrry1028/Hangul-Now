@@ -9,6 +9,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { buildLiveSetup, SCENARIOS, LIVE_MODEL as RP_MODEL, learningCardTool } from "./gemini/live-config.js";
 import { getCoveredTopics, recordLearned } from "./learningHistory.js";
 import { getTutorMemory } from "./tutorSession.js";
+import { getLiveFeedbackCard } from "./geminiService.js";
 
 const LIVE_MODEL = process.env.GEMINI_TUTOR_LIVE_MODEL || "gemini-3.8-live-extended-thinking";
 const TUTOR_THINKING_LEVEL = process.env.GEMINI_THINKING_LEVEL || "LOW";
@@ -160,44 +161,30 @@ ${mistakes}
 [말투 — 따뜻하고 친근하게]
 - 30년 동안 외국인 학생을 가르치며 쌓인 정과 여유가 묻어나는 말투로 말한다.
 - 학생이 말하면 먼저 그 말에 반응해 준다: "오~ 좋은데요?", "아이고, 고생하셨네요", "그러셨구나~"
-- 질문만 연달아 던지지 마라. 리액션 → 공감 → 질문 순서로 말한다.
-- 잘한 점을 자주 짚어 준다. 작은 것이라도 구체적으로 칭찬한다.
+- 리액션 → 공감 → 질문 순서로 말한다. 질문만 연달아 던지지 마라.
 - 딱딱한 사무 문장("알겠습니다.", "다음 질문입니다.")을 반복하지 마라.
+
+[필수 대화 원칙 — 초저지연 티키타카 및 Voice Turn Cap (엄격 준수)]
+1. 실제 전화 통화처럼 반응 속도가 생명입니다.
+2. 답변은 무조건 1~2문장(한국어 40자 이내)으로 아주 짧고 자연스럽게 말하세요. 혼자 길게 설명하거나 강의하지 마세요. (오디오 토큰 최소화)
+3. 절대로 문법이나 발음을 강의하듯 지적하거나 길게 설명하지 마세요. (상세 피드백은 화면 UI 패널이 전담합니다.)
+4. 학습자가 틀린 표현을 쓰면, 답변 문장 속에 올바른 표현을 자연스럽게 녹여서 되받아치세요 (Recasting).
+   예: 학생 "어제 비 와서 집에 있었어요" → 튜터 "아, 비가 오는 바람에 집에 계셨군요! 집에서 뭐 하셨어요?"
+5. 답변 마지막에는 항상 학습자가 말을 이어갈 수 있도록 짧은 질문을 덧붙이세요.
 
 [수업 진행]
 ${todayInterest
   ? `- 네가 먼저 인사하고, 위의 '오늘 수업 주제'로 바로 말을 건다. 주제를 학생에게 고르라고 묻지 않는다.`
   : `- 네가 먼저 "오늘은 어떤 얘기를 해 볼까요?"처럼 가볍게 말을 걸어 주제를 정하고, 대화를 계속 이끈다.`}
 - 학생이 말을 멈추면 반드시 이어질 질문을 던져 대화가 끊기지 않게 한다.
-- 한 번에 2~4문장 정도로 짧게 말한다. 혼자 길게 설명하지 않는다.
 - 학생이 영어로 물으면 짧게 영어로 답하되, 수업은 한국어로 되돌린다.
 - 학생이 한국어 설명을 이해하지 못하거나 모국어로 도움을 요청하면 ${feedbackLanguage}로 명확히 설명한 뒤 한국어 연습으로 돌아온다.
-- 학생이 "음…", "Mhm" 같은 소리만 내거나 막히면, 다그치지 말고 보기를 직접 준다:
+- 학생이 "음…", "Mhm" 같은 소리만 내거나 막히면 다정하게 보기를 직접 준다:
   "천천히 하셔도 괜찮아요. 머리가 아파요? 배가 아파요? 하나만 골라 보세요."
 
-[뜻이 안 통하는 실수는 반드시 짚는다]
-- 발음이 비슷한 단어를 헷갈려 뜻이 이상해지면 꼭 확인해 준다.
-  예: "열이 나요"를 "여름이 나요", "배가 아파요"를 "바다가 아파요"
-- 알아들은 척 그냥 넘어가지 마라. 다만 탓하지 말고 다정하게 되짚어 준다.
-  "아~ 열이 난다는 말씀이시죠? 여름이 아니라 열이에요. 열이 몇 도까지 올랐어요?"
-
-[실시간 피드백 — 아래 모든 영역을 다룬다]
-- 발음: 받침, 연음, 경음화, 억양에서 어색한 부분을 직접 소리 내어 시범 보인다.
-- 문법: 조사·어미·시제 오류를 바로잡고 왜 틀렸는지 한 줄로 설명한다.
-- 표현: 어색하지만 틀리지는 않은 문장을 한국 사람이 실제로 쓰는 표현으로 바꿔 준다.
-- 단어: 학생이 쓴 단어보다 더 알맞은 단어가 있으면 알려 주고 예문을 하나 든다.
-- 문화: 말투·높임말·상황에 맞는 예절처럼 문화적 배경이 필요한 부분을 알려 준다.
-- 용법: 비슷한 표현의 차이(예: 은/는과 이/가, -아서와 -니까)를 상황에 맞게 구분해 준다.
-
-[피드백 방식]
-- 칭찬 → 교정 → 다시 질문 순서로 자연스럽게 이어 간다.
-- 틀린 부분이 여러 개면 그 중 가장 중요한 한두 개만 고른다. 학생이 주눅 들지 않게 한다.
-- 교정할 때는 "지금 '홍대에 갔어요'라고 하셨죠? '홍대에서'가 더 자연스러워요"처럼 학생이 한 말을 그대로 인용한 뒤 고쳐 준다.
-
 [화면에 학습 자료 띄우기 — show_learning_card]
-- 문법·표현·단어를 설명하거나 학생 문장을 고쳐 줄 때는 말로 설명하면서 동시에 show_learning_card를 호출해 화면에 카드를 띄운다.
-- 학생이 눈으로도 확인할 수 있게, 설명한 내용에는 되도록 카드를 함께 띄운다.
-- 카드는 보조 자료다. 카드를 띄웠다고 말을 멈추지 말고 설명과 대화를 그대로 이어 간다.
+- 수업 중 특별히 강조할 핵심 문법이나 단어를 설명할 때만 보조적으로 show_learning_card를 호출합니다.
+- 카드를 호출하더라도 말은 1~2문장의 가벼운 대화 호흡을 멈추지 마세요.
 - 예문은 항상 2개, '한국어 문장 — 영어 뜻' 형식으로 넣는다.
 - 한 번에 카드 하나만. 같은 내용을 반복해서 띄우지 않는다.
 
@@ -278,6 +265,47 @@ export function attachLiveConversation(server, { path: wsPath = "/api/live" } = 
         upstream.send(JSON.stringify({ setup }));
       });
 
+      // Track 2: 비동기 UI 피드백 엔진을 위한 발화 버퍼 및 문맥 저장
+      let userUtteranceBuffer = "";
+      let tutorUtteranceBuffer = "";
+      const recentContextTurns = [];
+
+      const flushUserUtteranceAndAnalyze = () => {
+        const text = userUtteranceBuffer.trim();
+        userUtteranceBuffer = "";
+        if (!text) return;
+
+        recentContextTurns.push(`학생: ${text}`);
+        if (recentContextTurns.length > 6) recentContextTurns.shift();
+
+        // Track 2: 백그라운드 UI 피드백 엔진 비동기 호출 (Non-blocking)
+        const contextStr = recentContextTurns.slice(-4).join("\n");
+        getLiveFeedbackCard(text, contextStr)
+          .then((feedback) => {
+            if (!feedback || (!feedback.fix && !feedback.reason && !feedback.pronunciation_tip)) return;
+            const fix = feedback.fix || "";
+            const reason = feedback.reason || "";
+            const pronTip = feedback.pronunciation_tip || "";
+
+            const card = {
+              id: `fb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              title: fix ? `추천 표현: ${fix}` : "실시간 피드백",
+              explanation: reason || (pronTip ? `발음 팁: ${pronTip}` : "자연스러운 한국어 표현 팁"),
+              explanation_en: feedback.reason_en || reason || "",
+              examples: fix ? [`"${text}" → "${fix}"`] : [],
+              corrected_from: text,
+              corrected_to: fix,
+              category: pronTip ? "발음·표현" : "실시간 피드백",
+              pronunciation_tip: pronTip,
+              at: Date.now()
+            };
+            toClient({ type: "card", card });
+          })
+          .catch((err) => {
+            console.warn("[LiveFeedback] 백그라운드 피드백 생성 건너뜀:", err.message);
+          });
+      };
+
       upstream.on("message", (raw) => {
         let msg;
         try { msg = JSON.parse(raw.toString()); } catch { return; }
@@ -333,15 +361,37 @@ export function attachLiveConversation(server, { path: wsPath = "/api/live" } = 
         const sc = msg.serverContent;
         if (!sc) return;
 
-        if (sc.inputTranscription?.text) toClient({ type: "transcript", role: "user", text: sc.inputTranscription.text });
-        if (sc.outputTranscription?.text) toClient({ type: "transcript", role: "tutor", text: sc.outputTranscription.text });
-        if (sc.interrupted) toClient({ type: "interrupted" });
+        if (sc.inputTranscription?.text) {
+          userUtteranceBuffer += sc.inputTranscription.text;
+          toClient({ type: "transcript", role: "user", text: sc.inputTranscription.text });
+        }
+        if (sc.outputTranscription?.text) {
+          flushUserUtteranceAndAnalyze();
+          tutorUtteranceBuffer += sc.outputTranscription.text;
+          toClient({ type: "transcript", role: "tutor", text: sc.outputTranscription.text });
+        }
+        if (sc.interrupted) {
+          flushUserUtteranceAndAnalyze();
+          toClient({ type: "interrupted" });
+        }
 
         for (const part of sc.modelTurn?.parts || []) {
           if (part.inlineData?.data) toClient({ type: "audio", data: part.inlineData.data });
-          if (part.text) toClient({ type: "transcript", role: "tutor", text: part.text });
+          if (part.text) {
+            flushUserUtteranceAndAnalyze();
+            tutorUtteranceBuffer += part.text;
+            toClient({ type: "transcript", role: "tutor", text: part.text });
+          }
         }
-        if (sc.turnComplete) toClient({ type: "turnComplete" });
+        if (sc.turnComplete) {
+          flushUserUtteranceAndAnalyze();
+          if (tutorUtteranceBuffer.trim()) {
+            recentContextTurns.push(`튜터: ${tutorUtteranceBuffer.trim()}`);
+            if (recentContextTurns.length > 6) recentContextTurns.shift();
+            tutorUtteranceBuffer = "";
+          }
+          toClient({ type: "turnComplete" });
+        }
       });
 
       upstream.on("error", (err) => {
@@ -373,6 +423,8 @@ export function attachLiveConversation(server, { path: wsPath = "/api/live" } = 
       } else if (msg.type === "audioEnd") {
         upstream.send(JSON.stringify({ realtimeInput: { audioStreamEnd: true } }));
       } else if (msg.type === "text" && msg.text) {
+        userUtteranceBuffer = msg.text;
+        flushUserUtteranceAndAnalyze();
         upstream.send(JSON.stringify({
           clientContent: { turns: [{ role: "user", parts: [{ text: msg.text }] }], turnComplete: true }
         }));

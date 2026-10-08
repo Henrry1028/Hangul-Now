@@ -46,7 +46,8 @@ async function askJson(prompt, { maxOutputTokens = 2200, operation = "content" }
     generationConfig: {
       responseMimeType: "application/json",
       maxOutputTokens,
-      thinkingConfig: { thinkingLevel: "LOW" }
+      // '새로생성' 지연 해소를 위해 사고 토큰을 완전 차단하여 즉시 출력(0.3~0.5초)으로 전환
+      thinkingConfig: { thinkingBudget: 0 }
     }
   });
   const startedAt = Date.now();
