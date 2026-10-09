@@ -95,10 +95,11 @@ jobs:
       - name: Build Container Image via Cloud Build
         run: |
           IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloud-run-source-deploy/${{ env.SERVICE_NAME }}:${{ github.sha }}"
-          git archive --format=tar.gz -o hn-${{ github.sha }}.tgz ${{ github.sha }}
-          gcloud builds submit hn-${{ github.sha }}.tgz \
+          git archive --format=tar.gz -o hn.tgz HEAD
+          gcloud builds submit hn.tgz \
             --region ${{ env.REGION }} \
             --tag "$IMAGE_TAG"
+
 
 
       - name: Deploy to Google Cloud Run
