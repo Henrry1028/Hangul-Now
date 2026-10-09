@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
 import { profileInterests } from '../data/profileData.js';
 import OnboardingModal from './OnboardingModal.jsx';
-import AccountMenu from './AccountMenu.jsx';
+import AccountMenu, { LogoutIcon, MENU_TEXT, accountMenuItems } from './AccountMenu.jsx';
+import { COMMUNITY_TEXT, KAKAO_OPENCHAT } from '../data/communityData.js';
 import '../styles/shell.css';
 
 const MenuIcon = ({ size = 20 }) => (
@@ -22,7 +23,7 @@ const SHELL_TEXT = {
 // appended only for a server-verified admin (AGENTS.md section 14 keeps it from general users).
 // 헤더 '학습'은 오늘의 학습으로 이동하고, 사이드바의 학습 화면에 있는 동안 굵게 표시된다.
 // 사이드바 없이 전체 폭으로 보여 주는 화면 (헤더 메뉴의 독립 화면들)
-const NO_SIDEBAR_PAGES = ['intro', 'tutors', 'resources', 'videoclass', 'about', 'admin'];
+const NO_SIDEBAR_PAGES = ['intro', 'tutors', 'resources', 'videoclass', 'about', 'admin', 'notice'];
 // 데스크톱 사이드바에서 그룹 제목(학습 / 4대 영역 연습)을 숨기는 그룹
 const SIDEBAR_HIDDEN_LABELS = ['learn', 'practice'];
 const SIDEBAR_EXCLUDED = ['tutors', 'about', 'videoclass', 'resources'];
@@ -32,7 +33,7 @@ function navDefs(L, videoClassAccess) {
   return [
     { id: 'learn', label: L ? '학습' : 'LEARN', items: [['home', L ? '오늘의 학습' : 'Today', '오'], ['tutors', L ? '튜터' : 'Tutors', '튜'], ['chat', L ? '튜터 채팅' : 'Chat', '대']] },
     { id: 'practice', label: L ? '4대 영역 연습' : 'PRACTICE', items: [['listening', L ? '듣기 연습' : 'Listening', '듣'], ['reading', L ? '읽기 독해' : 'Reading', '읽'], ['writing', L ? '쓰기 조합' : 'Writing', '쓰'], ['speaking', L ? '말하기 코치' : 'Speaking', '말'], ['conversation', L ? '실시간 회화' : 'Conversation', '회']] },
-    { id: 'you', label: L ? '나의 기록' : 'YOU', items: [['record', L ? '학습 기록' : 'My progress', '기'], ['resources', L ? '자료실' : 'Resources', '자'], ['about', L ? '서비스 소개' : 'About us', '소']] },
+    { id: 'you', label: L ? '나의 기록' : 'YOU', items: [['record', L ? '학습 기록' : 'My progress', '기'], ['resources', L ? '자료실' : 'Resources', '자'], ['about', L ? '회사 소개' : 'About us', '소']] },
     ...(videoClassAccess ? [{ id: 'videoclass', label: L ? '화상 수업 매칭' : 'LIVE VIDEO CLASS', items: [['videoclass', L ? '1:1 화상수업' : '1:1 Live Class', '화']] }] : [])
   ];
 }
@@ -69,8 +70,8 @@ function AppShell({
     genderBg: raw.gender === 'female' ? '#E06B82' : '#4B7BEC'
   };
   const groups = navDefs(L, videoClassAccess);
-  // 데스크톱 사이드바(학습 메뉴)에는 학습 화면만: 튜터·자료실·서비스 소개·1:1 화상수업은 헤더 메뉴로 이동한다.
-  // 모바일 ☰ 메뉴·서브내비에는 그대로 유지. 항목이 모두 빠진 그룹(화상 수업 매칭)은 숨긴다.
+  // 데스크톱 사이드바(학습 메뉴)·모바일 서브내비에는 학습 화면만: 튜터·자료실·회사 소개·1:1 화상수업은 헤더(앱: ☰ 메뉴)로 이동한다.
+  // 항목이 모두 빠진 그룹(화상 수업 매칭)은 숨긴다.
   const sidebarGroups = groups
     .map((g) => ({ ...g, items: g.items.filter(([k]) => !SIDEBAR_EXCLUDED.includes(k)) }))
     .filter((g) => g.items.length > 0);
@@ -86,6 +87,15 @@ function AppShell({
   const asideRef = useRef(null);
   const handleRef = useRef(null);
   const mainRef = useRef(null);
+  const subnavRef = useRef(null);
+  // 앱 서브내비: 현재 페이지 버튼이 화면 밖이면 가운데로 가로 스크롤 (세로 스크롤은 건드리지 않는다)
+  useEffect(() => {
+    const bar = subnavRef.current;
+    const active = bar && bar.querySelector('[aria-current="page"]');
+    if (!bar || !active) return;
+    const left = active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2;
+    bar.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  }, [page, wide]);
   useEffect(() => {
     if (mainRef.current) mainRef.current.scrollTop = 0;
   }, [page]);
@@ -221,46 +231,77 @@ function AppShell({
               </div>
             </div>
 
-            {/* 내비게이션 그룹 */}
-            {groups.map((g) => (
-              <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ font: "500 10.5px 'IBM Plex Mono',monospace", letterSpacing: '.12em', color: 'var(--faint)', padding: '0 6px 4px' }}>{g.label}</span>
-                {g.items.map(navItem).map((n) => (
-                  <button type="button" key={n.k} onClick={go(n.k)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', border: 0, background: n.active ? 'var(--accent)' : 'transparent', color: n.active ? '#F5F2EB' : 'var(--ink2)', padding: '10px 12px', borderRadius: '10px', fontSize: '14px', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all .15s ease' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ width: '26px', height: '26px', borderRadius: '6px', border: `1px solid ${n.active ? 'rgba(245,242,235,.35)' : 'var(--line3)'}`, display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none', background: 'rgba(255,255,255,0.06)' }}>{n.glyph}</span>
-                      <span style={{ fontWeight: n.active ? '600' : '500' }}>{n.label}</span>
-                    </div>
+            {/* 주 메뉴: 웹 헤더와 같은 순서 (Home · 튜터 · 학습 · 자료실 · 화상수업 · 회사 소개). 학습 아래엔 학습 화면 8개 */}
+            <nav className="drawer-nav" aria-label={L ? '메뉴' : 'Menu'}>
+              <button type="button" className={`drawer-nav__item ${page === 'intro' ? 'is-active' : ''}`} onClick={go('intro')}>{t.navHow}</button>
+              <button type="button" className={`drawer-nav__item ${page === 'tutors' ? 'is-active' : ''}`} onClick={go('tutors')}>{t.navTutors}</button>
+              <div className="drawer-nav__group">
+                <span className={`drawer-nav__group-label ${LEARN_PAGES.includes(page) ? 'is-active' : ''}`}>{t.navLearn}</span>
+                {sidebarGroups.flatMap((g) => g.items).map(navItem).map((n) => (
+                  <button type="button" key={n.k} className={`drawer-nav__sub ${n.active ? 'is-active' : ''}`} onClick={go(n.k)} aria-current={n.active ? 'page' : undefined}>
+                    <span className="drawer-nav__glyph" aria-hidden="true">{n.glyph}</span>
+                    <span>{n.label}</span>
                   </button>
                 ))}
               </div>
-            ))}
-
-            {/* 계정 및 CTA 영역 */}
-            <div style={{ marginTop: 'auto', borderTop: '1px solid var(--line)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {auth.currentUser ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px', borderRadius: '10px', background: 'var(--chip)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#D7DCE3', color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 700, flex: 'none' }}>
-                      {userInitial}
-                    </div>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>{userName}</span>
-                  </div>
-                  <button type="button" onClick={auth.logout} style={{ border: 0, background: 'none', color: 'var(--faint)', fontSize: '12px', cursor: 'pointer' }}>로그아웃</button>
-                </div>
-              ) : (
-                <button type="button" onClick={auth.login} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', padding: '10px 12px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>
-                  <GoogleIcon />
-                  <span>{L ? 'Google 로그인' : 'Sign in with Google'}</span>
+              <button type="button" className={`drawer-nav__item ${page === 'resources' ? 'is-active' : ''}`} onClick={go('resources')}>{t.navResources}</button>
+              {videoClassAccess && (
+                <button type="button" className={`drawer-nav__item ${page === 'videoclass' ? 'is-active' : ''}`} onClick={() => { setMobileDrawerOpen(false); onGoVideoClass(); }}>
+                  {t.navVideoClass} <span className="drawer-nav__badge">Admin</span>
                 </button>
               )}
+              <button type="button" className={`drawer-nav__item ${page === 'about' ? 'is-active' : ''}`} onClick={go('about')}>{t.navAbout}</button>
+            </nav>
+
+            {/* 커뮤니티 참여 (웹: 채팅 화면 오른쪽 QR 카드) */}
+            <a className="drawer-community" href={KAKAO_OPENCHAT.url} target="_blank" rel="noopener noreferrer">
+              <span className="drawer-community__title">💬 {(COMMUNITY_TEXT[lang] || COMMUNITY_TEXT.en).title}</span>
+              <span className="drawer-community__body">{(COMMUNITY_TEXT[lang] || COMMUNITY_TEXT.en).body}</span>
+              <span className="drawer-community__cta">{(COMMUNITY_TEXT[lang] || COMMUNITY_TEXT.en).join} ↗</span>
+            </a>
+
+            {/* 계정: 웹 헤더 계정 메뉴와 같은 항목 + 관리자 콘솔(관리자만) + 로그인/로그아웃 */}
+            <div className="drawer-account">
+              {auth.currentUser ? (
+                <div className="drawer-account__user">
+                  <span className="drawer-account__avatar">
+                    {auth.currentUser.photoURL ? <img src={auth.currentUser.photoURL} alt="" /> : userInitial}
+                  </span>
+                  <span className="drawer-account__text">
+                    <span className="drawer-account__name">{userName}</span>
+                    {!!auth.currentUser.email && <span className="drawer-account__email">{auth.currentUser.email}</span>}
+                  </span>
+                </div>
+              ) : (
+                <button type="button" onClick={() => { setMobileDrawerOpen(false); auth.login(); }} className="drawer-account__login">
+                  <GoogleIcon />
+                  <span>{(MENU_TEXT[lang] || MENU_TEXT.en).loginGoogle}</span>
+                </button>
+              )}
+              <div className="drawer-account__list">
+                {accountMenuItems({ lang, auth, onNavigate: (target) => go(target)(), close: () => setMobileDrawerOpen(false) }).map((item) => (item.href ? (
+                  <a key={item.key} className="drawer-account__item" href={item.href} onClick={item.onClick}>{item.icon}<span>{item.label}</span></a>
+                ) : (
+                  <button key={item.key} type="button" className="drawer-account__item" onClick={item.onClick}>{item.icon}<span>{item.label}</span></button>
+                )))}
+                {auth.isAdmin && (
+                  <button type="button" className="drawer-account__item drawer-account__item--admin" onClick={() => { setMobileDrawerOpen(false); onGoAdmin(); }}>
+                    <span aria-hidden="true">👑</span><span>{(MENU_TEXT[lang] || MENU_TEXT.en).adminConsole}</span>
+                  </button>
+                )}
+                {auth.currentUser && (
+                  <button type="button" className="drawer-account__item drawer-account__item--danger" onClick={() => { setMobileDrawerOpen(false); auth.logout(); }}>
+                    <LogoutIcon /><span>{(MENU_TEXT[lang] || MENU_TEXT.en).logout}</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div className="app-body-container" style={{ display: 'flex', flex: 1, minHeight: 0, height: 'calc(100dvh - 62px)', background: 'var(--bg)', position: 'relative', overflow: 'hidden' }}>
-        {/* Home·튜터·자료실·화상수업·회사 소개·관리자 콘솔 화면에서는 왼쪽 사이드바를 띄우지 않는다 */}
+        {/* Home·튜터·자료실·화상수업·회사 소개·관리자 콘솔·공지사항 화면에서는 왼쪽 사이드바를 띄우지 않는다 */}
         {wide && !NO_SIDEBAR_PAGES.includes(page) && (
           <>
             {sidebarCollapsed && (
@@ -321,10 +362,11 @@ function AppShell({
         )}
 
         <main ref={mainRef} className="app-main-viewport" style={{ flex: 1, minWidth: 0, height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }}>
-          {!wide && page !== 'intro' && (
-            <div className="mobile-subnav-bar">
-              {groups.flatMap((g) => g.items).map(navItem).map((n) => (
-                <button type="button" key={n.k} onClick={go(n.k)} style={{ flex: 'none', border: `1px solid ${n.active ? 'var(--accent)' : 'var(--line)'}`, background: n.active ? 'var(--accent)' : 'var(--card)', color: n.active ? '#F5F2EB' : 'var(--ink2)', padding: '6px 12px', borderRadius: '999px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{n.label}</button>
+          {/* 앱 서브내비 = 웹 사이드바: 학습 화면에서만, 학습 항목만 */}
+          {!wide && LEARN_PAGES.includes(page) && (
+            <div className="mobile-subnav-bar" ref={subnavRef}>
+              {sidebarGroups.flatMap((g) => g.items).map(navItem).map((n) => (
+                <button type="button" key={n.k} onClick={go(n.k)} aria-current={n.active ? 'page' : undefined} style={{ flex: 'none', border: `1px solid ${n.active ? 'var(--accent)' : 'var(--line)'}`, background: n.active ? 'var(--accent)' : 'var(--card)', color: n.active ? '#F5F2EB' : 'var(--ink2)', padding: '6px 12px', borderRadius: '999px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{n.label}</button>
               ))}
             </div>
           )}

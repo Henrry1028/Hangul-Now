@@ -313,3 +313,57 @@ html, body { height: 100% !important; margin: 0 !important; overflow: hidden !im
   .mobile-header-actions .theme-toggle-btn { width: 32px; height: 32px; padding: 0 !important; }
   .mobile-menu-btn { width: 34px !important; height: 34px !important; }
 }
+
+/* ── 앱(모바일) ☰ 메뉴: 웹 헤더와 같은 주 메뉴 + 학습 하위 메뉴 + 커뮤니티 + 계정 ── */
+.drawer-nav { display: flex; flex-direction: column; gap: 2px; }
+.drawer-nav__item {
+  display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box;
+  border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer;
+  padding: 11px 12px; border-radius: 10px; font-size: 15px; font-weight: 600;
+}
+.drawer-nav__item:hover { background: var(--chip); }
+.drawer-nav__item.is-active { background: var(--accent); color: #F5F2EB; }
+.drawer-nav__badge { font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 6px; background: rgba(212,175,55,0.18); color: #B8860B; border: 1px solid rgba(212,175,55,0.4); }
+.drawer-nav__group { display: flex; flex-direction: column; gap: 1px; padding: 4px 0 6px; }
+.drawer-nav__group-label { padding: 9px 12px 5px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.drawer-nav__group-label.is-active { color: var(--accent-ink); }
+.drawer-nav__sub {
+  display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box;
+  border: 0; background: transparent; color: var(--ink2); text-align: left; cursor: pointer;
+  padding: 8px 12px 8px 18px; border-radius: 10px; font-size: 14px; font-weight: 500;
+}
+.drawer-nav__sub:hover { background: var(--chip); }
+.drawer-nav__sub.is-active { background: var(--accent); color: #F5F2EB; font-weight: 600; }
+.drawer-nav__glyph { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--line3); display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; }
+.drawer-nav__sub.is-active .drawer-nav__glyph { border-color: rgba(245,242,235,.35); }
+
+.drawer-community {
+  display: flex; flex-direction: column; gap: 4px; text-decoration: none;
+  background: var(--accent-soft); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+}
+.drawer-community__title { font-size: 14px; font-weight: 700; color: var(--ink); }
+.drawer-community__body { font-size: 12.5px; line-height: 1.5; color: var(--sub); }
+.drawer-community__cta { font-size: 13px; font-weight: 700; color: var(--accent-ink); margin-top: 2px; }
+
+.drawer-account { margin-top: auto; border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.drawer-account__user { display: flex; align-items: center; gap: 10px; padding: 4px 6px; min-width: 0; }
+.drawer-account__avatar { width: 36px; height: 36px; border-radius: 50%; background: #D7DCE3; color: #1C1F1E; display: grid; place-items: center; font-size: 13px; font-weight: 700; flex: none; overflow: hidden; }
+.drawer-account__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.drawer-account__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.drawer-account__name { font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drawer-account__email { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drawer-account__login {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.drawer-account__list { display: flex; flex-direction: column; gap: 1px; }
+.drawer-account__item {
+  display: flex; align-items: center; gap: 11px; width: 100%; box-sizing: border-box;
+  border: 0; background: none; color: var(--ink2); text-decoration: none; text-align: left; cursor: pointer;
+  padding: 9px 10px; border-radius: 9px; font-size: 14px; font-weight: 500;
+}
+.drawer-account__item svg { color: var(--sub); flex: none; }
+.drawer-account__item:hover { background: var(--chip); color: var(--ink); }
+.drawer-account__item--admin { color: var(--ink); font-weight: 700; }
+.drawer-account__item--danger, .drawer-account__item--danger svg { color: var(--hot); }

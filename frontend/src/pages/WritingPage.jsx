@@ -909,7 +909,7 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
                 </div>
                 <span className="writing-kb-mode-desc">
                   {isCji
-                    ? (L ? 'ㅣ·ㆍ·ㅡ 세 획으로 모음을, 같은 키를 여러 번 눌러 자음을 만들어요 (숫자키 1~0으로도 입력)' : 'Build vowels from ㅣ·ㆍ·ㅡ and tap a key repeatedly for consonants (number keys 1–0 work too)')
+                    ? (L ? `ㅣ·ㆍ·ㅡ 세 획으로 모음을, 같은 키를 여러 번 눌러 자음을 만들어요${isAppView ? '' : ' (숫자키 1~0으로도 입력)'}` : `Build vowels from ㅣ·ㆍ·ㅡ and tap a key repeatedly for consonants${isAppView ? '' : ' (number keys 1–0 work too)'}`)
                     : (L ? 'QWERTY 키보드 위 손가락 그림자 위치로 한글 2벌식 타자를 익혀요' : 'Learn Korean 2-Set typing by following the finger shadows on a QWERTY keyboard')}
                 </span>
               </div>

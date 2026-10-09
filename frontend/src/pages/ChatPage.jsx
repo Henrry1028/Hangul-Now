@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
 import { CHAT_TEXT, QUICK, fmtDate } from '../data/chatData.js';
 import { formatTime } from '../data/homeData.js';
+import { KAKAO_OPENCHAT } from '../data/communityData.js';
 import '../styles/chat.css';
 
 function TypingDots() {
@@ -17,7 +18,7 @@ function TypingDots() {
 // 문장 첨삭 아래 QR 코드 2칸. src(예: '/assets/qr/app.png')와 라벨을 채우면 표시되고, 비어 있으면 빈 칸으로 자리만 잡는다.
 // href를 넣으면 QR 아래에 링크로 표시된다.
 const CHAT_QR_CODES = [
-  { id: 'qr-1', src: '/assets/qr/kakao-openchat.png', label: { ko: '카카오 오픈채팅방', en: 'KakaoTalk Open Chat' }, href: 'https://open.kakao.com/o/p5mBaCPi' },
+  { id: 'qr-1', src: KAKAO_OPENCHAT.qr, label: KAKAO_OPENCHAT.label, href: KAKAO_OPENCHAT.url },
   { id: 'qr-2', src: '', label: { ko: '', en: '' }, href: '' }
 ];
 
@@ -104,6 +105,8 @@ export function ChatTutorHeader({ lang = 'ko', selectedTutorId = 'jiwoo', chatSt
 }
 
 function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = true, chatState, chat, onNavigate, tutorInSidebar = false }) {
+  // 앱(<860px)에는 오른쪽 '실시간 문장 첨삭' 패널이 없으므로, 고쳐 쓰기 카드에서 자세한 영어 설명을 펼쳐 본다.
+  const [openFix, setOpenFix] = useState({});
   const L = lang === 'ko' ? 1 : 0;
   const t = CHAT_TEXT[lang] || CHAT_TEXT.en;
   const s = chatState;
@@ -149,6 +152,8 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
             const trOpen = s.trAll || !!s.trOpen[trKey];
             const wantsTranslation = m.from === 't' && trOpen;
             const fixBrief = correctionBrief(m.fix);
+            const fixDetailEn = m.fix ? correctionDetailEn(m.fix) : '';
+            const fixKey = m.id || `fix-${i}`;
             const mt = first && i > 0 ? '8px' : '0';
             const rad = m.from === 't' ? (first ? '4px 14px 14px 14px' : '14px') : (first ? '14px 4px 14px 14px' : '14px');
             const timeLabel = formatTime(m.time, L);
@@ -187,6 +192,14 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
                         <span><span style={{ textDecoration: 'line-through', color: 'var(--hot)' }}>{m.fix.wrong}</span> → <b style={{ color: 'var(--accent-ink)' }}>{m.fix.right}</b></span>
                         {!!fixBrief.ko && <span style={{ color: 'var(--sub)', fontSize: '13px' }}>{fixBrief.ko}</span>}
                         {!!(s.trAll && fixBrief.en && fixBrief.en !== fixBrief.ko) && <span style={{ color: 'var(--sub)', fontSize: '12.5px', borderTop: '1px dashed var(--line3)', paddingTop: '6px' }}>{fixBrief.en}</span>}
+                        {!!fixDetailEn && (
+                          <>
+                            <button type="button" className="chat-fix-more" aria-expanded={!!openFix[fixKey]} onClick={() => setOpenFix((prev) => ({ ...prev, [fixKey]: !prev[fixKey] }))}>
+                              {openFix[fixKey] ? (L ? '설명 접기' : 'Hide details') : (L ? '자세한 설명 (English)' : 'Show details')} <span aria-hidden="true">{openFix[fixKey] ? '▴' : '▾'}</span>
+                            </button>
+                            {!!openFix[fixKey] && <span className="chat-fix-detail" lang="en">💡 {fixDetailEn}</span>}
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

@@ -50,12 +50,19 @@ test('every navigation target renders without errors or overflow', async ({ page
   await expect.poll(() => screenLabel(page)).toBe('02 Today');
   // 보이는 내비게이션(헤더 메뉴·데스크톱 사이드바·모바일 서브내비)에서만 찾는다. 튜터는 데스크톱에선 헤더에만 있다.
   const nav = page.locator('.desktop-header-nav, #app-sidebar, .mobile-subnav-bar');
+  const menuBtn = page.locator('.mobile-menu-btn');
   for (const [label, screen] of SCREENS) {
-    // 튜터·자료실 화면엔 사이드바가 없으므로, 메뉴가 안 보이면 헤더의 '학습(Learn)'으로 돌아간다.
-    if (!(await nav.locator('button:visible', { hasText: label }).count())) {
+    if (await nav.locator('button:visible', { hasText: label }).count()) {
+      await nav.locator('button:visible', { hasText: label }).first().click();
+    } else if (await menuBtn.isVisible()) {
+      // 앱: 서브내비에 없는 메뉴(튜터·회사 소개 등)는 ☰ 메뉴에서 연다.
+      await menuBtn.click();
+      await page.locator('.mobile-drawer-overlay.is-open .drawer-nav button', { hasText: label }).first().click();
+    } else {
+      // 웹: 튜터·자료실 화면엔 사이드바가 없으므로 헤더의 '학습(Learn)'으로 돌아간다.
       await page.locator('.desktop-header-nav button:visible', { hasText: 'Learn' }).click();
+      await nav.locator('button:visible', { hasText: label }).first().click();
     }
-    await nav.locator('button:visible', { hasText: label }).first().click();
     await expect.poll(() => screenLabel(page), { message: `${label} → ${screen}` }).toBe(screen);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     expect(overflow, `${screen} horizontal overflow`).toBe(false);
@@ -186,4 +193,26 @@ test('writing shows only the Cheonjiin keypad in the app layout (<860px)', async
     await expect(writing.getByRole('tab', { name: /PC Keyboard/ })).toBeVisible();
     await expect(writing.getByRole('tab', { name: /Mobile Cheonjiin/ })).toBeVisible();
   }
+});
+
+test('app layout: ☰ menu mirrors the web header and account menu; sub-nav only on learning pages', async ({ page }) => {
+  await page.goto('/');
+  const isApp = await page.evaluate(() => window.matchMedia('(max-width: 859px)').matches);
+  test.skip(!isApp, 'app (<860px) only');
+  await page.locator('.mobile-menu-btn').click();
+  const drawer = page.locator('.mobile-drawer-overlay.is-open');
+  const main = await drawer.locator('.drawer-nav > button').allInnerTexts();
+  expect(main.map((s) => s.trim())).toEqual(['Home', 'Tutors', 'Resources', 'About us']);
+  await expect(drawer.locator('.drawer-nav__sub')).toHaveCount(8);
+  for (const item of ['Change tutor', 'User guide', 'Notices', '1:1 Support']) await expect(drawer.getByText(item, { exact: true })).toBeVisible();
+  await expect(drawer.locator('.drawer-community')).toHaveAttribute('href', /open\.kakao\.com/);
+  await drawer.getByText('Notices', { exact: true }).click();
+  await expect.poll(() => screenLabel(page)).toBe('11 Notices');
+  await expect(page.locator('.mobile-subnav-bar')).toHaveCount(0);
+  await page.locator('.mobile-menu-btn').click();
+  await page.locator('.mobile-drawer-overlay.is-open .drawer-nav__sub', { hasText: 'My progress' }).click();
+  await expect.poll(() => screenLabel(page)).toBe('09 My progress');
+  const active = page.locator('.mobile-subnav-bar [aria-current="page"]');
+  await expect(active).toHaveText('My progress');
+  await expect.poll(async () => { const b = await active.boundingBox(); return !!b && b.x >= 0 && b.x + b.width <= 390; }).toBe(true);
 });
