@@ -11,7 +11,7 @@ If correcting an entry, add a dated correction note rather than silently replaci
 
 Status:
 
-`READY_TO_COMMIT`
+`COMPLETE` in commit `1514de7` (not deployed).
 
 Baseline:
 
@@ -32,6 +32,12 @@ Validation:
 - Korean 390 x 844 visual check PASS; the target and full Cheonjiin keypad are visible in the first viewport.
 - Scoped ESLint 0 errors; full ESLint is blocked by 27 pre-existing `SpeakingPage.jsx` errors outside this milestone.
 - `git diff --check` PASS.
+
+Result:
+
+- The app Writing screen now presents the target/composition card immediately above the Cheonjiin keypad.
+- The initial/vowel/final-jamo picker and secondary keyboard chrome are absent in app layout only.
+- Desktop Writing is unchanged.
 
 ---
 

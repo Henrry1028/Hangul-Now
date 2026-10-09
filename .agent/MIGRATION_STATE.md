@@ -4,12 +4,13 @@
 
 Status:
 
-`READY_TO_COMMIT`
+`COMPLETE` (commit `1514de7`; not deployed)
 
 - Baseline: `b8761e5` on `feat/writing-app-keyboard-focus`.
 - Scope: app-only Writing layout; remove the jamo picker from the app flow and keep the target/composition card adjacent to the Cheonjiin keypad.
 - Desktop Writing behavior, data contracts, and production traffic are out of scope.
 - Validation: Node 20 build PASS; Vitest 39/39; Playwright 13 passed / 1 expected skip; Korean 390 x 844 first-viewport visual check PASS.
+- Production traffic: unchanged. Deployment requires separate explicit approval.
 
 ---
 

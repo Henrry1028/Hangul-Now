@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`READY_TO_COMMIT`
+`COMPLETE` (commit `1514de7`)
 
 Baseline HEAD:
 
@@ -53,6 +53,11 @@ Result so far:
 - Korean 390 x 844 visual check PASS: target card y=205..440; keyboard card y=448..714; both fully visible without scrolling.
 - Scoped ESLint PASS with 0 errors (4 pre-existing unused-variable warnings in `WritingPage.jsx`). Full ESLint remains blocked by 27 pre-existing `SpeakingPage.jsx` `no-useless-escape` errors.
 - `git diff --check` PASS.
+- Feature commit complete: `1514de7` (`feat: focus app writing on Cheonjiin practice`).
+
+Next action:
+
+- None for this bounded task. Production deployment/traffic remains unchanged and requires separate explicit approval.
 
 ---
 
