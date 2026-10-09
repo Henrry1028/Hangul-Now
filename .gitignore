@@ -1,5 +1,16 @@
 node_modules/
+# Environment & Secrets
 .env
+.env.*
+!.env.example
+*.env
+*.env.*
+*.pem
+*.key
+*service_account*.json
+*service-account*.json
+*-sa-key*.json
+
 .venv/
 __pycache__/
 *.log
@@ -10,4 +21,3 @@ frontend/test-results/
 .firebase/
 scratch/
 *.tgz
-

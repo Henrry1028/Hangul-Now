@@ -1,0 +1,14 @@
+# AI Agent / Cursor Indexing Exclusion Rules
+# 로컬 개발 환경의 민감한 환경변수 및 인증 정보가 AI 컨텍스트에 노출되는 것을 차단합니다.
+
+.env
+.env.*
+!.env.example
+*.env
+*.env.*
+*.pem
+*.key
+*service_account*.json
+*service-account*.json
+*-sa-key*.json
+data/audio-reviews/
