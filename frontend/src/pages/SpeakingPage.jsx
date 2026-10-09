@@ -89,11 +89,14 @@ function SpeakingPage({
 
   // 음성 녹음 및 Web Speech Recognition 상태
   const [transcript, setTranscript] = useState('');
+  const [spokenText, setSpokenText] = useState('');
+  const [showEnglish, setShowEnglish] = useState(true);
   const [micActive, setMicActive] = useState(false);
   const [matchResult, setMatchResult] = useState(null);
   const recognitionRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const finalTranscriptRef = useRef('');
 
   // AI 전문가 피드백 상태
   const [feedbackLoading, setFeedbackLoading] = useState(false);
@@ -117,9 +120,22 @@ function SpeakingPage({
   const isNativeLoading = speech.isLoading(nativeSpeechKey);
   const isNativePlaying = speech.isPlaying(nativeSpeechKey);
 
+  // 🌟 [최적화] 현재 문장 및 다음 문장 자동 백그라운드 프리페치 (Native 버튼 지연시간 0초 단축)
+  useEffect(() => {
+    if (sent?.text) {
+      speech.prefetch(sent.text);
+    }
+    const nextSent = SENTS_SRC[(s.sIdx + 1) % SENTS_SRC.length];
+    if (nextSent?.text) {
+      speech.prefetch(nextSent.text);
+    }
+  }, [sent?.text, selectedTutorId, s.sIdx]);
+
   // 새 문장으로 전환 시 피드백 및 녹음 상태 초기화
   useEffect(() => {
     setTranscript('');
+    setSpokenText('');
+    finalTranscriptRef.current = '';
     setMatchResult(null);
     setAiFeedback(null);
     setFeedbackError('');
@@ -147,6 +163,11 @@ function SpeakingPage({
       if (data.error) throw new Error(data.error);
       if (data.topic) recordLearnedTopic('speaking', `${lv}:${data.topic}`, data.topic, userId);
       update({ genLoading: false, genError: '', genSpeaking: data, sIdx: 0, rec: 'idle' });
+      // 🌟 신규 문장 생성 즉시 1, 2번째 문장 백그라운드 프리페치
+      if (data?.sentences?.length) {
+        speech.prefetch(data.sentences[0].text);
+        if (data.sentences[1]) speech.prefetch(data.sentences[1].text);
+      }
     } catch (err) {
       update({ genLoading: false, genError: `새 자료를 만들지 못했어요: ${err.message}` });
     }
@@ -161,6 +182,8 @@ function SpeakingPage({
   // 녹음 시작 / 종료 처리
   const startRecording = async () => {
     setTranscript('');
+    setSpokenText('');
+    finalTranscriptRef.current = '';
     setMatchResult(null);
     setAiFeedback(null);
     setFeedbackError('');
@@ -193,6 +216,7 @@ function SpeakingPage({
         reco.onresult = (e) => {
           const resultText = Array.from(e.results).map((r) => r[0].transcript).join('');
           setTranscript(resultText);
+          finalTranscriptRef.current = resultText;
         };
         reco.onerror = (e) => {
           console.warn('[SpeechRecognition] Notice:', e.error);
@@ -222,8 +246,11 @@ function SpeakingPage({
       mediaRecorderRef.current = null;
     }
 
+    // 🌟 사용자가 실제로 발음한 내용 그대로 보존 및 평가
+    const spoken = (finalTranscriptRef.current || transcript || '').trim();
+    setSpokenText(spoken);
+
     // 발음 일치도 정밀 평가
-    const spoken = transcript.trim() || sent.text;
     const analysis = analyzePronunciation(sent.text, spoken, sent.weak);
     setMatchResult(analysis);
 
@@ -232,7 +259,7 @@ function SpeakingPage({
       module: '발음 코칭',
       icon: '🎙️',
       title: `AI 발음 코칭: ${sent.text}`,
-      detail: `발음 정확도: ${analysis.accuracy}% · ${sent.pron}`,
+      detail: spoken ? `발음 일치도: ${analysis.accuracy}% · 들린 내용: "${spoken}"` : `발음 일치도: ${analysis.accuracy}% · ${sent.pron}`,
       xp: 30,
       tag: `발음 ${analysis.accuracy}%`
     });
@@ -370,7 +397,7 @@ function SpeakingPage({
 
         {s.genError && <div style={{ background: 'var(--hot-soft)', border: '1px solid var(--hot)', borderRadius: '12px', padding: '12px 16px', fontSize: '13.5px' }}>{s.genError}</div>}
 
-        {/* 2. 볼드체로 변경하고 크기 키움 : ju-ma-re mwo hae-sseo-yo? */}
+        {/* 2. 볼드체 로마자 표기 : ju-ma-re mwo hae-sseo-yo? */}
         {showRomanization && (
           <div
             style={{
@@ -390,38 +417,154 @@ function SpeakingPage({
           </div>
         )}
 
+        {/* 🌟 1. 영어 번역 보기 영역 및 토글 버튼 */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+          {showEnglish && (
+            <div
+              style={{
+                fontFamily: "'Pretendard', sans-serif",
+                fontSize: 'clamp(17px, 2.2vw, 22px)',
+                fontWeight: 600,
+                color: 'var(--ink2)',
+                background: 'rgba(56, 189, 248, 0.08)',
+                padding: '8px 22px',
+                borderRadius: '14px',
+                border: '1px solid rgba(56, 189, 248, 0.22)',
+                maxWidth: '92%',
+                lineHeight: 1.45,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>🇺🇸</span>
+              <span>“{sent.en || '번역 없음'}”</span>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowEnglish((prev) => !prev)}
+            style={{
+              border: '1px solid var(--line2)',
+              background: showEnglish ? 'rgba(56, 189, 248, 0.12)' : 'var(--chip)',
+              color: showEnglish ? '#0284C7' : 'var(--sub)',
+              borderRadius: '10px',
+              padding: '4px 12px',
+              fontSize: '12.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              transition: 'all 0.18s ease'
+            }}
+          >
+            <span>{showEnglish ? '🇺🇸 영어 번역 숨기기' : '🇺🇸 영어 번역 보기'}</span>
+          </button>
+        </div>
+
         {/* sounds like 발음 가이드 */}
         <span style={{ fontSize: '16px', color: 'var(--sub)' }}>
-          {translationState.trOn && <>“{sent.en}” · </>}
           {t.soundsLike} <b style={{ color: 'var(--ink)', fontFamily: "'Gowun Batang',serif", fontSize: '17px' }}>{sent.pron.startsWith('[') ? sent.pron : `[${sent.pron}]`}</b>
         </span>
 
-        {/* 실시간 녹음 마이크 오디오 웨이브 시각화 (3번 시각 자료) */}
+        {/* 🌟 3. 녹음 진행 중: 실시간 음성 감지 및 발화 내용 프리뷰 */}
         {recording && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 24px', background: 'var(--hot-soft)', borderRadius: '30px', border: '1px solid var(--hot)' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--hot)', animation: 'pulse 1s infinite' }} />
-            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--hot)' }}>한국어 발화 감지 중…</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginLeft: '6px' }}>
-              {[18, 28, 14, 32, 22, 16, 26].map((h, i) => (
-                <div
-                  key={i}
-                  style={{
-                    width: '3.5px',
-                    height: `${h}px`,
-                    background: 'var(--hot)',
-                    borderRadius: '2px',
-                    animation: `pulse 0.8s ease-in-out infinite alternate ${i * 0.1}s`
-                  }}
-                />
-              ))}
+          <div style={{
+            width: '100%',
+            maxWidth: '560px',
+            padding: '12px 20px',
+            background: 'var(--hot-soft)',
+            border: '1px solid var(--hot)',
+            borderRadius: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--hot)', animation: 'pulse 1s infinite' }} />
+              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--hot)' }}>한국어 발화 감지 중…</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginLeft: '6px' }}>
+                {[18, 28, 14, 32, 22, 16, 26].map((h, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: '3.5px',
+                      height: `${h}px`,
+                      background: 'var(--hot)',
+                      borderRadius: '2px',
+                      animation: `pulse 0.8s ease-in-out infinite alternate ${i * 0.1}s`
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div style={{ fontSize: '17px', fontWeight: 700, color: 'var(--ink)' }}>
+              "{transcript || '목소리를 듣고 있습니다. 문장을 소리 내어 읽어보세요…'}"
             </div>
           </div>
         )}
 
-        {/* 사용자가 발화한 텍스트 실시간 미리보기 */}
-        {recording && transcript && (
-          <div style={{ fontSize: '15px', color: 'var(--ink)', fontWeight: 600, background: 'var(--bg)', padding: '8px 18px', borderRadius: '12px' }}>
-            "{transcript}"
+        {/* 🌟 3. 녹음 완료 후: 사용자가 발음한 내용이 어떻게 들렸는지 그대로 표시하는 카드 */}
+        {recDone && (
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '620px',
+              background: 'var(--bg)',
+              border: '1.5px solid var(--line2)',
+              borderRadius: '18px',
+              padding: '16px 22px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              textAlign: 'left',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--hot)', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                🎙️ 내가 발음한 내용 (What Was Heard)
+              </span>
+              <span style={{ fontSize: '12.5px', fontWeight: 700, color: currentScore >= 80 ? 'var(--accent)' : 'var(--hot)' }}>
+                발음 일치도 {currentScore}%
+              </span>
+            </div>
+
+            <div style={{
+              fontSize: 'clamp(19px, 2.5vw, 24px)',
+              fontWeight: 800,
+              fontFamily: "'Gowun Batang', serif",
+              lineHeight: 1.4,
+              color: spokenText ? 'var(--ink)' : 'var(--faint)',
+              padding: '4px 0'
+            }}>
+              {spokenText ? (
+                <span style={{ color: currentScore >= 80 ? 'var(--accent)' : 'var(--hot)' }}>
+                  "{spokenText}"
+                </span>
+              ) : (
+                <span style={{ fontSize: '15px', color: 'var(--faint)', fontStyle: 'italic', fontFamily: 'sans-serif' }}>
+                  음성이 또렷하게 감지되지 않았습니다. Record 버튼을 누르고 다시 읽어보세요.
+                </span>
+              )}
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '13.5px',
+              color: 'var(--sub)',
+              borderTop: '1px solid var(--line)',
+              paddingTop: '6px'
+            }}>
+              <span>목표 문장:</span>
+              <b style={{ color: 'var(--ink)', fontFamily: "'Gowun Batang', serif" }}>{sent.text}</b>
+            </div>
           </div>
         )}
 
@@ -521,8 +664,10 @@ function SpeakingPage({
                   {currentScore >= 90 ? '🌟 Excellent Match' : currentScore >= 80 ? '👍 Good Articulation' : '💪 Keep Practicing'}
                 </span>
                 <span style={{ fontSize: '17px', fontWeight: 700 }}>발음 일치도 평가</span>
-                <span style={{ fontSize: '13px', color: '#DCE5E0', lineHeight: 1.4 }}>
-                  {transcript ? `인식된 음성: "${transcript}"` : '정확한 억양과 연음으로 문장을 낭독하셨습니다.'}
+                <span style={{ fontSize: '13.5px', color: '#DCE5E0', lineHeight: 1.4 }}>
+                  {spokenText ? (
+                    <>내가 발음한 내용: <b style={{ color: '#50E3C2' }}>"{spokenText}"</b></>
+                  ) : '정확한 억양과 연음으로 문장을 낭독해 보세요.'}
                 </span>
               </div>
             </div>

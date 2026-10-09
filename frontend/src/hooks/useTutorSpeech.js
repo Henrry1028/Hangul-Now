@@ -6,8 +6,9 @@ const TUTOR_STYLE = {
   seoyeon: { rate: 0.9, pitch: 1 }, haneul: { rate: 0.78, pitch: 0.92 }
 };
 
-// 동일 세션 내 중복 TTS 호출 방지용 오디오 캐시
+// 동일 세션 내 중복 TTS 호출 방지용 오디오 캐시 및 진행 중인 프리페치 프로미스 맵
 const ttsBlobCache = new Map();
+const prefetchPromiseCache = new Map();
 
 // Legacy playTutorSpeech / stopTutorSpeech / speakWithDeviceVoice for screens whose
 // speech buttons have visual playing/loading state (Speaking, etc.).
@@ -68,6 +69,38 @@ export default function useTutorSpeech(tutorId) {
     window.speechSynthesis.speak(utterance);
   }, []);
 
+  // 🌟 백그라운드 TTS 사전 호출 (Pre-fetch) 캐시 생성
+  const prefetch = useCallback((text) => {
+    const speechText = String(text || '').trim();
+    if (!speechText) return;
+    const cacheKey = `${tutorRef.current}:${speechText}`;
+    if (ttsBlobCache.has(cacheKey) || prefetchPromiseCache.has(cacheKey)) return;
+
+    const controller = new AbortController();
+    const promise = (async () => {
+      try {
+        const response = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: speechText, tutorId: tutorRef.current }),
+          signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`TTS_HTTP_${response.status}`);
+        const audioBlob = await response.blob();
+        if (!audioBlob.size) throw new Error('TTS_EMPTY_AUDIO');
+        const url = URL.createObjectURL(audioBlob);
+        ttsBlobCache.set(cacheKey, url);
+        prefetchPromiseCache.delete(cacheKey);
+        return url;
+      } catch {
+        prefetchPromiseCache.delete(cacheKey);
+        return null;
+      }
+    })();
+
+    prefetchPromiseCache.set(cacheKey, promise);
+  }, []);
+
   const play = useCallback(async (text, key) => {
     const speechText = String(text || '').trim();
     if (!speechText) return;
@@ -88,6 +121,7 @@ export default function useTutorSpeech(tutorId) {
     const cacheKey = `${tutorRef.current}:${speechText}`;
     let objectUrl = ttsBlobCache.get(cacheKey);
 
+    // 🌟 [최적화 1] 이미 캐시된 오디오 URL이 있으면 즉시 0초 재생
     if (objectUrl) {
       try {
         const audio = new Audio(objectUrl);
@@ -100,6 +134,25 @@ export default function useTutorSpeech(tutorId) {
       } catch {
         // 캐시된 URL 만료 시 재요청
         ttsBlobCache.delete(cacheKey);
+      }
+    }
+
+    // 🌟 [최적화 2] 백그라운드 프리페치가 진행 중인 경우 기다려서 즉시 재생
+    if (prefetchPromiseCache.has(cacheKey)) {
+      try {
+        const prefetchedUrl = await prefetchPromiseCache.get(cacheKey);
+        if (prefetchedUrl) {
+          const audio = new Audio(prefetchedUrl);
+          audioRef.current = audio;
+          objectUrlRef.current = prefetchedUrl;
+          audio.onended = () => { if (statusRef.current.speechKey === key) syncStatus('idle', ''); };
+          audio.onerror = () => { if (statusRef.current.speechKey === key) syncStatus('idle', ''); };
+          await audio.play();
+          syncStatus('playing', key);
+          return;
+        }
+      } catch {
+        // 프리페치 실패 시 신규 요청으로 계속 진행
       }
     }
 
@@ -144,6 +197,7 @@ export default function useTutorSpeech(tutorId) {
   return {
     play,
     stop,
+    prefetch,
     status: speechState.status,
     activeKey: speechState.key,
     isPlaying: (k) => speechState.key === k && speechState.status === 'playing',
