@@ -1,0 +1,14 @@
+.gcloudignore
+.git
+.gitignore
+.geminiignore
+.cursorignore
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.venv/
+__pycache__/
+*.log
+*.tgz
+data/audio-reviews/
+scratch/
