@@ -74,7 +74,7 @@ jobs:
   deploy-backend:
     name: Build & Deploy Backend (Cloud Run)
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/hardening/post-launch' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
@@ -108,7 +108,7 @@ jobs:
             --timeout 3600 \
             --max-instances 1 \
             --allow-unauthenticated \
-            --set-secrets GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest
+            "--set-secrets=GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest"
 
       - name: Verify Deployment Health
         run: |
