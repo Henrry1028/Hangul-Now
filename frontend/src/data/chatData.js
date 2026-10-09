@@ -1,19 +1,42 @@
-// Verbatim legacy Chat data (preview/index.html 3556-3584).
-export const TODAY='2026-09-26';
+export const RETENTION_DAYS = 7;
+export const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
+export const CHAT_STORAGE_KEY = 'hn_chat_history_v1';
+export const DEFAULT_GREETING_TEXT = '안녕하세요! 오늘은 어떤 얘기를 해볼까요?';
+export const DEFAULT_GREETING_TR = 'Hello! What would you like to talk about today?';
+
+export function getTodayIso() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export const TODAY = getTodayIso();
+
+export function nowHM() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+export function createDefaultGreetingMessage(tutorId = 'jiwoo') {
+  const now = Date.now();
+  return {
+    id: `greet_${tutorId}_${now}`,
+    from: 't',
+    text: DEFAULT_GREETING_TEXT,
+    tr: DEFAULT_GREETING_TR,
+    time: nowHM(),
+    date: getTodayIso(),
+    timestamp: now
+  };
+}
 
 export const SEED = {
-  jiwoo: [
-    {from:'t', text:'에마 씨, 좋은 아침이에요! 주말에 뭐 할 거예요?', tr:'Good morning, Emma! What are you doing this weekend?', time:'09:12', date:TODAY},
-    {from:'me', text:'저는 친구하고 한강에 갈 거예요.', time:'09:14'},
-    {from:'t', text:'와, 좋겠다! 한강에서 뭐 하고 싶어요?', tr:'Oh, nice! What do you want to do at the Han River?', time:'09:14'},
-    {from:'me', text:'치킨을 먹고 자전거를 탈 거예요.', time:'09:15'},
-    {from:'me', text:'어제는 비가 많이 왔어서 못 갔어요.', time:'09:16', fix:{wrong:'왔어서', right:'와서', note:['-아서/어서 never takes the past tense: 오다 → 와서','-아서/어서 앞에는 과거형을 쓰지 않아요: 오다 → 와서']}},
-    {from:'t', text:'맞아요, 어제 비가 정말 많이 왔죠. 오늘은 맑아서 다행이에요.', tr:'Right, it really poured yesterday. Glad it’s clear today.', time:'09:17'},
-    {from:'t', text:'참, 한강에서 치킨 먹는 걸 “치맥”이라고 해요. 치킨 + 맥주!', tr:'By the way, eating chicken by the river is called “chimaek” — chicken + beer!', time:'09:17'}
-  ],
-  minho: [{from:'t', text:'월요일 회의 준비는 잘 되고 있어요? 오늘은 자기소개를 연습해 봐요.', tr:'How’s prep for Monday’s meeting going? Let’s practice introducing yourself.', time:'18:40', date:'2026-09-25'}],
-  seoyeon: [{from:'t', text:'어제 보낸 작문 첨삭했어요. ‘에’와 ‘에서’만 조심하면 완벽해요!', tr:'I corrected your writing. Just watch 에 vs 에서 and it’s perfect!', time:'21:05', date:'2026-09-24'}],
-  haneul: [{from:'t', text:'“했어요”는 [해써요]처럼 이어서 읽어요. 한번 녹음해 볼까요?', tr:'Read “했어요” linked together, like [hae-sseo-yo]. Want to try recording it?', time:'10:30', date:'2026-09-22'}]
+  jiwoo: [createDefaultGreetingMessage('jiwoo')],
+  minho: [createDefaultGreetingMessage('minho')],
+  seoyeon: [createDefaultGreetingMessage('seoyeon')],
+  haneul: [createDefaultGreetingMessage('haneul')]
 };
 
 export const REPLIES = [
@@ -54,15 +77,74 @@ export function fmtDate(iso, L) {
     : `${WD[d.getDay()][0]}, ${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
-export function nowHM() {
-  const d = new Date();
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+export function pruneOldMessages(messages, now = Date.now()) {
+  if (!Array.isArray(messages)) return [];
+  return messages.filter((m) => {
+    if (!m) return false;
+    // 과거 하드코딩 예시 대화(에마 씨 등)는 영구 제거
+    if (m.text && m.text.includes('에마 씨, 좋은 아침이에요')) return false;
+    if (m.text && m.text.includes('어제는 비가 많이 왔어서')) return false;
+
+    const ts = typeof m.timestamp === 'number'
+      ? m.timestamp
+      : (m.date ? new Date(`${m.date}T12:00:00`).getTime() : 0);
+    if (!ts || isNaN(ts)) return false;
+
+    return (now - ts) <= RETENTION_MS;
+  });
+}
+
+export function loadStoredChatMessages() {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return JSON.parse(JSON.stringify(SEED));
+  }
+  try {
+    const raw = window.localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(SEED));
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return JSON.parse(JSON.stringify(SEED));
+
+    const tutors = ['jiwoo', 'minho', 'seoyeon', 'haneul'];
+    const result = {};
+    const now = Date.now();
+
+    tutors.forEach((tid) => {
+      const list = Array.isArray(parsed[tid]) ? parsed[tid] : [];
+      const validList = pruneOldMessages(list, now);
+      if (!validList.length) {
+        result[tid] = [createDefaultGreetingMessage(tid)];
+      } else {
+        result[tid] = validList;
+      }
+    });
+
+    return result;
+  } catch (err) {
+    console.warn('[loadStoredChatMessages error]', err);
+    return JSON.parse(JSON.stringify(SEED));
+  }
+}
+
+export function saveStoredChatMessages(msgs) {
+  if (typeof window === 'undefined' || !window.localStorage || !msgs) return;
+  try {
+    const tutors = Object.keys(msgs);
+    const cleaned = {};
+    const now = Date.now();
+    tutors.forEach((tid) => {
+      const list = Array.isArray(msgs[tid]) ? msgs[tid] : [];
+      cleaned[tid] = pruneOldMessages(list, now);
+    });
+    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(cleaned));
+  } catch (err) {
+    console.warn('[saveStoredChatMessages error]', err);
+  }
 }
 
 export function createInitialChatState() {
   return {
-    msgs: JSON.parse(JSON.stringify(SEED)),
-    unread: { minho: 1, seoyeon: 1 },
+    msgs: loadStoredChatMessages(),
+    unread: {},
     typing: false,
     draft: '',
     trAll: false,

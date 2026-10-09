@@ -243,6 +243,14 @@ function App() {
     setActivityState(next);
   }, []);
   const chat = useChat(chatState, updateChatState, selectedTutorId, handleRecordActivity, auth.currentUser?.uid || null);
+
+  // 튜터 채팅 진입 시 및 튜터 변경 시 7일 보존 검사 및 기본 첫 인사 동기화
+  useEffect(() => {
+    if (currentPage === 'chat') {
+      chat.onTutorSelected(selectedTutorId);
+    }
+  }, [currentPage, selectedTutorId, chat]);
+
   // Legacy reviewMode is one app-wide flag (Writing's review toggle also drives Conversation).
   const conversation = useConversation({
     tutorId: selectedTutorId,

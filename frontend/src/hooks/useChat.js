@@ -1,6 +1,13 @@
 import { useMemo, useRef } from 'react';
 import { TUTORS } from '../data/tutorsData.js';
-import { REPLIES, nowHM } from '../data/chatData.js';
+import {
+  REPLIES,
+  nowHM,
+  getTodayIso,
+  pruneOldMessages,
+  createDefaultGreetingMessage,
+  saveStoredChatMessages
+} from '../data/chatData.js';
 import { authHeaders } from '../data/authHeaders.js';
 
 const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -58,7 +65,9 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
                 list[index] = { ...current, tr: String(data.translations[offset]).trim() };
               }
             });
-            return { msgs: { ...prev.msgs, [tid]: list } };
+            const nextMsgs = { ...prev.msgs, [tid]: list };
+            saveStoredChatMessages(nextMsgs);
+            return { msgs: nextMsgs };
           });
           await nextTick();
         }
@@ -91,29 +100,28 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `HTTP_${res.status}`);
         if (data.error) throw new Error(data.error);
-        updateChatState((prev) => ({
-          msgs: {
-            ...prev.msgs,
-            [tid]: (prev.msgs[tid] || []).map((message) => {
-              if (message.id !== messageId) return message;
-              const next = { ...message, correctionPending: false, correctionError: '', correctionChecked: true };
-              if (data.has_error && data.wrong_span && data.fixed) {
-                next.fix = {
-                  wrong: String(data.wrong_span).trim(),
-                  right: String(data.fixed).trim(),
-                  ruleId: String(data.rule_id || '').trim(),
-                  note: [
-                    String(data.explanation_en || data.explanation_ko || '').trim(),
-                    String(data.explanation_ko || data.explanation_en || '').trim()
-                  ],
-                  // 채팅 말풍선용 한 줄 요점 [en, ko]. 자세한 설명(note)은 '실시간 문장 첨삭' 패널에 영어로 표시한다.
-                  brief: [String(data.brief_en || '').trim(), String(data.brief_ko || '').trim()]
-                };
-              }
-              return next;
-            })
-          }
-        }));
+        updateChatState((prev) => {
+          const updatedList = (prev.msgs[tid] || []).map((message) => {
+            if (message.id !== messageId) return message;
+            const next = { ...message, correctionPending: false, correctionError: '', correctionChecked: true };
+            if (data.has_error && data.wrong_span && data.fixed) {
+              next.fix = {
+                wrong: String(data.wrong_span).trim(),
+                right: String(data.fixed).trim(),
+                ruleId: String(data.rule_id || '').trim(),
+                note: [
+                  String(data.explanation_en || data.explanation_ko || '').trim(),
+                  String(data.explanation_ko || data.explanation_en || '').trim()
+                ],
+                brief: [String(data.brief_en || '').trim(), String(data.brief_ko || '').trim()]
+              };
+            }
+            return next;
+          });
+          const nextMsgs = { ...prev.msgs, [tid]: updatedList };
+          saveStoredChatMessages(nextMsgs);
+          return { msgs: nextMsgs };
+        });
       } catch (err) {
         console.warn('[Correction API Error]', err);
         updateChatState((prev) => ({
@@ -139,17 +147,32 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
       if (!text) return;
       const targetTutorId = tutorRef.current;
       const targetTutor = TUTORS.find((tu) => tu.id === targetTutorId);
-      const msgId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-      const userMsg = { id: msgId, from: 'me', text, time: nowHM(), pending: true, correctionPending: true, correctionError: '' };
-      // Legacy quirk: raw TUTORS entries have no `name`, so activity titles always say 지우.
+      const now = Date.now();
+      const msgId = `msg_${now}_${Math.random().toString(36).slice(2, 6)}`;
+      const userMsg = {
+        id: msgId,
+        from: 'me',
+        text,
+        time: nowHM(),
+        date: getTodayIso(),
+        timestamp: now,
+        pending: true,
+        correctionPending: true,
+        correctionError: ''
+      };
       const tutorName = targetTutor?.name || '지우';
 
       recordRef.current?.({ type: 'chat', module: '튜터 대화', icon: '💬', title: `${tutorName} 튜터에게 메시지 전송`, detail: `"${text}"`, xp: 15, tag: '채팅 발송' });
-      updateChatState((prev) => ({
-        msgs: { ...prev.msgs, [targetTutorId]: [...(prev.msgs[targetTutorId] || []), userMsg] },
-        draft: '',
-        typing: tutorRef.current === targetTutorId ? true : prev.typing
-      }));
+      updateChatState((prev) => {
+        const nextList = [...(prev.msgs[targetTutorId] || []), userMsg];
+        const nextMsgs = { ...prev.msgs, [targetTutorId]: nextList };
+        saveStoredChatMessages(nextMsgs);
+        return {
+          msgs: nextMsgs,
+          draft: '',
+          typing: tutorRef.current === targetTutorId ? true : prev.typing
+        };
+      });
       nextTick().then(() => requestInlineCorrection(targetTutorId, msgId, text));
 
       const isMock = typeof window !== 'undefined' && (
@@ -162,10 +185,21 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
           const r = REPLIES[stateRef.current.ri % REPLIES.length];
           recordRef.current?.({ type: 'chat', module: '튜터 대화', icon: '💬', title: `${tutorName} 튜터 피드백 수신`, detail: r.text.slice(0, 80), xp: 20, tag: '답변 및 교정' });
           updateChatState((prev) => {
+            const replyNow = Date.now();
             const list = (prev.msgs[targetTutorId] || []).map((m) => (m.id === msgId ? { ...m, pending: false } : m));
-            list.push({ id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, from: 't', text: r.text, tr: r.tr, time: nowHM() });
+            list.push({
+              id: `msg_${replyNow}_${Math.random().toString(36).slice(2, 6)}`,
+              from: 't',
+              text: r.text,
+              tr: r.tr,
+              time: nowHM(),
+              date: getTodayIso(),
+              timestamp: replyNow
+            });
             const stillPending = list.some((m) => m.pending);
-            return { msgs: { ...prev.msgs, [targetTutorId]: list }, typing: tutorRef.current === targetTutorId ? stillPending : prev.typing, ri: prev.ri + 1 };
+            const nextMsgs = { ...prev.msgs, [targetTutorId]: list };
+            saveStoredChatMessages(nextMsgs);
+            return { msgs: nextMsgs, typing: tutorRef.current === targetTutorId ? stillPending : prev.typing, ri: prev.ri + 1 };
           });
           translateAfterReply(targetTutorId);
         }, 1600);
@@ -192,26 +226,41 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
         .then((data) => {
           recordRef.current?.({ type: 'chat', module: '튜터 대화', icon: '💬', title: `${tutorName} 튜터 피드백 수신`, detail: data.reply.trim().slice(0, 80), xp: 20, tag: '답변 및 교정' });
           updateChatState((prev) => {
+            const replyNow = Date.now();
             const updated = (prev.msgs[targetTutorId] || []).map((m) => (m.id === msgId ? { ...m, pending: false } : m));
             updated.push({
-              id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+              id: `msg_${replyNow}_${Math.random().toString(36).slice(2, 6)}`,
               from: 't',
               text: data.reply.trim(),
               tr: typeof data.translation === 'string' ? data.translation : '',
-              time: nowHM()
+              time: nowHM(),
+              date: getTodayIso(),
+              timestamp: replyNow
             });
             const stillPending = updated.some((m) => m.pending);
-            return { msgs: { ...prev.msgs, [targetTutorId]: updated }, typing: tutorRef.current === targetTutorId ? stillPending : prev.typing };
+            const nextMsgs = { ...prev.msgs, [targetTutorId]: updated };
+            saveStoredChatMessages(nextMsgs);
+            return { msgs: nextMsgs, typing: tutorRef.current === targetTutorId ? stillPending : prev.typing };
           });
           translateAfterReply(targetTutorId);
         })
         .catch((err) => {
           console.error('[Chat API Error]', err);
           updateChatState((prev) => {
+            const errNow = Date.now();
             const updated = (prev.msgs[targetTutorId] || []).map((m) => (m.id === msgId ? { ...m, pending: false } : m));
-            updated.push({ from: 't', text: '지금 답변을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.', time: nowHM() });
+            updated.push({
+              id: `msg_err_${errNow}`,
+              from: 't',
+              text: '지금 답변을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+              time: nowHM(),
+              date: getTodayIso(),
+              timestamp: errNow
+            });
             const stillPending = updated.some((m) => m.pending);
-            return { msgs: { ...prev.msgs, [targetTutorId]: updated }, typing: tutorRef.current === targetTutorId ? stillPending : prev.typing };
+            const nextMsgs = { ...prev.msgs, [targetTutorId]: updated };
+            saveStoredChatMessages(nextMsgs);
+            return { msgs: nextMsgs, typing: tutorRef.current === targetTutorId ? stillPending : prev.typing };
           });
         })
         .finally(() => clearTimeout(timeoutId));
@@ -231,12 +280,23 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
       if (next && !hasTr) translateMissing(tutorRef.current);
     };
 
-    // Legacy selectTutor side effects on chat state.
+    // 튜터를 변경하거나 선택했을 때의 처리
     const onTutorSelected = async (id) => {
       updateChatState((prev) => {
         const unread = { ...prev.unread };
         delete unread[id];
-        return { unread, chatTranslationError: '' };
+        const currentList = prev.msgs[id] || [];
+        const validList = pruneOldMessages(currentList);
+        let nextMsgs = prev.msgs;
+        // 기존에 대화한 적이 없거나 7일 만료되어 비어있는 경우 기본 첫 인사 메시지 자동 생성
+        if (!validList.length) {
+          nextMsgs = { ...prev.msgs, [id]: [createDefaultGreetingMessage(id)] };
+          saveStoredChatMessages(nextMsgs);
+        } else if (validList.length !== currentList.length) {
+          nextMsgs = { ...prev.msgs, [id]: validList };
+          saveStoredChatMessages(nextMsgs);
+        }
+        return { msgs: nextMsgs, unread, chatTranslationError: '' };
       });
       await nextTick();
       if (stateRef.current.trAll) translateMissing(id);
