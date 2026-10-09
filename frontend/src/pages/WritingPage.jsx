@@ -775,7 +775,7 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
   const guideTabStyle = (active) => ({ border: 0, background: active ? 'var(--accent)' : 'transparent', color: active ? '#ffffff' : 'var(--ink2)', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' });
 
   return (
-    <div className={`writing-screen ${isBuildTab(s) ? 'is-build' : ''}`} data-screen-label="07 Writing">
+    <div className={`writing-screen ${isBuildTab(s) ? 'is-build' : ''} ${isAppView ? 'is-app-view' : ''}`} data-screen-label="07 Writing">
       <div className="writing-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}><span style={{ font: "500 12px 'IBM Plex Mono',monospace", color: 'var(--hot)', letterSpacing: '.1em' }}>WRITING</span><h1 style={{ margin: 0, font: "500 clamp(30px,3.4vw,40px)/1.15 'Newsreader','Gowun Batang',serif", letterSpacing: '-.02em' }}><Interp>{t.wTitle}</Interp></h1></div>
       </div>
@@ -872,32 +872,34 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
               </div>
             </div>
 
-            <div className="writing-jamo-card" style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '20px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', boxShadow: '0 4px 16px rgba(0,0,0,0.03)' }}>
-              {jamoRows.map(([label, arr, key]) => (
-                <div className="writing-jamo-row" key={key} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--ink)' }}><Interp>{label}</Interp></span>
+            {!isAppView && (
+              <div className="writing-jamo-card" style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '20px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', boxShadow: '0 4px 16px rgba(0,0,0,0.03)' }}>
+                {jamoRows.map(([label, arr, key]) => (
+                  <div className="writing-jamo-row" key={key} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--ink)' }}><Interp>{label}</Interp></span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {arr.map(([ch, v]) => {
+                        const active = s[key] === v;
+                        return (
+                          <button
+                            type="button"
+                            key={`${key}-${ch}-${v}`}
+                            className="writing-jamo-key"
+                            onClick={() => update({ [key]: v })}
+                            style={{ minWidth: '44px', height: '44px', padding: '0 6px', borderRadius: '11px', border: `1.5px solid ${active ? 'var(--accent)' : 'var(--line)'}`, background: active ? 'var(--accent)' : 'var(--card)', color: active ? '#fff' : 'var(--ink)', font: `600 ${ch.length > 1 ? '13px' : '20px'} 'Pretendard',sans-serif`, cursor: 'pointer', transition: 'transform .1s' }}
+                          >
+                            <Interp>{ch}</Interp>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {arr.map(([ch, v]) => {
-                      const active = s[key] === v;
-                      return (
-                        <button
-                          type="button"
-                          key={`${key}-${ch}-${v}`}
-                          className="writing-jamo-key"
-                          onClick={() => update({ [key]: v })}
-                          style={{ minWidth: '44px', height: '44px', padding: '0 6px', borderRadius: '11px', border: `1.5px solid ${active ? 'var(--accent)' : 'var(--line)'}`, background: active ? 'var(--accent)' : 'var(--card)', color: active ? '#fff' : 'var(--ink)', font: `600 ${ch.length > 1 ? '13px' : '20px'} 'Pretendard',sans-serif`, cursor: 'pointer', transition: 'transform .1s' }}
-                        >
-                          <Interp>{ch}</Interp>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-              <span className="writing-jamo-note" style={{ fontSize: '13px', color: 'var(--faint)', lineHeight: 1.6, borderTop: '1px solid var(--line2)', paddingTop: '12px' }}><Interp>{t.jamoNote}</Interp></span>
-            </div>
+                ))}
+                <span className="writing-jamo-note" style={{ fontSize: '13px', color: 'var(--faint)', lineHeight: 1.6, borderTop: '1px solid var(--line2)', paddingTop: '12px' }}><Interp>{t.jamoNote}</Interp></span>
+              </div>
+            )}
           </div>
 
           <div className="writing-keyboard-card" style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '22px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 6px 20px rgba(0,0,0,0.03)' }}>

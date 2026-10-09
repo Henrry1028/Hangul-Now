@@ -7,6 +7,34 @@ If correcting an entry, add a dated correction note rather than silently replaci
 
 ---
 
+## H5 — Writing App Target + Cheonjiin Focus
+
+Status:
+
+`READY_TO_COMMIT`
+
+Baseline:
+
+- `b8761e5` on `feat/writing-app-keyboard-focus`.
+- Clean working tree and remote divergence `0 0` before the milestone.
+
+Bounded scope:
+
+- Remove the separate initial/vowel/final-jamo picker from app Writing.
+- Prioritize the target/composition card and Cheonjiin keypad in the first mobile viewport.
+- Preserve desktop Writing and all input/composition behavior.
+
+Validation:
+
+- Node 20 Vite production build PASS.
+- Full Vitest 39/39 PASS.
+- Focused Writing Playwright desktop/mobile 2/2 PASS; full regression 13 passed with 1 expected desktop-only skip.
+- Korean 390 x 844 visual check PASS; the target and full Cheonjiin keypad are visible in the first viewport.
+- Scoped ESLint 0 errors; full ESLint is blocked by 27 pre-existing `SpeakingPage.jsx` errors outside this milestone.
+- `git diff --check` PASS.
+
+---
+
 ## Foundation / Security
 
 ### Booking Security

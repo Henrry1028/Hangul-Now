@@ -186,9 +186,26 @@ test('writing shows only the Cheonjiin keypad in the app layout (<860px)', async
   const writing = page.locator('[data-screen-label="07 Writing"]');
   if (isApp) {
     await expect(writing.locator('.writing-cji-root')).toBeVisible();
+    await expect(writing.locator('.writing-jamo-card')).toHaveCount(0);
+    await expect(writing.locator('.writing-keyboard-header')).not.toBeVisible();
+    await expect(writing.locator('.writing-keyboard-footer')).not.toBeVisible();
     await expect(writing.locator('#virtual-keyboard-root')).toHaveCount(0);
     await expect(writing.getByRole('tab', { name: /PC Keyboard/ })).toHaveCount(0);
     await expect(writing.getByText('QWERTY Korean Setup Guide')).toHaveCount(0);
+    const target = await writing.locator('.writing-target-card').boundingBox();
+    const keyboard = await writing.locator('.writing-keyboard-card').boundingBox();
+    expect(target).not.toBeNull();
+    expect(keyboard).not.toBeNull();
+    expect(keyboard.y - (target.y + target.height)).toBeLessThanOrEqual(12);
+    expect(keyboard.y + keyboard.height).toBeLessThanOrEqual(844);
+
+    // 자모 선택 카드 없이도 강조된 천지인 키만 눌러 조합이 진행되어야 한다.
+    const composed = writing.locator('.writing-build-block');
+    await expect(composed).toHaveText('?');
+    for (let tap = 0; tap < 5 && (await composed.innerText()).trim() === '?'; tap += 1) {
+      await writing.locator('.key-target').click();
+    }
+    await expect(composed).not.toHaveText('?');
   } else {
     await expect(writing.getByRole('tab', { name: /PC Keyboard/ })).toBeVisible();
     await expect(writing.getByRole('tab', { name: /Mobile Cheonjiin/ })).toBeVisible();

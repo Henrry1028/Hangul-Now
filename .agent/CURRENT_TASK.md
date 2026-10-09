@@ -1,5 +1,61 @@
 # Current Task
 
+## Active Product Task — H5
+
+Milestone ID:
+
+`H5-WRITING-APP-KEYBOARD-FOCUS`
+
+Milestone Name:
+
+`WRITING APP TARGET + CHEONJIIN FOCUS`
+
+Status:
+
+`READY_TO_COMMIT`
+
+Baseline HEAD:
+
+`b8761e5af234ea3e6ade70243c42082e7b792cfb`
+
+Branch:
+
+`feat/writing-app-keyboard-focus` (branched from the current production follow-up line because `main` does not contain the live post-launch Writing/mobile changes)
+
+Expected files:
+
+- `frontend/src/pages/WritingPage.jsx`
+- `frontend/src/styles/writing.css`
+- `frontend/e2e/smoke.spec.js`
+- `.agent/CURRENT_TASK.md`
+- `.agent/MIGRATION_STATE.md`
+- `.agent/MIGRATION_LOG.md`
+
+Intended scope:
+
+- In the app layout (`<860px`), remove the separate initial/vowel/final-jamo picker from the learning flow.
+- Place the target/composition card immediately next to the Cheonjiin keypad and fit both into the initial mobile viewport as far as the shared app shell permits.
+- Remove secondary keyboard configuration/statistics chrome from the app layout while preserving desktop Writing behavior and all existing Cheonjiin input logic.
+
+First required action:
+
+- Implement the app-only render/layout change, then validate at the 390 x 844 Playwright viewport and a taller phone viewport.
+
+Result so far:
+
+- Handoff validation PASS: baseline clean; current source branch and origin were `0 0`; migration branch was `0 0`.
+- Source audit complete: the scroll delay is caused by the mobile stack `target card -> jamo card -> keyboard card`, with additional keyboard header/statistics chrome.
+- Implementation complete: app-only jamo picker removal and compact target-to-Cheonjiin flow; desktop render path preserved.
+- Node 20 Vite production build PASS.
+- Full Vitest PASS: 39/39.
+- Focused Playwright Writing PASS: desktop + mobile 2/2, including keypad-driven composition without the jamo picker.
+- Full Playwright regression PASS: 13 passed, 1 desktop-only skip.
+- Korean 390 x 844 visual check PASS: target card y=205..440; keyboard card y=448..714; both fully visible without scrolling.
+- Scoped ESLint PASS with 0 errors (4 pre-existing unused-variable warnings in `WritingPage.jsx`). Full ESLint remains blocked by 27 pre-existing `SpeakingPage.jsx` `no-useless-escape` errors.
+- `git diff --check` PASS.
+
+---
+
 ## Active Product Task — H3
 
 Milestone ID:
