@@ -224,3 +224,121 @@ export const TUTORS_INTRO = [
     }
   }
 ];
+
+export const MOBILE_UPDATE_NOTICE = {
+  ko: {
+    badge: '공지 NOTICE',
+    title: '모바일 홈 화면 앱(PWA) 최신 업데이트 반영 안내',
+    subtitle: '새로운 기능이 보이지 않거나 이전 화면이 유지될 때 스마트폰 기기별 조치 방법',
+    whyNotice: '💡 왜 필요한가요? 스마트폰의 홈 화면 앱(PWA)은 빠른 실행을 위해 이전 화면 데이터를 기기 내부에 보관(캐시)합니다. 최신 기능이 배포되었을 때 아래의 안내에 따라 1회 갱신해 주시면 즉시 최신 화면이 적용됩니다.',
+    tabs: {
+      all: '전체 보기',
+      android: '🤖 안드로이드 폰 (Galaxy / Chrome)',
+      ios: '🍎 애플 폰 (iPhone / iPad / Safari)'
+    },
+    android: {
+      name: '안드로이드 (Galaxy / Chrome / 삼성인터넷)',
+      method1: {
+        title: '방법 1. 가장 빠르고 확실한 방법 (홈 화면 재추가)',
+        steps: [
+          '스마트폰 바탕화면의 [Hangul Now] 아이콘을 1~2초간 길게 터치합니다.',
+          '나타나는 팝업 메뉴에서 [설치 삭제] 또는 [삭제]를 선택합니다.',
+          'Chrome 또는 삼성인터넷 브라우저를 열고 서비스 주소로 접속합니다.',
+          '브라우저 메뉴(우측 상단 ⋮ 또는 하단 ≡)에서 [홈 화면에 추가] 또는 [앱 설치]를 터치합니다.'
+        ]
+      },
+      method2: {
+        title: '방법 2. 브라우저 캐시 삭제 (아이콘 유지 시)',
+        steps: [
+          '브라우저 상단 주소창 왼쪽의 [자물쇠 🔒] 또는 사이트 설정 아이콘을 터치합니다.',
+          '[사이트 설정] → [데이터 삭제 및 재설정]을 터치합니다.',
+          '페이지를 새로고침(아래로 당겨서 새로고침)합니다.'
+        ]
+      }
+    },
+    ios: {
+      name: '애플 (iPhone / iPad / Safari)',
+      method1: {
+        title: '방법 1. 가장 빠르고 확실한 방법 (홈 화면 재추가)',
+        steps: [
+          '아이폰 홈 화면의 [Hangul Now] 아이콘을 1~2초간 길게 터치합니다.',
+          '나타나는 팝업 메뉴에서 [책갈피 삭제] 또는 [홈 화면에서 제거]를 터치합니다.',
+          'Safari(사파리) 브라우저를 열고 서비스 주소로 접속합니다.',
+          '하단 중앙의 [공유 버튼 (네모 상자 위로 화살표 ↑)]을 터치합니다.',
+          '메뉴를 아래로 스크롤하여 [+ 홈 화면에 추가]를 터치합니다.'
+        ]
+      },
+      method2: {
+        title: '방법 2. Safari 웹사이트 데이터 갱신',
+        steps: [
+          '아이폰 [설정] 앱 실행 → [Safari] 메뉴로 이동합니다.',
+          '맨 아래 [고급] → [웹사이트 데이터]를 터치합니다.',
+          '검색창에 "hangul"을 입력하고 나온 항목을 왼쪽으로 밀어 [삭제]합니다.',
+          'Safari를 다시 열고 새로고침합니다.'
+        ]
+      }
+    },
+    copyUrl: '접속 주소 복사',
+    copied: '주소가 클립보드에 복사되었습니다!',
+    toggleHide: '공지 접기',
+    toggleShow: '공지 펼치기'
+  },
+  en: {
+    badge: 'NOTICE',
+    title: 'How to Get the Latest App Updates on Mobile (PWA)',
+    subtitle: 'Step-by-step guide for Android & iOS when new features don’t show up immediately',
+    whyNotice: '💡 Why is this needed? Mobile Home Screen web apps (PWA) cache app data locally for instant loading. When a new version is released, following the quick steps below ensures you receive the latest updates immediately.',
+    tabs: {
+      all: 'Show All',
+      android: '🤖 Android (Galaxy / Chrome)',
+      ios: '🍎 Apple (iPhone / iPad / Safari)'
+    },
+    android: {
+      name: 'Android (Galaxy / Chrome / Samsung Internet)',
+      method1: {
+        title: 'Option 1. Recommended: Re-add to Home Screen',
+        steps: [
+          'Press and hold the [Hangul Now] app icon on your home screen.',
+          'Tap [Uninstall] or [Remove] from the popup menu.',
+          'Open Chrome or Samsung Internet and visit the app URL.',
+          'Tap the browser menu (⋮ at top-right or ≡ at bottom) and choose [Add to Home screen] or [Install app].'
+        ]
+      },
+      method2: {
+        title: 'Option 2. Clear Browser Cache',
+        steps: [
+          'Tap the [Lock 🔒] or settings icon on the left side of the address bar.',
+          'Go to [Site settings] → Tap [Clear & reset data].',
+          'Refresh the page.'
+        ]
+      }
+    },
+    ios: {
+      name: 'Apple (iPhone / iPad / Safari)',
+      method1: {
+        title: 'Option 1. Recommended: Re-add to Home Screen',
+        steps: [
+          'Press and hold the [Hangul Now] icon on your iPhone home screen.',
+          'Tap [Delete Bookmark] or [Remove from Home Screen].',
+          'Open Safari and navigate to the app URL.',
+          'Tap the [Share button (square with arrow pointing up ↑)] at the bottom.',
+          'Scroll down and tap [+ Add to Home Screen].'
+        ]
+      },
+      method2: {
+        title: 'Option 2. Reset Safari Website Data',
+        steps: [
+          'Open iPhone [Settings] app → Tap [Safari].',
+          'Scroll to the bottom, tap [Advanced] → [Website Data].',
+          'Search for "hangul" and swipe left to delete it.',
+          'Reopen Safari and refresh the web page.'
+        ]
+      }
+    },
+    copyUrl: 'Copy App URL',
+    copied: 'URL copied to clipboard!',
+    toggleHide: 'Collapse Notice',
+    toggleShow: 'Expand Notice'
+  }
+};
+

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { INTRO_TEXT, MOCKS, SKILLS, STEPS, TUTORS_INTRO } from '../data/introContent.js';
+import { INTRO_TEXT, MOCKS, SKILLS, STEPS, TUTORS_INTRO, MOBILE_UPDATE_NOTICE } from '../data/introContent.js';
 
 function IntroPage({ lang = 'ko', onNavigate }) {
   const [mockIdx, setMockIdx] = useState(0);
   const [mockOn, setMockOn] = useState(true);
+  const [noticeExpanded, setNoticeExpanded] = useState(true);
+  const [noticeTab, setNoticeTab] = useState('all');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let mockTt = null;
@@ -54,6 +57,18 @@ function IntroPage({ lang = 'ko', onNavigate }) {
     }
   };
 
+  const nt = MOBILE_UPDATE_NOTICE[lang] || MOBILE_UPDATE_NOTICE.ko;
+
+  const handleCopyUrl = () => {
+    const url = typeof window !== 'undefined' ? window.location.origin : 'https://hangul-now.web.app';
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      });
+    }
+  };
+
   return (
     <div data-screen-label="01 Landing">
       {/* 🌟 Hero Section */}
@@ -101,6 +116,190 @@ function IntroPage({ lang = 'ko', onNavigate }) {
               <img className="hun-pose scroll" src="/assets/훈이_scroll.png" alt="" />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 🌟 모바일 앱(PWA) 최신 업데이트 반영 안내 공지 */}
+      <section className="intro-notice-section">
+        <div className="intro-notice-card">
+          <div className="intro-notice-header">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="intro-notice-badge">📢 {nt.badge}</span>
+                <span style={{ font: "500 12px 'IBM Plex Mono',monospace", color: 'var(--faint)' }}>PWA Update Guide</span>
+              </div>
+              <h2 style={{ margin: 0, font: "600 clamp(19px,2.2vw,25px) 'Newsreader','Gowun Batang',serif", color: 'var(--ink)' }}>
+                {nt.title}
+              </h2>
+              <p style={{ margin: 0, fontSize: '14.5px', color: 'var(--sub)', lineHeight: 1.5 }}>
+                {nt.subtitle}
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div className="intro-notice-tabs">
+                <button
+                  type="button"
+                  className={`intro-notice-tab-btn ${noticeTab === 'all' ? 'is-active' : ''}`}
+                  onClick={() => setNoticeTab('all')}
+                >
+                  <span>📱</span>
+                  <span>{nt.tabs.all}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`intro-notice-tab-btn ${noticeTab === 'android' ? 'is-active' : ''}`}
+                  onClick={() => setNoticeTab('android')}
+                >
+                  <span>🤖</span>
+                  <span>{nt.tabs.android}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`intro-notice-tab-btn ${noticeTab === 'ios' ? 'is-active' : ''}`}
+                  onClick={() => setNoticeTab('ios')}
+                >
+                  <span>🍎</span>
+                  <span>{nt.tabs.ios}</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNoticeExpanded((prev) => !prev)}
+                style={{
+                  border: '1px solid var(--line)',
+                  background: 'var(--card)',
+                  color: 'var(--ink2)',
+                  borderRadius: '999px',
+                  padding: '7px 15px',
+                  fontSize: '12.5px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {noticeExpanded ? nt.toggleHide : nt.toggleShow}
+              </button>
+            </div>
+          </div>
+
+          {noticeExpanded && (
+            <div style={{ marginTop: '18px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* 왜 필요한가? 안내 박스 */}
+              <div style={{ background: 'var(--accent-soft)', border: '1px solid rgba(35,73,63,0.18)', borderRadius: '12px', padding: '12px 16px', fontSize: '13.5px', color: 'var(--ink)', lineHeight: 1.55 }}>
+                {nt.whyNotice}
+              </div>
+
+              {/* 기기별 가이드 그리드 */}
+              <div className="intro-notice-grid">
+                {/* 안드로이드 가이드 카드 */}
+                {(noticeTab === 'all' || noticeTab === 'android') && (
+                  <div className="intro-notice-panel">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--line)', paddingBottom: '10px' }}>
+                      <span style={{ fontSize: '20px' }}>🤖</span>
+                      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--ink)' }}>{nt.android.name}</h3>
+                    </div>
+
+                    {/* 안드로이드 방법 1 */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--accent)' }}>
+                        {nt.android.method1.title}
+                      </span>
+                      <ul className="intro-notice-step-list">
+                        {nt.android.method1.steps.map((st, i) => (
+                          <li key={i} className="intro-notice-step-item">
+                            <span className="intro-notice-step-num">{i + 1}</span>
+                            <span>{st}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* 안드로이드 방법 2 */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px dashed var(--line)', paddingTop: '12px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sub)' }}>
+                        {nt.android.method2.title}
+                      </span>
+                      <ul className="intro-notice-step-list">
+                        {nt.android.method2.steps.map((st, i) => (
+                          <li key={i} className="intro-notice-step-item" style={{ fontSize: '13px' }}>
+                            <span style={{ color: 'var(--faint)', marginRight: '6px' }}>•</span>
+                            <span>{st}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* 애플 iOS 가이드 카드 */}
+                {(noticeTab === 'all' || noticeTab === 'ios') && (
+                  <div className="intro-notice-panel">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--line)', paddingBottom: '10px' }}>
+                      <span style={{ fontSize: '20px' }}>🍎</span>
+                      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--ink)' }}>{nt.ios.name}</h3>
+                    </div>
+
+                    {/* iOS 방법 1 */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--hot)' }}>
+                        {nt.ios.method1.title}
+                      </span>
+                      <ul className="intro-notice-step-list">
+                        {nt.ios.method1.steps.map((st, i) => (
+                          <li key={i} className="intro-notice-step-item">
+                            <span className="intro-notice-step-num ios">{i + 1}</span>
+                            <span>{st}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* iOS 방법 2 */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px dashed var(--line)', paddingTop: '12px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sub)' }}>
+                        {nt.ios.method2.title}
+                      </span>
+                      <ul className="intro-notice-step-list">
+                        {nt.ios.method2.steps.map((st, i) => (
+                          <li key={i} className="intro-notice-step-item" style={{ fontSize: '13px' }}>
+                            <span style={{ color: 'var(--faint)', marginRight: '6px' }}>•</span>
+                            <span>{st}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 하단 URL 복사 액션 바 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--line)', paddingTop: '14px', marginTop: '6px' }}>
+                <span style={{ fontSize: '13px', color: 'var(--faint)' }}>
+                  🌐 {L ? '현재 접속 주소' : 'Current App URL'}: <strong style={{ color: 'var(--ink)' }}>{typeof window !== 'undefined' ? window.location.origin : 'https://hangul-now.web.app'}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyUrl}
+                  style={{
+                    border: '1px solid var(--line)',
+                    background: copied ? 'var(--accent)' : 'var(--card)',
+                    color: copied ? '#fff' : 'var(--ink)',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <span>{copied ? '✓' : '📋'}</span>
+                  <span>{copied ? nt.copied : nt.copyUrl}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
