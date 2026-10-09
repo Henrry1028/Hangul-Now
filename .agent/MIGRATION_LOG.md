@@ -7,6 +7,38 @@ If correcting an entry, add a dated correction note rather than silently replaci
 
 ---
 
+## H6 — Listening Speed Steps + A-B Repeat
+
+Status:
+
+`READY_TO_COMMIT`
+
+Baseline:
+
+- `4b9037e` on `feat/listening-playback-loop`.
+- Clean working tree and remote divergence `0 0` before the milestone.
+
+Bounded scope:
+
+- Use five Listening speed steps: 0.8, 0.9, 1.0, 1.1, and 1.2.
+- Add seekable server-audio progress and A-B section repeat controls.
+- Preserve generation, TTS prefetch, transcript, quizzes, and device-speech fallback.
+
+Validation:
+
+- Node 20 production build PASS.
+- Full Vitest 42/42 PASS.
+- Latest real-WAV Listening Playwright desktop/mobile 2/2 PASS, including automatic B-to-A looping.
+- Latest navigation Playwright desktop/mobile 2/2 PASS after adapting the smoke harness to dismiss the concurrently added PWA update banner.
+- Korean 390 x 844 visual check PASS with five speeds and A/B controls fully visible.
+- Scoped ESLint 0 errors; one baseline prefetch-effect dependency warning remains.
+
+Concurrent baseline:
+
+- Another process pushed PWA/Speaking commits `6a22524`, `f67da12`, and `6234954` during validation. They are preserved and do not overlap the H6 product files.
+
+---
+
 ## H5 — Writing App Target + Cheonjiin Focus
 
 Status:

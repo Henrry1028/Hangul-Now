@@ -6,7 +6,15 @@ import '../styles/listening.css';
 import { authHeaders } from '../data/authHeaders.js';
 
 const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
+const LISTENING_SPEEDS = [0.8, 0.9, 1, 1.1, 1.2];
+const MIN_REPEAT_SECONDS = 0.35;
 const errorBoxStyle = { background: 'var(--hot-soft)', border: '1px solid var(--hot)', borderRadius: '12px', padding: '12px 16px', fontSize: '13.5px' };
+
+const formatAudioTime = (seconds) => {
+  const safe = Math.max(0, Number.isFinite(Number(seconds)) ? Number(seconds) : 0);
+  const rounded = Math.round(safe);
+  return `${Math.floor(rounded / 60)}:${String(rounded % 60).padStart(2, '0')}`;
+};
 
 function ListeningPage({
   lang = 'ko',
@@ -97,7 +105,7 @@ function ListeningPage({
   const stopListeningAudio = (reset = true) => {
     releaseListeningAudio();
     clearPrefetch();
-    if (reset) update({ playing: false, prog: 0, listeningStatus: 'idle', listeningDuration: 0, listeningProvider: '', listeningSource: '' });
+    if (reset) update({ playing: false, prog: 0, listeningStatus: 'idle', listeningDuration: 0, listeningProvider: '', listeningSource: '', repeatStart: null, repeatEnd: null, repeatEnabled: false });
   };
 
   // Legacy go(): leaving Listening stops and resets playback.
@@ -124,7 +132,7 @@ function ListeningPage({
       update({ prog: Math.min(1, elapsed / duration) });
     };
     utterance.onstart = () => {
-      update({ playing: true, listeningStatus: 'playing', listeningDuration: duration, listeningProvider: 'device', listeningError: '' });
+      update({ playing: true, listeningStatus: 'playing', listeningDuration: duration, listeningProvider: 'device', listeningError: '', repeatStart: null, repeatEnd: null, repeatEnabled: false });
       clearListeningTimer();
       timerRef.current = setInterval(tick, 200);
     };
@@ -233,6 +241,11 @@ function ListeningPage({
     }
 
     if (audioRef.current && st.listeningSource === speechSource && audioRef.current.currentTime < audioRef.current.duration) {
+      const repeatStart = Number(st.repeatStart);
+      const repeatEnd = Number(st.repeatEnd);
+      if (st.repeatEnabled && Number.isFinite(repeatStart) && Number.isFinite(repeatEnd) && repeatEnd > repeatStart && audioRef.current.currentTime >= repeatEnd) {
+        audioRef.current.currentTime = repeatStart;
+      }
       audioRef.current.playbackRate = st.speed || 1;
       await audioRef.current.play();
       update({ playing: true, listeningStatus: 'playing', listeningError: '' });
@@ -262,10 +275,29 @@ function ListeningPage({
       };
       audio.ontimeupdate = () => {
         if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          const current = stateRef.current;
+          const repeatStart = Number(current.repeatStart);
+          const repeatEnd = Number(current.repeatEnd);
+          if (current.repeatEnabled && Number.isFinite(repeatStart) && Number.isFinite(repeatEnd) && repeatEnd > repeatStart && audio.currentTime >= repeatEnd) {
+            audio.currentTime = repeatStart;
+            update({ prog: repeatStart / audio.duration, listeningDuration: audio.duration });
+            return;
+          }
           update({ prog: Math.min(1, audio.currentTime / audio.duration), listeningDuration: audio.duration });
         }
       };
-      audio.onended = () => update({ playing: false, prog: 1, listeningStatus: 'ended' });
+      audio.onended = () => {
+        const current = stateRef.current;
+        const repeatStart = Number(current.repeatStart);
+        const repeatEnd = Number(current.repeatEnd);
+        if (current.repeatEnabled && Number.isFinite(repeatStart) && Number.isFinite(repeatEnd) && repeatEnd > repeatStart) {
+          audio.currentTime = repeatStart;
+          audio.play().catch(() => update({ playing: false, listeningStatus: 'paused' }));
+          update({ playing: true, prog: repeatStart / Math.max(audio.duration, 1), listeningStatus: 'playing' });
+          return;
+        }
+        update({ playing: false, prog: 1, listeningStatus: 'ended' });
+      };
       audio.onerror = () => update({ playing: false, listeningStatus: 'error', listeningError: '서버 음성을 재생하지 못했습니다.' });
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
         update({ listeningDuration: audio.duration });
@@ -329,6 +361,7 @@ function ListeningPage({
       requestRef.current = null;
       if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
       if (objectUrlRef.current) { URL.revokeObjectURL(objectUrlRef.current); objectUrlRef.current = null; }
+      update({ repeatStart: null, repeatEnd: null, repeatEnabled: false });
       startListeningFallback(speechText);
     }
   };
@@ -337,6 +370,51 @@ function ListeningPage({
     if (audioRef.current) audioRef.current.playbackRate = speed;
     update({ speed });
   };
+
+  const seekListeningRatio = (nextRatio) => {
+    const audio = audioRef.current;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const ratio = Math.max(0, Math.min(1, nextRatio));
+    audio.currentTime = ratio * audio.duration;
+    update({ prog: ratio, listeningDuration: audio.duration });
+  };
+
+  const seekListening = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width) return;
+    seekListeningRatio((event.clientX - rect.left) / rect.width);
+  };
+
+  const markRepeatStart = () => {
+    const audio = audioRef.current;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const point = Math.min(audio.currentTime, Math.max(0, audio.duration - MIN_REPEAT_SECONDS));
+    update({ repeatStart: point, repeatEnd: null, repeatEnabled: false });
+  };
+
+  const markRepeatEnd = () => {
+    const audio = audioRef.current;
+    const start = Number(stateRef.current.repeatStart);
+    if (!audio || !Number.isFinite(start) || !Number.isFinite(audio.duration)) return;
+    const point = Math.min(audio.currentTime, audio.duration);
+    if (point - start < MIN_REPEAT_SECONDS) return;
+    update({ repeatEnd: point, repeatEnabled: false });
+  };
+
+  const toggleRepeat = () => {
+    update((prev) => {
+      const start = Number(prev.repeatStart);
+      const end = Number(prev.repeatEnd);
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end - start < MIN_REPEAT_SECONDS) return {};
+      const enabled = !prev.repeatEnabled;
+      if (enabled && audioRef.current && (audioRef.current.currentTime < start || audioRef.current.currentTime >= end)) {
+        audioRef.current.currentTime = start;
+      }
+      return { repeatEnabled: enabled, prog: enabled && audioRef.current?.duration ? audioRef.current.currentTime / audioRef.current.duration : prev.prog };
+    });
+  };
+
+  const clearRepeat = () => update({ repeatStart: null, repeatEnd: null, repeatEnabled: false });
 
   const generateListening = async (level) => {
     const lv = level || studyLevelRef.current || 'beginner';
@@ -372,7 +450,10 @@ function ListeningPage({
         showScript: false,
         listeningDuration: 0,
         listeningProvider: '',
-        listeningStatus: 'idle'
+        listeningStatus: 'idle',
+        repeatStart: null,
+        repeatEnd: null,
+        repeatEnabled: false
       });
       updateTr({ studyTrans: {} });
 
@@ -460,6 +541,11 @@ function ListeningPage({
   const totalSec = Math.round(listeningDuration);
   const listeningTotalTime = `${Math.floor(totalSec / 60)}:${String(totalSec % 60).padStart(2, '0')}`;
   const provider = String(s.listeningProvider || '');
+  const repeatStart = Number(s.repeatStart);
+  const repeatEnd = Number(s.repeatEnd);
+  const hasRepeatStart = s.repeatStart != null && Number.isFinite(repeatStart);
+  const hasRepeatRange = hasRepeatStart && s.repeatEnd != null && Number.isFinite(repeatEnd) && repeatEnd - repeatStart >= MIN_REPEAT_SECONDS;
+  const canSeekListening = !!provider && provider !== 'device' && s.listeningStatus !== 'loading' && listeningDuration > 0;
   const listeningProviderLabel = listeningGenerating ? (L ? '새 자료가 완성되면 재생할 수 있어요' : 'Playback unlocks when generation finishes')
     : s.listeningStatus === 'loading' ? (L ? `${tutorName} 튜터 음성 준비 중` : `Preparing ${tutorName}'s voice`)
       : s.listeningProvider === 'device' ? (L ? '기기 한국어 음성' : 'Device Korean voice')
@@ -518,9 +604,29 @@ function ListeningPage({
               <span key={i} className="listening-wave-bar" style={{ flex: 1, height: b.h, background: b.c, opacity: b.opacity, boxShadow: b.shadow, borderRadius: '999px', animation: b.animation }} />
             ))}
           </div>
-          <div className="listening-progress-track"><div className="listening-progress-fill" style={{ width: `${Math.round((s.prog || 0) * 100)}%` }} /></div>
+          <div
+            className={`listening-progress-track ${canSeekListening ? 'is-seekable' : ''}`}
+            data-testid="listening-progress"
+            role="slider"
+            aria-label={L ? '재생 위치' : 'Playback position'}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={Math.round((s.prog || 0) * 100)}
+            tabIndex={canSeekListening ? 0 : -1}
+            onClick={canSeekListening ? seekListening : undefined}
+            onKeyDown={canSeekListening ? (event) => {
+              if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+              event.preventDefault();
+              const delta = event.key === 'ArrowRight' ? 5 : -5;
+              seekListeningRatio(((s.prog || 0) * listeningDuration + delta) / listeningDuration);
+            } : undefined}
+          >
+            <div className="listening-progress-fill" style={{ width: `${Math.round((s.prog || 0) * 100)}%` }} />
+            {hasRepeatStart && <span className="listening-repeat-marker is-start" style={{ left: `${Math.min(100, (repeatStart / listeningDuration) * 100)}%` }} aria-hidden="true">A</span>}
+            {hasRepeatRange && <span className="listening-repeat-marker is-end" style={{ left: `${Math.min(100, (repeatEnd / listeningDuration) * 100)}%` }} aria-hidden="true">B</span>}
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <div className="listening-player-controls" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <button
             type="button"
             className="listening-control"
@@ -532,14 +638,32 @@ function ListeningPage({
           </button>
           <span style={{ font: "500 13px 'IBM Plex Mono',monospace", color: '#B9D7E8' }}>{playTime} / {listeningTotalTime}</span>
           <span style={{ fontSize: '11.5px', color: '#7DD3FC', border: '1px solid rgba(125,211,252,.24)', borderRadius: '999px', padding: '4px 9px' }}>{listeningProviderLabel}</span>
-          <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
-            {[0.75, 1, 1.25].map((v) => (
-              <button type="button" key={v} onClick={() => setListeningSpeed(v)} style={{ border: '1px solid #45443F', background: s.speed === v ? '#DDF4FF' : 'transparent', color: s.speed === v ? '#08243A' : '#B9D7E8', borderRadius: '8px', padding: '6px 10px', font: "500 12px 'IBM Plex Mono',monospace", cursor: 'pointer' }}>{`${v.toFixed(2).replace(/0$/, '')}×`}</button>
+          <div className="listening-speed-controls" role="group" aria-label={L ? '재생 배속' : 'Playback speed'}>
+            {LISTENING_SPEEDS.map((v) => (
+              <button type="button" key={v} aria-pressed={s.speed === v} onClick={() => setListeningSpeed(v)} style={{ border: '1px solid #45443F', background: s.speed === v ? '#DDF4FF' : 'transparent', color: s.speed === v ? '#08243A' : '#B9D7E8', borderRadius: '8px', padding: '6px 10px', font: "500 12px 'IBM Plex Mono',monospace", cursor: 'pointer' }}>{`${v.toFixed(1)}×`}</button>
             ))}
           </div>
           <button type="button" onClick={() => update((prev) => ({ showScript: !prev.showScript }))} style={{ border: '1px solid #45443F', background: 'transparent', color: '#F5F2EB', borderRadius: '8px', padding: '6px 12px', fontSize: '13px', cursor: 'pointer' }}>
             {s.showScript ? (L ? '대본 숨기기' : 'Hide script') : (L ? '대본 보기' : 'Show script')}
           </button>
+        </div>
+        <div className="listening-repeat-controls" aria-label={L ? '구간 반복 설정' : 'Section repeat settings'}>
+          <span className="listening-repeat-title">↻ {L ? '구간 반복' : 'Section repeat'}</span>
+          <button type="button" data-testid="repeat-start" onClick={markRepeatStart} disabled={!canSeekListening}>
+            A {hasRepeatStart ? formatAudioTime(repeatStart) : (L ? '시작' : 'Start')}
+          </button>
+          <button type="button" data-testid="repeat-end" onClick={markRepeatEnd} disabled={!canSeekListening || !hasRepeatStart || (s.prog || 0) * listeningDuration - repeatStart < MIN_REPEAT_SECONDS}>
+            B {hasRepeatRange ? formatAudioTime(repeatEnd) : (L ? '끝' : 'End')}
+          </button>
+          <button type="button" data-testid="repeat-toggle" className={s.repeatEnabled ? 'is-active' : ''} aria-pressed={!!s.repeatEnabled} onClick={toggleRepeat} disabled={!canSeekListening || !hasRepeatRange}>
+            {s.repeatEnabled ? (L ? '반복 중' : 'Repeating') : (L ? '반복 켜기' : 'Repeat')}
+          </button>
+          {(hasRepeatStart || hasRepeatRange) && <button type="button" className="listening-repeat-clear" onClick={clearRepeat}>{L ? '초기화' : 'Clear'}</button>}
+          <span className="listening-repeat-help">
+            {provider === 'device'
+              ? (L ? '기기 음성에서는 구간 반복을 지원하지 않아요.' : 'Section repeat is unavailable for device speech.')
+              : (L ? '진행 바에서 위치를 찾고 A와 B를 차례로 지정하세요.' : 'Seek on the progress bar, then set A and B.')}
+          </span>
         </div>
         {s.showScript && (
           <div style={{ borderTop: '1px solid #33362F', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>

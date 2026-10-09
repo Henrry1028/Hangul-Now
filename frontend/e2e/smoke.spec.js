@@ -16,6 +16,10 @@ const SCREENS = [
 ];
 
 const screenLabel = (page) => page.locator('.app-main-viewport [data-screen-label]').first().getAttribute('data-screen-label');
+const dismissUpdateBanner = async (page) => {
+  const close = page.getByRole('button', { name: 'Close' });
+  if (await close.isVisible({ timeout: 1000 }).catch(() => false)) await close.evaluate((button) => button.click());
+};
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -52,6 +56,7 @@ test('every navigation target renders without errors or overflow', async ({ page
   const nav = page.locator('.desktop-header-nav, #app-sidebar, .mobile-subnav-bar');
   const menuBtn = page.locator('.mobile-menu-btn');
   for (const [label, screen] of SCREENS) {
+    await dismissUpdateBanner(page);
     if (await nav.locator('button:visible', { hasText: label }).count()) {
       await nav.locator('button:visible', { hasText: label }).first().click();
     } else if (await menuBtn.isVisible()) {
@@ -173,6 +178,53 @@ test('reading shows the passage before practice enrichment finishes', async ({ p
   await expect(readingScreen).toContainText('Where did they go?');
   await expect(readingScreen).toContainText('-에 가다');
   await expect(readingScreen).not.toContainText('Passage ready · adding practice…');
+});
+
+test('listening offers five speed steps and A-B section repeat', async ({ page, request }) => {
+  const sampleAudio = await request.get('/assets/tutors/audio/jiwoo.wav');
+  expect(sampleAudio.ok()).toBeTruthy();
+  const sampleBody = await sampleAudio.body();
+  await page.route('**/api/tts', (route) => route.fulfill({
+    status: 200,
+    contentType: 'audio/wav',
+    headers: { 'X-TTS-Provider': 'Google MultiSpeaker TTS' },
+    body: sampleBody
+  }));
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Take the 5-min level check' }).click();
+  await expect.poll(() => screenLabel(page)).toBe('02 Today');
+  await page.locator('button:visible', { hasText: 'Listening' }).filter({ hasNot: page.locator('header') }).last().click();
+  await expect.poll(() => screenLabel(page)).toBe('05 Listening');
+
+  const listening = page.locator('[data-screen-label="05 Listening"]');
+  const speedButtons = listening.getByRole('group', { name: 'Playback speed' }).getByRole('button');
+  await expect(speedButtons).toHaveText(['0.8×', '0.9×', '1.0×', '1.1×', '1.2×']);
+  await speedButtons.filter({ hasText: '0.8×' }).click();
+  await expect(speedButtons.filter({ hasText: '0.8×' })).toHaveAttribute('aria-pressed', 'true');
+
+  await listening.locator('.listening-control').click();
+  const startButton = listening.getByTestId('repeat-start');
+  const endButton = listening.getByTestId('repeat-end');
+  const repeatButton = listening.getByTestId('repeat-toggle');
+  await expect(startButton).toBeEnabled();
+
+  const progress = listening.getByTestId('listening-progress');
+  const box = await progress.boundingBox();
+  expect(box).not.toBeNull();
+  await progress.click({ position: { x: box.width * 0.2, y: box.height / 2 } });
+  await startButton.click();
+  await expect(startButton).toContainText(/A 0:/);
+  await progress.click({ position: { x: box.width * 0.35, y: box.height / 2 } });
+  await expect(endButton).toBeEnabled();
+  await endButton.click();
+  await expect(repeatButton).toBeEnabled();
+  await repeatButton.click();
+  await expect(repeatButton).toHaveAttribute('aria-pressed', 'true');
+  await expect(listening.locator('.listening-repeat-marker')).toHaveCount(2);
+  await page.waitForTimeout(2500);
+  await expect(listening.locator('.listening-control')).toContainText('Pause');
+  expect(Number(await progress.getAttribute('aria-valuenow'))).toBeLessThan(45);
 });
 
 test('writing shows only the Cheonjiin keypad in the app layout (<860px)', async ({ page }) => {

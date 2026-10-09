@@ -1,5 +1,64 @@
 # Current Task
 
+## Active Product Task — H6
+
+Milestone ID:
+
+`H6-LISTENING-PLAYBACK-LOOP`
+
+Milestone Name:
+
+`LISTENING SPEED STEPS + A-B REPEAT`
+
+Status:
+
+`READY_TO_COMMIT`
+
+Baseline HEAD:
+
+`4b9037e9de5417cf12d965975680a7f0724d1b70`
+
+Branch:
+
+`feat/listening-playback-loop`
+
+Expected files:
+
+- `frontend/src/pages/ListeningPage.jsx`
+- `frontend/src/data/listeningData.js`
+- `frontend/src/styles/listening.css`
+- `frontend/e2e/smoke.spec.js`
+- `.agent/CURRENT_TASK.md`
+- `.agent/MIGRATION_STATE.md`
+- `.agent/MIGRATION_LOG.md`
+
+Intended scope:
+
+- Replace Listening playback speeds with `0.8 / 0.9 / 1.0 / 1.1 / 1.2`.
+- Make the progress track seekable for server-backed audio.
+- Add A and B markers plus an explicit section-repeat toggle and clear action.
+- Preserve TTS prefetch, pause/resume, transcript, quiz, and device-speech fallback behavior.
+
+First required action:
+
+- Extend Listening state and the bound `HTMLAudioElement` time-update/end handlers, then add responsive controls and browser coverage.
+
+Result so far:
+
+- Handoff validation PASS: clean tree; `hardening/post-launch` and origin `0 0` at `4b9037e`.
+- Source audit complete: server TTS uses a seekable `Audio` object; device `speechSynthesis` fallback cannot seek and will keep repeat controls disabled.
+- Implementation complete: five speed choices, pointer/keyboard seek, A/B markers, repeat toggle, clear action, and loop enforcement on both `timeupdate` and `ended`.
+- New material, screen exit, and device-speech fallback reset repeat state safely.
+- Latest Node 20 production build PASS. The build reports an unrelated pre-existing malformed PWA keyframe warning in `updateBanner.css` and the existing chunk-size advisory.
+- Latest full Vitest PASS: 42/42.
+- Scoped ESLint: 0 errors; one baseline `ListeningPage` exhaustive-deps warning remains from the existing TTS prefetch effect.
+- Real-WAV Playwright on latest HEAD: Listening desktop/mobile 2/2 PASS, including B-to-A playback looping; navigation desktop/mobile 2/2 PASS.
+- Korean 390 x 844 visual check PASS: all five speed buttons and the A/B controls fit inside the player without horizontal overflow.
+- `git diff --check` PASS.
+- Concurrent Git note: PWA/Speaking commits `6a22524`, `f67da12`, and `6234954` were committed and pushed by another process while H6 validation ran. They do not overlap H6 files and are preserved as the remote baseline.
+
+---
+
 ## Active Product Task — H5
 
 Milestone ID:

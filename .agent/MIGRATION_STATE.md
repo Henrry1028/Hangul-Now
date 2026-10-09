@@ -1,5 +1,19 @@
 # HangulNow React + Vite Migration State
 
+## H6 — Listening Speed Steps + A-B Repeat
+
+Status:
+
+`READY_TO_COMMIT`
+
+- Baseline: `4b9037e` on `feat/listening-playback-loop`.
+- Scope: Listening-only speed choices, seekable progress, and A-B repeat for server-backed audio.
+- Device speech fallback remains playable but cannot offer arbitrary seeking or section repeat.
+- Validation: Node 20 build PASS; Vitest 42/42; latest real-WAV Listening and navigation Playwright desktop/mobile 4/4 PASS; Korean 390 x 844 visual check PASS.
+- Concurrent remote baseline now includes unrelated PWA/Speaking commits through `6234954`; H6 does not modify those product files.
+
+---
+
 ## H5 — Writing App Target + Cheonjiin Focus
 
 Status:
