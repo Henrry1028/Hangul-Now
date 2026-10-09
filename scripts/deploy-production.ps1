@@ -33,14 +33,18 @@ try {
         --allow-unauthenticated `
         "--set-secrets=GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest"
 
-    Write-Host "🩺 [5/5] 서비스 헬스체크 검증..." -ForegroundColor Cyan
+    Write-Host "🌐 [5/6] Firebase Hosting 정적 사이트 동시 배포..." -ForegroundColor Cyan
+    npx firebase-tools deploy --only hosting --project $PROJECT_ID --non-interactive
+
+    Write-Host "🩺 [6/6] 서비스 헬스체크 검증..." -ForegroundColor Cyan
     $serviceUrl = (gcloud run services describe $SERVICE_NAME --region $REGION --format "value(status.url)")
     $health = Invoke-RestMethod -Uri "$serviceUrl/api/health"
     if ($health.status -eq "ok") {
-        Write-Host "✅ 배포 성공! 서비스 정상 가동 중: $serviceUrl" -ForegroundColor Green
+        Write-Host "✅ 배포 성공! Cloud Run 및 Firebase Hosting 모두 최신 배포 완료: $serviceUrl" -ForegroundColor Green
     } else {
         Write-Warning "⚠️ 헬스체크 응답 이상: $health"
     }
+
 }
 finally {
     if (Test-Path $archiveFile) {
