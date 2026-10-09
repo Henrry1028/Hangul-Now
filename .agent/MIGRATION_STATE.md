@@ -11,6 +11,7 @@ Status:
 - Desktop Writing behavior, data contracts, and production traffic are out of scope.
 - Validation: Node 20 build PASS; Vitest 39/39; Playwright 13 passed / 1 expected skip; Korean 390 x 844 first-viewport visual check PASS.
 - Production traffic: unchanged. Deployment requires separate explicit approval.
+- Concurrent Git note: remote `feat/writing-app-keyboard-focus` gained unrelated deployment-script commit `c06bc54` during validation. It is preserved; H5 begins after that commit and does not modify the deployment script.
 
 ---
 

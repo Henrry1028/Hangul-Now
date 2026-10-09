@@ -54,6 +54,7 @@ Result so far:
 - Scoped ESLint PASS with 0 errors (4 pre-existing unused-variable warnings in `WritingPage.jsx`). Full ESLint remains blocked by 27 pre-existing `SpeakingPage.jsx` `no-useless-escape` errors.
 - `git diff --check` PASS.
 - Feature commit complete: `1514de7` (`feat: focus app writing on Cheonjiin practice`).
+- Concurrent Git note: while validation was running, `c06bc54` (deployment-script-only) was committed and pushed to the same feature branch by another process. It is preserved as the remote baseline; the H5 product diff after it remains exactly the six expected files above.
 
 Next action:
 

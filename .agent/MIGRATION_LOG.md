@@ -38,6 +38,7 @@ Result:
 - The app Writing screen now presents the target/composition card immediately above the Cheonjiin keypad.
 - The initial/vowel/final-jamo picker and secondary keyboard chrome are absent in app layout only.
 - Desktop Writing is unchanged.
+- During validation, another process committed and pushed deployment-script-only commit `c06bc54` to the same feature branch. The commit was preserved as the remote baseline; the H5 diff after it contains only the expected Writing, test, and state files.
 
 ---
 
