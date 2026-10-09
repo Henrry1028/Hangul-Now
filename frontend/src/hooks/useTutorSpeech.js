@@ -194,6 +194,11 @@ export default function useTutorSpeech(tutorId) {
 
   useEffect(() => () => stop(), [stop]);
 
+  // A tutor change must never leave the previous tutor's voice playing.
+  useEffect(() => {
+    stop();
+  }, [tutorId, stop]);
+
   return {
     play,
     stop,

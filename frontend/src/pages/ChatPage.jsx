@@ -3,6 +3,7 @@ import { TUTORS } from '../data/tutorsData.js';
 import { CHAT_TEXT, QUICK, fmtDate } from '../data/chatData.js';
 import { formatTime } from '../data/homeData.js';
 import { KAKAO_OPENCHAT } from '../data/communityData.js';
+import useTutorSpeech from '../hooks/useTutorSpeech.js';
 import '../styles/chat.css';
 
 function TypingDots() {
@@ -126,6 +127,20 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
   const tutor = chatTutor(selectedTutorId, L);
   const msgList = useMemo(() => s.msgs[selectedTutorId] || [], [s.msgs, selectedTutorId]);
   const msgRef = useRef(null);
+  const speech = useTutorSpeech(selectedTutorId);
+  const prefetchSpeech = speech.prefetch;
+
+  const newestTutorMessage = useMemo(() => {
+    for (let index = msgList.length - 1; index >= 0; index -= 1) {
+      if (msgList[index]?.from === 't' && String(msgList[index]?.text || '').trim()) return msgList[index];
+    }
+    return null;
+  }, [msgList]);
+
+  // Warm only the newest tutor reply. Replaying any clicked bubble then uses the hook's session cache.
+  useEffect(() => {
+    if (newestTutorMessage?.text) prefetchSpeech(newestTutorMessage.text);
+  }, [newestTutorMessage?.id, newestTutorMessage?.text, selectedTutorId, prefetchSpeech]);
 
   // Legacy componentDidUpdate: keep the newest message in view.
   useEffect(() => {
@@ -167,6 +182,14 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
             const fixBrief = correctionBrief(m.fix);
             const fixDetailEn = m.fix ? correctionDetailEn(m.fix) : '';
             const fixKey = m.id || `fix-${i}`;
+            const speechKey = `${selectedTutorId}:${m.id || `message-${i}`}`;
+            const speechLoading = speech.isLoading(speechKey);
+            const speechPlaying = speech.isPlaying(speechKey);
+            const speechLabel = speechLoading
+              ? (L ? '음성을 준비하고 있어요' : 'Preparing audio')
+              : speechPlaying
+                ? (L ? '읽기 중지' : 'Stop reading')
+                : (L ? '이 대화 읽기' : 'Read this message');
             const mt = first && i > 0 ? '8px' : '0';
             const rad = m.from === 't' ? (first ? '4px 14px 14px 14px' : '14px') : (first ? '14px 4px 14px 14px' : '14px');
             const timeLabel = formatTime(m.time, L);
@@ -181,12 +204,26 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: 'min(72%,520px)' }}>
                       {first && <span style={{ fontSize: '12.5px', color: 'var(--chat-ink)' }}>{tutor.name}</span>}
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
-                        <div onClick={() => chat.toggleMessage(trKey, !!m.tr)} title={t.tapTr} style={{ background: 'var(--tbubble)', padding: '9px 12px', borderRadius: rad, fontSize: '15px', lineHeight: 1.5, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <span>{m.text}</span>
+                        <button
+                          type="button"
+                          className={`chat-message-bubble chat-message-bubble--tutor${speechLoading ? ' is-loading' : ''}${speechPlaying ? ' is-playing' : ''}`}
+                          onClick={() => speech.play(m.text, speechKey)}
+                          title={speechLabel}
+                          aria-label={`${speechLabel}: ${m.text}`}
+                          aria-pressed={speechPlaying}
+                          data-tts-message-id={m.id || `message-${i}`}
+                          data-tts-state={speechLoading ? 'loading' : speechPlaying ? 'playing' : 'idle'}
+                          style={{ background: 'var(--tbubble)', borderRadius: rad }}
+                        >
+                          <span className="chat-message-copy">{m.text}</span>
                           {wantsTranslation && m.tr && <span style={{ fontSize: '13px', color: 'var(--sub)', borderTop: '1px dashed var(--line3)', paddingTop: '6px' }}>{m.tr}</span>}
                           {wantsTranslation && !m.tr && translationLoading && <span style={{ fontSize: '12px', color: 'var(--faint)', borderTop: '1px dashed var(--line3)', paddingTop: '6px' }}>{L ? '영어 번역 중…' : 'Translating…'}</span>}
+                          <span className="chat-message-audio-state" aria-hidden="true">{speechLoading ? '···' : speechPlaying ? '■' : '▶'}</span>
+                        </button>
+                        <div className="chat-message-meta">
+                          <button type="button" className="chat-message-translate" onClick={() => chat.toggleMessage(trKey, !!m.tr)} title={t.tapTr} aria-label={t.tapTr}>EN</button>
+                          <span>{timeLabel}</span>
                         </div>
-                        <span style={{ fontSize: '11px', color: 'var(--chat-ink)', flex: 'none', whiteSpace: 'nowrap' }}>{timeLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -195,7 +232,20 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginTop: mt }}>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', justifyContent: 'flex-end', maxWidth: 'min(76%,540px)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flex: 'none' }}>{!!m.pending && <span style={{ fontSize: '11px', fontWeight: 700, color: '#C99A00' }}>1</span>}<span style={{ fontSize: '11px', color: 'var(--chat-ink)', whiteSpace: 'nowrap' }}>{timeLabel}</span></div>
-                      <div style={{ background: 'var(--bubble)', color: '#1C1F1E', padding: '9px 12px', borderRadius: rad, fontSize: '15px', lineHeight: 1.5 }}>{m.text}</div>
+                      <button
+                        type="button"
+                        className={`chat-message-bubble chat-message-bubble--mine${speechLoading ? ' is-loading' : ''}${speechPlaying ? ' is-playing' : ''}`}
+                        onClick={() => speech.play(m.text, speechKey)}
+                        title={speechLabel}
+                        aria-label={`${speechLabel}: ${m.text}`}
+                        aria-pressed={speechPlaying}
+                        data-tts-message-id={m.id || `message-${i}`}
+                        data-tts-state={speechLoading ? 'loading' : speechPlaying ? 'playing' : 'idle'}
+                        style={{ background: 'var(--bubble)', borderRadius: rad }}
+                      >
+                        <span className="chat-message-copy">{m.text}</span>
+                        <span className="chat-message-audio-state" aria-hidden="true">{speechLoading ? '···' : speechPlaying ? '■' : '▶'}</span>
+                      </button>
                     </div>
                     {!!m.correctionPending && <span style={{ fontSize: '11.5px', color: 'var(--chat-ink)', paddingRight: '4px' }}>{L ? '문장 확인 중…' : 'Checking your sentence…'}</span>}
                     {!!m.correctionError && <span style={{ fontSize: '11.5px', color: 'var(--hot)', paddingRight: '4px' }}>{L ? '문장 교정을 불러오지 못했어요.' : 'Could not check this sentence.'}</span>}

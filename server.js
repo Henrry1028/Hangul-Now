@@ -117,8 +117,8 @@ const TUTOR_TTS_VOICES = Object.freeze({
   }
 });
 
-// Flash TTS is the quality-first model. GEMINI_TTS_MODEL can still override it in deployments.
-const GEMINI_TTS_MODEL = process.env.GEMINI_TTS_MODEL || "gemini-3.8-flash-tts";
+// Flash-Lite TTS keeps interactive read-aloud latency low. Deployments can still override it.
+const GEMINI_TTS_MODEL = process.env.GEMINI_TTS_MODEL || "gemini-3.8-flash-lite-tts";
 
 const findAudioPayload = value => {
   if (!value) return null;

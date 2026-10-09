@@ -3,6 +3,20 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ChatPage from './ChatPage.jsx';
 
+const { tutorSpeech } = vi.hoisted(() => ({
+  tutorSpeech: {
+    play: vi.fn(),
+    stop: vi.fn(),
+    prefetch: vi.fn(),
+    isPlaying: vi.fn(() => false),
+    isLoading: vi.fn(() => false),
+    status: 'idle',
+    activeKey: ''
+  }
+}));
+
+vi.mock('../hooks/useTutorSpeech.js', () => ({ default: () => tutorSpeech }));
+
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 let container;
@@ -46,6 +60,7 @@ function mount(messages, lang = 'en') {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  vi.clearAllMocks();
 });
 
 describe('ChatPage smart correction sync', () => {
@@ -86,5 +101,33 @@ describe('ChatPage smart correction sync', () => {
     ));
 
     expect(container.querySelector('[data-correction-source="live-chat"]').textContent).toContain('자연스러운 문장');
+  });
+});
+
+describe('ChatPage message TTS', () => {
+  it('plays tutor and learner bubbles with the selected tutor voice hook', () => {
+    mount([
+      { id: 'tutor-1', from: 't', text: '안녕하세요?', time: '16:45', tr: 'Hello?' },
+      { id: 'learner-1', from: 'me', text: '반갑습니다.', time: '16:46' }
+    ], 'ko');
+
+    const tutorBubble = container.querySelector('[data-tts-message-id="tutor-1"]');
+    const learnerBubble = container.querySelector('[data-tts-message-id="learner-1"]');
+
+    act(() => tutorBubble.click());
+    act(() => learnerBubble.click());
+
+    expect(tutorSpeech.play).toHaveBeenNthCalledWith(1, '안녕하세요?', 'jiwoo:tutor-1');
+    expect(tutorSpeech.play).toHaveBeenNthCalledWith(2, '반갑습니다.', 'jiwoo:learner-1');
+    expect(tutorSpeech.prefetch).toHaveBeenCalledWith('안녕하세요?');
+  });
+
+  it('keeps per-message translation on its own control', () => {
+    mount([{ id: 'tutor-2', from: 't', text: '오늘 어때요?', time: '16:47', tr: 'How are you today?' }], 'ko');
+
+    act(() => container.querySelector('.chat-message-translate').click());
+
+    expect(chat.toggleMessage).toHaveBeenCalledWith('jiwoo0', true);
+    expect(tutorSpeech.play).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,5 @@
 // 주요 화면 스모크 테스트 — 게스트로 모든 메뉴를 열고 렌더링·오류·가로 넘침을 확인한다.
-// AI·TTS 호출은 하지 않는다 (비용 없음).
+// AI·TTS 호출은 로컬 응답으로 대체한다 (비용 없음).
 import { expect, test } from '@playwright/test';
 
 const SCREENS = [
@@ -86,8 +86,23 @@ test('guests never see admin or Video Class entry points, even with ?admin=1', a
 
 test('chat shows only the correction point; smart correction explains it in English', async ({ page }) => {
   const problems = [];
+  const ttsRequests = [];
   page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
   page.on('console', (message) => { if (message.type() === 'error') problems.push(`console: ${message.text()}`); });
+  await page.addInitScript(() => {
+    // Headless Chromium may finish or reject media immediately. Keep playback deterministic
+    // while still exercising Blob creation, caching, request payloads, and React state.
+    window.Audio = class MockAudio {
+      constructor(src) {
+        this.src = src;
+        this.currentTime = 0;
+        this.onended = null;
+        this.onerror = null;
+      }
+      play() { return Promise.resolve(); }
+      pause() {}
+    };
+  });
 
   await page.route('**/api/correction', (route) => route.fulfill({
     status: 200,
@@ -109,6 +124,14 @@ test('chat shows only the correction point; smart correction explains it in Engl
     contentType: 'application/json',
     body: JSON.stringify({ reply: '배달 앱으로 주문할 수 있어요.' })
   }));
+  await page.route('**/api/tts', async (route) => {
+    ttsRequests.push(route.request().postDataJSON());
+    await route.fulfill({
+      status: 200,
+      contentType: 'audio/wav',
+      path: 'public/assets/tutors/audio/jiwoo.wav'
+    });
+  });
 
   await page.goto('/');
   await page.locator('button:visible', { hasText: 'Chat' }).filter({ hasNot: page.locator('header') }).last().evaluate((button) => button.click());
@@ -129,6 +152,14 @@ test('chat shows only the correction point; smart correction explains it in Engl
   await expect(chatPane).toContainText("맞춤법: '어떻게'");
   await expect(chatPane).not.toContainText('Use 어떻게 for “how”.');
   await expect(chatPane).not.toContainText('방법을 묻는 말은 어떻게라고 써요.');
+
+  const learnerBubble = chatScreen.locator('[data-tts-message-id]').filter({ hasText: '어똥에 배달 해요?' });
+  const tutorBubble = chatScreen.locator('[data-tts-message-id]').filter({ hasText: '배달 앱으로 주문할 수 있어요.' });
+  await learnerBubble.click();
+  await expect.poll(() => ttsRequests.some((request) => request.text === '어똥에 배달 해요?' && request.tutorId === 'jiwoo')).toBe(true);
+  await tutorBubble.click();
+  await expect(tutorBubble).toHaveAttribute('data-tts-state', 'playing');
+  await expect.poll(() => ttsRequests.some((request) => request.text === '배달 앱으로 주문할 수 있어요.' && request.tutorId === 'jiwoo')).toBe(true);
   expect(problems).toEqual([]);
 });
 
@@ -231,7 +262,7 @@ test('writing shows only the Cheonjiin keypad in the app layout (<860px)', async
   await page.goto('/');
   await page.getByRole('button', { name: 'Take the 5-min level check' }).click();
   await expect.poll(() => screenLabel(page)).toBe('02 Today');
-  await page.locator('button:visible', { hasText: 'Writing' }).filter({ hasNot: page.locator('header') }).last().click();
+  await page.locator('button:visible', { hasText: 'Writing' }).filter({ hasNot: page.locator('header') }).last().evaluate((button) => button.click());
   await expect.poll(() => screenLabel(page)).toBe('07 Writing');
 
   const isApp = await page.evaluate(() => window.matchMedia('(max-width: 859px)').matches);
