@@ -276,6 +276,13 @@ npm test
 npm run build
 ```
 
+### 7.3 원클릭 프로덕션 배포 (모바일 PWA 및 웹 Cloud Run)
+'푸시하고 배포해줘' 명령 시 실행되는 통합 원클릭 배포 명령입니다:
+```bash
+npm run deploy:prod
+```
+- Git Push ➡️ Git Archive 패키징 ➡️ Cloud Build 컨테이너 빌드 ➡️ Cloud Run 배포 ➡️ 트래픽 100% 즉시 전환 ➡️ 헬스체크 검증까지 전자동 완료됩니다.
+
 ---
 
 ## 8. 진행 상황 (Progress Tracking & Changelog)
@@ -284,6 +291,7 @@ npm run build
 
 | 일자 | 작업 유형 | 변경 내용 및 상세 설명 | 상태 |
 | :--- | :---: | :--- | :---: |
+| **2026-10-09** | **배포 자동화** | • 모바일 PWA 및 웹 통합 원클릭 Cloud Run 배포 스크립트(`scripts/deploy-production.ps1`, `npm run deploy:prod`) 구축<br>• 향후 '푸시하고 배포해줘' 요청 시 Cloud Run 100% 트래픽 전환까지 전자동 수행 원칙 확립 | **완료** |
 | **2026-10-09** | **CI/CD 자동화** | • `deploy.yml` 파이프라인 확장: `hardening/post-launch` 푸시 시 Firebase Hosting과 Google Cloud Run(모바일 PWA 프로덕션) 동시 자동 배포 적용 | **완료** |
 | **2026-10-09** | **UI/UX 개선** | • 모바일 앱 뷰(&lt;860px) ☰ 드로어 메뉴를 웹 헤더/계정 메뉴 구조와 통일 및 커뮤니티(카카오 오픈채팅) 링크 연동<br>• 천지인 키보드 앱 뷰 입력 설명 최적화 및 모바일 드로어 스모크 테스트 보강 | **완료** |
 | **2026-10-09** | **문서화** | • 전체 프로젝트 분석 기반 종합 기술 문서 `GEMINI.md` 신규 생성<br>• 시스템 아키텍처 Mermaid 다이어그램 및 15개 페이지 상세 명세 작성 | **완료** |

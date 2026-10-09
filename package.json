@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "tsx server.js",
-    "dev": "tsx server.js"
+    "dev": "tsx server.js",
+    "deploy:prod": "pwsh -File ./scripts/deploy-production.ps1"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.1",
