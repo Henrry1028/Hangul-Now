@@ -1655,3 +1655,14 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H8 — Chat Mobile Toolbar + Mic Removal
+
+- 2026-10-09: Started from clean `f673f5b` on `feat/chat-mobile-cleanup`; remote divergence `0 0`.
+- Audited the Chat toolbar and composer controls; the requested elements can be hidden at the existing app breakpoint without changing desktop behavior.
+- Implemented and committed as `482c243`: mobile-only toolbar/microphone removal while preserving desktop controls.
+- Tightened TTS prefetch to new in-session tutor replies, avoiding automatic synthesis of historical/seed messages during Chat entry.
+- Validation PASS: changed-file ESLint; Vitest 48/48; Node 20 build; focused Chat Playwright 2/2; full Playwright 15 pass / 1 expected skip.
+- Production deployment and traffic were not changed.
+
+---

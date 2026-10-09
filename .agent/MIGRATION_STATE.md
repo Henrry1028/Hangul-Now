@@ -1,5 +1,20 @@
 # HangulNow React + Vite Migration State
 
+## H8 — Chat Mobile Toolbar + Mic Removal
+
+Status:
+
+`COMPLETE` (commit `482c243`; not deployed)
+
+- Baseline: `f673f5b` on `feat/chat-mobile-cleanup`.
+- Scope: mobile-only removal of the Chat tutor/translation toolbar and composer microphone icon.
+- Desktop Chat and message/correction/TTS behavior remain unchanged.
+- Historical/seed Chat messages no longer trigger TTS prefetch on screen entry; only a newly arrived tutor reply is prefetched.
+- Validation: changed-file ESLint PASS; Vitest 48/48; Node 20 build PASS; Playwright 15 passed / 1 expected skip.
+- Production traffic: unchanged. Deployment requires separate explicit approval.
+
+---
+
 ## H7 — Chat Message Click TTS
 
 Status:

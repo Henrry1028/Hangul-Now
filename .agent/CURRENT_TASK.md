@@ -1,5 +1,62 @@
 # Current Task
 
+## Active Product Task — H8
+
+Milestone ID:
+
+`H8-CHAT-MOBILE-CLEANUP`
+
+Milestone Name:
+
+`CHAT MOBILE TOOLBAR + MIC REMOVAL`
+
+Status:
+
+`COMPLETE` (commit `482c243`)
+
+Baseline HEAD:
+
+`f673f5b158caabd74973e2733ec8bf6287e7bbb5`
+
+Branch:
+
+`feat/chat-mobile-cleanup`
+
+Expected files:
+
+- `frontend/src/pages/ChatPage.jsx`
+- `frontend/src/styles/chat.css`
+- `frontend/e2e/smoke.spec.js`
+- `.agent/CURRENT_TASK.md`
+- `.agent/MIGRATION_STATE.md`
+- `.agent/MIGRATION_LOG.md`
+
+Intended scope:
+
+- Hide the Chat tutor-change and English-translation toolbar only in the app layout (`<860px`).
+- Hide the left microphone icon in the Chat composer only in the app layout.
+- Preserve both controls in desktop Chat and preserve all message TTS, correction, quick-reply, and send behavior.
+
+First required action:
+
+- Add stable control classes and app-only CSS, then assert mobile-hidden and desktop-visible behavior in Playwright.
+
+Result so far:
+
+- Handoff validation PASS: clean tree at `f673f5b`; branch and origin were `0 0`.
+- Scope audit complete: the two top buttons are contained by `.chat-tutor-bar`; the microphone is an independent composer button without behavior attached.
+- Implementation complete: app layout hides the full Chat tutor/translation toolbar and the composer microphone; desktop sidebar controls and desktop microphone remain visible.
+- TTS prefetch was tightened to synthesize only tutor replies that arrive while Chat is open. Historical/seed messages remain click-to-load, eliminating unnecessary entry-time TTS calls and related 503 console noise.
+- Changed-file ESLint PASS; full Vitest 48/48 PASS; Node 20 production build PASS.
+- Focused Chat Playwright desktop/mobile 2/2 PASS; full Playwright regression 15 PASS / 1 expected desktop-only skip.
+- Feature commit complete: `482c243` (`feat(chat): simplify mobile controls`).
+
+Next action:
+
+- None for this bounded task. Production deployment/traffic remains unchanged and requires separate explicit approval.
+
+---
+
 ## Active Product Task — H7
 
 Milestone ID:
