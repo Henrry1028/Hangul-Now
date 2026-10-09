@@ -40,12 +40,44 @@ function ListeningPage({
   const timerRef = useRef(null);
   const fallbackStartedAtRef = useRef(0);
 
+  // 🌟 백그라운드 TTS 사전 호출(Pre-fetch) 캐시 참조
+  const prefetchStateRef = useRef({
+    source: '',
+    audio: null,
+    objectUrl: null,
+    provider: '',
+    promise: null,
+    controller: null
+  });
+
   const update = onListeningStateChange;
   const updateTr = onTranslationStateChange;
 
   const clearListeningTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
+  };
+
+  const clearPrefetch = () => {
+    if (prefetchStateRef.current.controller) {
+      prefetchStateRef.current.controller.abort();
+    }
+    if (prefetchStateRef.current.objectUrl && prefetchStateRef.current.objectUrl !== objectUrlRef.current) {
+      URL.revokeObjectURL(prefetchStateRef.current.objectUrl);
+    }
+    if (prefetchStateRef.current.audio && prefetchStateRef.current.audio !== audioRef.current) {
+      prefetchStateRef.current.audio.pause();
+      prefetchStateRef.current.audio.removeAttribute('src');
+      prefetchStateRef.current.audio.load();
+    }
+    prefetchStateRef.current = {
+      source: '',
+      audio: null,
+      objectUrl: null,
+      provider: '',
+      promise: null,
+      controller: null
+    };
   };
 
   const releaseListeningAudio = () => {
@@ -64,6 +96,7 @@ function ListeningPage({
 
   const stopListeningAudio = (reset = true) => {
     releaseListeningAudio();
+    clearPrefetch();
     if (reset) update({ playing: false, prog: 0, listeningStatus: 'idle', listeningDuration: 0, listeningProvider: '', listeningSource: '' });
   };
 
@@ -109,11 +142,88 @@ function ListeningPage({
     window.speechSynthesis.speak(utterance);
   };
 
+  // 🌟 [핵심] 대본 생성 즉시 백그라운드 TTS 사전 호출 (Pre-fetch) 함수
+  const prefetchListeningAudio = (text, segments = []) => {
+    const speechText = String(text || '').trim();
+    if (!speechText) return;
+    const speechSource = `${selectedTutorId}:${speechText}`;
+
+    // 이미 같은 대본+튜터 조합으로 캐시되었거나 요청 중이면 중복 호출 방지
+    if (prefetchStateRef.current.source === speechSource && (prefetchStateRef.current.audio || prefetchStateRef.current.promise)) {
+      return;
+    }
+    if (stateRef.current.listeningSource === speechSource && audioRef.current) {
+      return;
+    }
+
+    clearPrefetch();
+
+    const controller = new AbortController();
+    const promise = (async () => {
+      try {
+        const response = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: speechText, segments, tutorId: selectedTutorId }),
+          signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`TTS_HTTP_${response.status}`);
+        const blob = await response.blob();
+        if (!blob.size || !String(blob.type || response.headers.get('content-type') || '').startsWith('audio/')) {
+          throw new Error('TTS_INVALID_AUDIO');
+        }
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.preload = 'auto';
+        audio.playbackRate = stateRef.current.speed || 1;
+        const provider = response.headers.get('X-TTS-Provider') || 'server';
+
+        audio.onloadedmetadata = () => {
+          if (Number.isFinite(audio.duration) && audio.duration > 0) {
+            update({ listeningDuration: audio.duration });
+          }
+        };
+
+        if (prefetchStateRef.current.source === speechSource) {
+          prefetchStateRef.current.audio = audio;
+          prefetchStateRef.current.objectUrl = url;
+          prefetchStateRef.current.provider = provider;
+          prefetchStateRef.current.promise = null;
+          prefetchStateRef.current.controller = null;
+        } else {
+          URL.revokeObjectURL(url);
+          audio.removeAttribute('src');
+          audio.load();
+        }
+        return { audio, url, provider };
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.warn('[Listening TTS Prefetch] Background audio fetch notice:', err.message);
+        }
+        if (prefetchStateRef.current.source === speechSource) {
+          prefetchStateRef.current.promise = null;
+          prefetchStateRef.current.controller = null;
+        }
+        return null;
+      }
+    })();
+
+    prefetchStateRef.current = {
+      source: speechSource,
+      audio: null,
+      objectUrl: null,
+      provider: '',
+      promise,
+      controller
+    };
+  };
+
   const toggleListeningAudio = async (text, segments = [], ready = true) => {
     const st = stateRef.current;
     const speechText = String(text || '').trim();
     const speechSource = `${selectedTutorId}:${speechText}`;
     if (!ready || !speechText || st.listeningStatus === 'loading') return;
+
     if (st.playing) {
       if (audioRef.current) audioRef.current.pause();
       if (speechRef.current && window.speechSynthesis) window.speechSynthesis.pause();
@@ -121,12 +231,14 @@ function ListeningPage({
       update({ playing: false, listeningStatus: 'paused' });
       return;
     }
+
     if (audioRef.current && st.listeningSource === speechSource && audioRef.current.currentTime < audioRef.current.duration) {
       audioRef.current.playbackRate = st.speed || 1;
       await audioRef.current.play();
       update({ playing: true, listeningStatus: 'playing', listeningError: '' });
       return;
     }
+
     if (speechRef.current && st.listeningSource === speechSource && window.speechSynthesis?.paused) {
       const duration = st.listeningDuration || 1;
       fallbackStartedAtRef.current = performance.now() - st.prog * duration * 1000;
@@ -138,6 +250,57 @@ function ListeningPage({
       }, 200);
       update({ playing: true, listeningStatus: 'playing', listeningError: '' });
       return;
+    }
+
+    // 오디오 재생 세팅 헬퍼
+    const bindAndPlay = async (audio, url, provider) => {
+      objectUrlRef.current = url;
+      audioRef.current = audio;
+      audio.playbackRate = stateRef.current.speed || 1;
+      audio.onloadedmetadata = () => {
+        if (Number.isFinite(audio.duration)) update({ listeningDuration: audio.duration });
+      };
+      audio.ontimeupdate = () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          update({ prog: Math.min(1, audio.currentTime / audio.duration), listeningDuration: audio.duration });
+        }
+      };
+      audio.onended = () => update({ playing: false, prog: 1, listeningStatus: 'ended' });
+      audio.onerror = () => update({ playing: false, listeningStatus: 'error', listeningError: '서버 음성을 재생하지 못했습니다.' });
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        update({ listeningDuration: audio.duration });
+      }
+      await audio.play();
+      update({ playing: true, listeningStatus: 'playing', listeningProvider: provider, listeningError: '', listeningSource: speechSource });
+    };
+
+    // 🌟 [최적화 1] 백그라운드 프리페치가 이미 완료되어 캐시된 경우 ➡️ 대기 시간 0초 즉시 재생!
+    if (prefetchStateRef.current.source === speechSource && prefetchStateRef.current.audio) {
+      const { audio, objectUrl, provider } = prefetchStateRef.current;
+      prefetchStateRef.current.audio = null;
+      prefetchStateRef.current.objectUrl = null;
+      try {
+        await bindAndPlay(audio, objectUrl, provider);
+        return;
+      } catch (err) {
+        console.warn('[Listening TTS] Prefetched audio play failed, falling back:', err.message);
+      }
+    }
+
+    // 🌟 [최적화 2] 백그라운드 프리페치가 진행 중인 경우 ➡️ 기존 요청 결과를 기다려 즉시 재생!
+    if (prefetchStateRef.current.source === speechSource && prefetchStateRef.current.promise) {
+      update({ playing: false, prog: 0, listeningStatus: 'loading', listeningError: '', listeningSource: speechSource, listeningProvider: '' });
+      try {
+        const prefetched = await prefetchStateRef.current.promise;
+        if (prefetched?.audio) {
+          prefetchStateRef.current.audio = null;
+          prefetchStateRef.current.objectUrl = null;
+          await bindAndPlay(prefetched.audio, prefetched.url, prefetched.provider);
+          return;
+        }
+      } catch (err) {
+        console.warn('[Listening TTS] Waiting for prefetch failed, requesting fresh:', err.message);
+      }
     }
 
     releaseListeningAudio();
@@ -157,20 +320,9 @@ function ListeningPage({
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.preload = 'auto';
-      audio.playbackRate = stateRef.current.speed || 1;
       requestRef.current = null;
-      objectUrlRef.current = url;
-      audioRef.current = audio;
-      audio.onloadedmetadata = () => {
-        if (Number.isFinite(audio.duration)) update({ listeningDuration: audio.duration });
-      };
-      audio.ontimeupdate = () => {
-        if (Number.isFinite(audio.duration) && audio.duration > 0) update({ prog: Math.min(1, audio.currentTime / audio.duration), listeningDuration: audio.duration });
-      };
-      audio.onended = () => update({ playing: false, prog: 1, listeningStatus: 'ended' });
-      audio.onerror = () => update({ playing: false, listeningStatus: 'error', listeningError: '서버 음성을 재생하지 못했습니다.' });
-      await audio.play();
-      update({ playing: true, listeningStatus: 'playing', listeningProvider: response.headers.get('X-TTS-Provider') || 'server', listeningError: '' });
+      const provider = response.headers.get('X-TTS-Provider') || 'server';
+      await bindAndPlay(audio, url, provider);
     } catch (err) {
       if (controller.signal.aborted) return;
       console.warn('[Listening TTS] Server voice unavailable; using device Korean voice.', err.message);
@@ -223,6 +375,15 @@ function ListeningPage({
         listeningStatus: 'idle'
       });
       updateTr({ studyTrans: {} });
+
+      // 🌟 [핵심] 대본 생성 완료 즉시 백그라운드 TTS 사전 호출 (Pre-fetch) 실행!
+      const nextScript = data?.script?.length ? data.script : SCRIPT;
+      const nextText = nextScript.map((l) => l.text).filter(Boolean).join(' ');
+      const nextSegments = nextScript.filter((l) => l.text).map((l) => ({
+        speaker: l.whoKo || l.whoEn || '상대',
+        text: l.text
+      }));
+      prefetchListeningAudio(nextText, nextSegments);
     } catch (err) {
       update({ genLoading: false, genError: `새 자료를 만들지 못했어요: ${err.message}` });
     }
@@ -233,6 +394,7 @@ function ListeningPage({
     onStudyLevelChange?.(level);
     generateListening(level);
   };
+
 
   const submitDictationAt = (index, answer, total) => {
     const st = stateRef.current;
@@ -264,6 +426,13 @@ function ListeningPage({
   const listeningSegments = SCRIPT_SRC.filter((line) => line.text).map((line) => ({ speaker: line.who?.[1] || line.who?.[0] || '상대', text: line.text }));
   const listeningGenerating = !!s.genLoading;
   const listeningReady = !listeningGenerating && !!listeningSpeechText;
+
+  // 🌟 [최적화] 대본 준비 완료 또는 튜터 변경 시 백그라운드 TTS 사전 호출(Pre-fetch)
+  useEffect(() => {
+    if (!listeningReady || listeningGenerating) return;
+    prefetchListeningAudio(listeningSpeechText, listeningSegments);
+  }, [listeningReady, listeningGenerating, listeningSpeechText, selectedTutorId]);
+
   const estimatedListeningDuration = Math.max(6, listeningSpeechText.length / 4.2);
   const listeningDuration = s.listeningDuration || estimatedListeningDuration;
   const sec = Math.min(Math.round(s.prog * listeningDuration), Math.round(listeningDuration));
