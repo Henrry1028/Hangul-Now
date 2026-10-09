@@ -94,11 +94,21 @@ jobs:
 
       - name: Build Container Image via Cloud Build
         run: |
+          echo "=== Active Google Account ==="
+          gcloud auth list
           IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloud-run-source-deploy/${{ env.SERVICE_NAME }}:${{ github.sha }}"
           git archive --format=tar.gz -o hn.tgz HEAD
+          ls -lh hn.tgz
           gcloud builds submit hn.tgz \
             --region ${{ env.REGION }} \
-            --tag "$IMAGE_TAG"
+            --tag "$IMAGE_TAG" 2>&1 | tee build.log || {
+              echo "### ❌ Cloud Build Failed Log" >> $GITHUB_STEP_SUMMARY
+              echo '```text' >> $GITHUB_STEP_SUMMARY
+              tail -n 40 build.log >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              exit 1
+            }
+
 
 
 
