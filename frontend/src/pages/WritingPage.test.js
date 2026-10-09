@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { calcTypingStats, formatTime } from './WritingPage.jsx';
+import { calcTypingStats, cheonjiinGuide, formatTime } from './WritingPage.jsx';
+import { CJ_SEQ } from '../data/writingData.js';
 
 describe('WritingPage typing speed utilities', () => {
   it('formats elapsed seconds into MM:SS correctly', () => {
@@ -67,5 +68,29 @@ describe('WritingPage typing speed utilities', () => {
     const shiftPress = calcTypingStats(base, 'Shift', 'T', 1002500);
     expect(shiftPress.errorStrokes).toBe(0);
     expect(shiftPress.accuracy).toBe(100);
+  });
+});
+
+describe('cheonjiinGuide (천지인 단계 안내)', () => {
+  const step = (stage, jamo, extra = {}) => ({ stage, jamo, ...extra });
+  it('says how many times to tap the same key instead of showing fractions', () => {
+    const g = cheonjiinGuide(step('L', 'ㅊ'), CJ_SEQ['ㅊ'], 0, true);
+    expect(g.head).toBe('1단계 초성 ㅊ');
+    expect(g.action).toBe("'ㅈㅊ' 키를 두 번 누르세요");
+    expect(g.chips.map((c) => c.state)).toEqual(['now', 'todo']);
+    expect(g.text).not.toMatch(/\d\/\d/);
+    expect(cheonjiinGuide(step('L', 'ㅊ'), CJ_SEQ['ㅊ'], 1, true).action).toBe("'ㅈㅊ' 키를 한 번 더 누르세요");
+  });
+
+  it('shows the key order for multi-key vowels with done/now/todo chips', () => {
+    const g = cheonjiinGuide(step('V', 'ㅕ'), CJ_SEQ['ㅕ'], 1, true);
+    expect(g.action).toBe("이번엔 'ㆍ' 키를 누르세요");
+    expect(g.chips).toEqual([{ label: 'ㆍ', state: 'done' }, { label: 'ㆍ', state: 'now' }, { label: 'ㅣ', state: 'todo' }]);
+  });
+
+  it('single taps have no chips and compounds name the part in words', () => {
+    const g = cheonjiinGuide(step('V', 'ㅗ', { compound: 'ㅘ', part: 1 }), CJ_SEQ['ㅗ'], 0, true);
+    expect(g.compound).toBe('ㅘ = ㅗ + ㅏ 중 앞부분 ㅗ');
+    expect(cheonjiinGuide(step('L', 'ㅂ'), CJ_SEQ['ㅂ'], 0, false)).toMatchObject({ action: "Tap 'ㅂㅍ' once", chips: [] });
   });
 });

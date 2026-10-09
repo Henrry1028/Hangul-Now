@@ -1676,3 +1676,14 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H10 — Writing Cheonjiin Mobile Keypad + Realistic Grip Hands + Guide
+
+- 2026-10-09: Started from clean `c1a44d2`; created `feat/writing-cj-mobile-hands`.
+- Enlarged the app-view Cheonjiin keypad (tight viewBox, no inner phone frame, bigger labels, less card padding).
+- Replaced the side-bezel thumb path with a pure, tested hand model (`cjHandModel.js`) showing both hands gripping the phone; iterated through contact sheets of all 16 key poses. Per user feedback, removed the blur and restored 0.36 opacity for crisp shadows.
+- Rewrote the Cheonjiin step bubble: wording instead of "n/m" fractions, plus key-order chips; the bubble row now grows with content.
+- Validation PASS: ESLint 0 errors; Vitest 60/60; Playwright 15 pass / 1 expected skip; Node 20 build.
+- Production deployment and traffic were not changed.
+
+---

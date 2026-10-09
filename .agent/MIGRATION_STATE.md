@@ -1,5 +1,19 @@
 # HangulNow React + Vite Migration State
 
+## H10 — Writing Cheonjiin Mobile Keypad + Realistic Grip Hands + Guide
+
+Status:
+
+`COMPLETE` (feature commit on `feat/writing-cj-mobile-hands`; not pushed, not deployed)
+
+- Baseline: `c1a44d2` (branched from `feat/videoclass-en-kst`).
+- App view (<860px): keypad viewBox cropped to the keys and inner phone frame removed, so keys grow from ~67x38px to ~88x50px on a 412px phone; larger labels.
+- Hand shadow: new pure model `frontend/src/data/cjHandModel.js` draws both hands gripping the phone (index finger wrapping the side edge, thumb-index web, thenar at the bottom rows, tapered thumb with knuckle/pad/round tip). The hand slides up for top rows, and the thumb foreshortens/curls for near keys. Left thumb = two left columns, right thumb = two right columns. Crisp edges (no blur), tweened motion, tap pulse on repeated taps.
+- Step guide: no "1/2"-style fractions; plain wording ("'ㅈㅊ' 키를 두 번 누르세요" / "한 번 더") plus a key-order chip row (✓ done / now / to do). The QWERTY compound note also uses words ("ㅘ = ㅗ + ㅏ 중 앞부분 ㅗ").
+- Validation: ESLint 0 errors; Vitest 60/60; Playwright 15 passed / 1 expected skip (against Vite dev); Node 20 build PASS.
+
+---
+
 ## H9 — Video Class English Toggle + Live KST Clock
 
 Status:

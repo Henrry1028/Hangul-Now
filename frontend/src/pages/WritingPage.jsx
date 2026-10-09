@@ -25,6 +25,7 @@ import {
   getHangulPron,
   jamoHint
 } from '../data/writingData.js';
+import { CJ_THUMB_REST, cjThumbSide, thumbHand } from '../data/cjHandModel.js';
 import '../styles/writing.css';
 
 export function formatTime(sec) {
@@ -189,140 +190,94 @@ function HandImage({ side, active, target, opacity }) {
   );
 }
 
-// 📱 스마트폰 양손 파지 인체공학적 엄지 손 그림자 엔진 (PC 키보드 손 그림자와 100% 동일한 실루엣 퀄리티)
-function buildMobileHandGrip(side, targetPos, isTargetActive) {
-  const isLeft = side === 'left';
-  const sign = isLeft ? 1 : -1;
-
-  // 대기 위치: 왼손은 한/영 키 부근 [86, 268], 오른손은 Space 키 부근 [372, 268]
-  const restTip = isLeft ? [86, 268] : [372, 268];
-  const [tx, ty] = isTargetActive && targetPos ? targetPos : restTip;
-
-  // 1. 기저점 B (스마트폰 좌우 측면 베젤 x: 0 또는 516)
-  // 타겟 키의 y 높이에 따라 손바닥/엄지 기저부가 베젤을 따라 유기적으로 승강 (180 ~ 235)
-  const bx = isLeft ? 0 : 516;
-  const by = 205 + (ty - 165) * 0.25;
-
-  const dx = tx - bx;
-  const dy = ty - by;
-  const dist = Math.max(Math.hypot(dx, dy), 1);
-  const ux = dx / dist;
-  const uy = dy / dist;
-
-  // 법선 벡터 (엄지 등쪽 = 윗방향)
-  const nx = -uy * sign;
-  const ny = ux * sign;
-
-  // 인체공학적 엄지 두께 (자연스러운 사람 손가락 해부학 비율)
-  const wTip = 22.0;    // 손끝 돔 반경
-  const wJoint = 24.5;  // 중간 관절 두께
-  const wBase = 32.0;   // 베젤 진입부 손바닥 두께
-
-  // 중간 관절 J (위쪽으로 살짝 볼록한 자연스러운 아치)
-  const jDist = dist * 0.52;
-  const arch = Math.sin(Math.min(dist / 220, 1) * Math.PI) * 10.0 * sign;
-  const jx = bx + ux * jDist + nx * (arch * 0.4);
-  const jy = by + uy * jDist + ny * (arch * 0.4);
-
-  const d2x = tx - jx;
-  const d2y = ty - jy;
-  const dist2 = Math.max(Math.hypot(d2x, d2y), 1);
-  const u2x = d2x / dist2;
-  const u2y = d2y / dist2;
-  const n2x = -u2y * sign;
-  const n2y = u2x * sign;
-
-  // 엄지 등쪽 점들
-  const pBase_top = [bx + nx * wBase, by + ny * wBase];
-  const pJoint_top = [jx + n2x * wJoint, jy + n2y * wJoint];
-  const pTip_top = [tx + n2x * wTip, ty + n2y * wTip];
-
-  // 손끝 둥근 돔 및 정면 점
-  const pTip_front = [tx + u2x * (wTip * 1.05), ty + u2y * (wTip * 1.05)];
-  const pTip_bottom = [tx - n2x * wTip, ty - n2y * wTip];
-
-  // 돔 제어점 (표준 큐빅 베지어 둥근 호)
-  const cTip1 = [pTip_top[0] + u2x * (wTip * 0.58), pTip_top[1] + u2y * (wTip * 0.58)];
-  const cTip2 = [pTip_front[0] + n2x * (wTip * 0.58), pTip_front[1] + n2y * (wTip * 0.58)];
-  const cTip3 = [pTip_front[0] - n2x * (wTip * 0.58), pTip_front[1] - n2y * (wTip * 0.58)];
-  const cTip4 = [pTip_bottom[0] + u2x * (wTip * 0.58), pTip_bottom[1] + u2y * (wTip * 0.58)];
-
-  // 엄지 안쪽(물갈퀴) 점들
-  const pJoint_bottom = [jx - n2x * (wJoint * 0.92), jy - n2y * (wJoint * 0.92)];
-  const pBase_bottom = [bx - nx * (wBase * 0.88), by - ny * (wBase * 0.88)];
-
-  let pathD = '';
-  if (isLeft) {
-    pathD = `
-      M -24 334
-      C -22 295 -14 260 -4 230
-      C 0 216 0 206 ${pBase_top[0].toFixed(1)} ${pBase_top[1].toFixed(1)}
-      C ${(pBase_top[0] + ux * 18).toFixed(1)} ${(pBase_top[1] + uy * 18).toFixed(1)} ${(pJoint_top[0] - u2x * 18).toFixed(1)} ${(pJoint_top[1] - u2y * 18).toFixed(1)} ${pJoint_top[0].toFixed(1)} ${pJoint_top[1].toFixed(1)}
-      C ${(pJoint_top[0] + u2x * 16).toFixed(1)} ${(pJoint_top[1] + u2y * 16).toFixed(1)} ${(pTip_top[0] - u2x * 14).toFixed(1)} ${(pTip_top[1] - u2y * 14).toFixed(1)} ${pTip_top[0].toFixed(1)} ${pTip_top[1].toFixed(1)}
-      C ${cTip1[0].toFixed(1)} ${cTip1[1].toFixed(1)} ${cTip2[0].toFixed(1)} ${cTip2[1].toFixed(1)} ${pTip_front[0].toFixed(1)} ${pTip_front[1].toFixed(1)}
-      C ${cTip3[0].toFixed(1)} ${cTip3[1].toFixed(1)} ${cTip4[0].toFixed(1)} ${cTip4[1].toFixed(1)} ${pTip_bottom[0].toFixed(1)} ${pTip_bottom[1].toFixed(1)}
-      C ${(pTip_bottom[0] - u2x * 14).toFixed(1)} ${(pTip_bottom[1] - u2y * 14).toFixed(1)} ${(pJoint_bottom[0] + u2x * 16).toFixed(1)} ${(pJoint_bottom[1] + u2y * 16).toFixed(1)} ${pJoint_bottom[0].toFixed(1)} ${pJoint_bottom[1].toFixed(1)}
-      C ${(pJoint_bottom[0] - u2x * 18).toFixed(1)} ${(pJoint_bottom[1] - u2y * 18).toFixed(1)} ${(pBase_bottom[0] + ux * 16).toFixed(1)} ${(pBase_bottom[1] + uy * 16).toFixed(1)} ${pBase_bottom[0].toFixed(1)} ${pBase_bottom[1].toFixed(1)}
-      C 2 275 8 305 22 326
-      C 32 334 46 334 68 334
-      L -24 334 Z
-    `;
-  } else {
-    pathD = `
-      M 540 334
-      C 538 295 530 260 520 230
-      C 516 216 516 206 ${pBase_top[0].toFixed(1)} ${pBase_top[1].toFixed(1)}
-      C ${(pBase_top[0] + ux * 18).toFixed(1)} ${(pBase_top[1] + uy * 18).toFixed(1)} ${(pJoint_top[0] - u2x * 18).toFixed(1)} ${(pJoint_top[1] - u2y * 18).toFixed(1)} ${pJoint_top[0].toFixed(1)} ${pJoint_top[1].toFixed(1)}
-      C ${(pJoint_top[0] + u2x * 16).toFixed(1)} ${(pJoint_top[1] + u2y * 16).toFixed(1)} ${(pTip_top[0] - u2x * 14).toFixed(1)} ${(pTip_top[1] - u2y * 14).toFixed(1)} ${pTip_top[0].toFixed(1)} ${pTip_top[1].toFixed(1)}
-      C ${cTip1[0].toFixed(1)} ${cTip1[1].toFixed(1)} ${cTip2[0].toFixed(1)} ${cTip2[1].toFixed(1)} ${pTip_front[0].toFixed(1)} ${pTip_front[1].toFixed(1)}
-      C ${cTip3[0].toFixed(1)} ${cTip3[1].toFixed(1)} ${cTip4[0].toFixed(1)} ${cTip4[1].toFixed(1)} ${pTip_bottom[0].toFixed(1)} ${pTip_bottom[1].toFixed(1)}
-      C ${(pTip_bottom[0] - u2x * 14).toFixed(1)} ${(pTip_bottom[1] - u2y * 14).toFixed(1)} ${(pJoint_bottom[0] + u2x * 16).toFixed(1)} ${(pJoint_bottom[1] + u2y * 16).toFixed(1)} ${pJoint_bottom[0].toFixed(1)} ${pJoint_bottom[1].toFixed(1)}
-      C ${(pJoint_bottom[0] - u2x * 18).toFixed(1)} ${(pJoint_bottom[1] - u2y * 18).toFixed(1)} ${(pBase_bottom[0] + ux * 16).toFixed(1)} ${(pBase_bottom[1] + uy * 16).toFixed(1)} ${pBase_bottom[0].toFixed(1)} ${pBase_bottom[1].toFixed(1)}
-      C 514 275 508 305 494 326
-      C 484 334 470 334 448 334
-      L 540 334 Z
-    `;
-  }
-
-  return { pathD, tipCenter: [tx, ty] };
+// 엄지 끝 좌표를 짧게 보간해 실제 엄지가 키 사이를 미끄러지듯 옮겨 가게 한다.
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+function useTweenedPoint(tx, ty, ms = 170) {
+  const [pt, setPt] = useState([tx, ty]);
+  const cur = useRef([tx, ty]);
+  useEffect(() => {
+    const from = cur.current;
+    if (from[0] === tx && from[1] === ty) return undefined;
+    const reduce = typeof window !== 'undefined' && window.matchMedia?.(REDUCED_MOTION_QUERY).matches;
+    if (reduce || typeof requestAnimationFrame !== 'function') {
+      cur.current = [tx, ty];
+      setPt(cur.current);
+      return undefined;
+    }
+    let raf = 0;
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / ms);
+      const e = 1 - (1 - k) ** 3;
+      cur.current = [from[0] + (tx - from[0]) * e, from[1] + (ty - from[1]) * e];
+      setPt(cur.current);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [tx, ty, ms]);
+  return pt;
 }
 
-// 📱 스마트폰 양손 파지 천지인 손 그림자 컴포넌트 (두 번째 첨부 PC 키보드 손 그림자와 동일한 실루엣 퀄리티)
-function CheonjiinHandGrip({ targetKey, opacity = 1 }) {
-  // 실제 사람이 스마트폰을 쥘 때의 인체공학적 키 분담:
-  // 1열(col 0: 1, 4, 7, 한/영) 및 2열(col 1: 2, 5, 8, 0)은 왼손 엄지가 탭! (오른손은 Space 대기)
-  // 3열(col 2: 3, 6, 9) 및 4열(col 3: Delete, Enter, .,?!, Space)은 오른손 엄지가 탭! (왼손은 한/영 대기)
-  const isLeftActive = !!(targetKey && targetKey.col <= 1);
-  const isRightActive = !!(targetKey && targetKey.col >= 2);
-
-  const leftTarget = isLeftActive ? [targetKey.cx, targetKey.cy] : null;
-  const rightTarget = isRightActive ? [targetKey.cx, targetKey.cy] : null;
-
-  const leftGrip = buildMobileHandGrip('left', leftTarget, isLeftActive);
-  const rightGrip = buildMobileHandGrip('right', rightTarget, isRightActive);
-
+// 📱 두 손으로 휴대폰을 쥐고 엄지로 치는 천지인 손 그림자 (엄지 2마디 + 엄지두덩 + 검지 옆선)
+// 누를 차례인 엄지만 진하게 뻗고, 다른 엄지는 자기 쪽 아래 키 위에 떠서 쉰다. tapKey가 바뀔 때마다 손끝이 눌리는 표시.
+function CheonjiinHandGrip({ targetKey, tapKey, opacity = 1 }) {
+  const side = targetKey ? cjThumbSide(targetKey) : null;
+  const leftGoal = side === 'left' ? [targetKey.cx, targetKey.cy] : CJ_THUMB_REST.left;
+  const rightGoal = side === 'right' ? [targetKey.cx, targetKey.cy] : CJ_THUMB_REST.right;
+  const leftTip = useTweenedPoint(leftGoal[0], leftGoal[1]);
+  const rightTip = useTweenedPoint(rightGoal[0], rightGoal[1]);
+  const hands = [thumbHand('left', leftTip), thumbHand('right', rightTip)].map((h, i) => ({ ...h, side: i ? 'right' : 'left' }));
   return (
     <g className="cji-mobile-grip-layer" pointerEvents="none">
-      {/* 📱 왼손 손 그림자 (두 번째 첨부 PC 키보드와 100% 동일한 실루엣 룩앤필) */}
-      <path
-        className="hand-layer"
-        d={leftGrip.pathD}
-        fill="#000000"
-        opacity={(isLeftActive ? 0.36 : 0.11) * opacity}
-        style={{ transition: 'opacity 150ms ease-out' }}
-      />
-
-      {/* 📱 오른손 손 그림자 (두 번째 첨부 PC 키보드와 100% 동일한 실루엣 룩앤필) */}
-      <path
-        className="hand-layer"
-        d={rightGrip.pathD}
-        fill="#000000"
-        opacity={(isRightActive ? 0.36 : 0.11) * opacity}
-        style={{ transition: 'opacity 150ms ease-out' }}
-      />
+      {hands.map((h) => (
+        <path
+          key={h.side}
+          className={`cj-hand-shadow ${side === h.side ? 'is-active' : ''}`}
+          d={h.d}
+          opacity={(side === h.side ? 0.36 : 0.13) * opacity}
+        />
+      ))}
+      {hands.filter((h) => h.side === side).map((h) => (
+        <g key={`${h.side}-${tapKey}`} transform={`translate(${h.tip[0].toFixed(1)} ${h.tip[1].toFixed(1)}) rotate(${h.padAngle.toFixed(1)})`}>
+          <ellipse className="cj-hand-shadow cj-hand-contact" cx="0" cy="0" rx="17" ry="12" opacity={0.2 * opacity} />
+        </g>
+      ))}
     </g>
   );
 }
+
+// 이중모음·겹받침의 어느 부분을 치는 중인지: "ㅘ = ㅗ + ㅏ 중 앞부분 ㅗ"
+function compoundPartNote(step, L) {
+  const parts = JAMO_SEQ[step.compound];
+  return L
+    ? `${step.compound} = ${parts.join(' + ')} 중 ${step.part === 1 ? '앞' : '뒷'}부분 ${step.jamo}`
+    : `${step.compound} = ${parts.join(' + ')}, ${step.part === 1 ? 'first' : 'second'} part ${step.jamo}`;
+}
+
+const KO_TIMES = ['', '한', '두', '세', '네'];
+// 천지인 단계 안내: "1/2" 같은 분수 대신 무엇을 몇 번 누르는지 말로 쓰고,
+// 여러 번 누르는 자모는 키 순서를 칩(✓ 누름 / 지금 / 남음)으로 보여 준다.
+export function cheonjiinGuide(step, seq, n, L) {
+  const stageNo = { L: 1, V: 2, T: 3 }[step.stage];
+  const stage = L ? { L: '초성', V: '모음', T: '받침' }[step.stage] : { L: 'Initial', V: 'Vowel', T: 'Final' }[step.stage];
+  const labels = seq.map((k) => CJ_MAP[k].label);
+  const key = labels[n];
+  const sameKey = labels.every((x) => x === labels[0]);
+  const head = L ? `${stageNo}단계 ${stage} ${step.jamo}` : `Step ${stageNo} · ${stage} ${step.jamo}`;
+  let action;
+  if (labels.length === 1) action = L ? `'${key}' 키를 한 번 누르세요` : `Tap '${key}' once`;
+  else if (sameKey && n === 0) action = L ? `'${key}' 키를 ${KO_TIMES[labels.length]} 번 누르세요` : `Tap '${key}' ${labels.length} times`;
+  else if (sameKey) action = L ? `'${key}' 키를 한 번 더 누르세요` : `Tap '${key}' once more`;
+  else action = L ? `이번엔 '${key}' 키를 누르세요` : `Now tap '${key}'`;
+  const compound = step.compound ? compoundPartNote(step, L) : '';
+  const chips = labels.length > 1 ? labels.map((label, i) => ({ label, state: i < n ? 'done' : i === n ? 'now' : 'todo' })) : [];
+  const text = `${head} · ${action}${compound ? ` (${compound})` : ''}`;
+  return { head, action, compound, chips, jamo: step.jamo, text };
+}
+
+// 앱 화면 천지인: 키패드(x 30~486, y 30~302)에 바짝 맞춘 보기 영역. 손바닥은 아래 모서리 밖으로 잘린다.
+const CJ_APP_VIEWBOX = '22 22 472 288';
 
 // 천지인 탭 진행 상태는 지금 입력 중인 자모 단계에만 유효하다.
 const cjSig = (st, step) => (step ? [st.wTab, st.jLevel, st.reviewMode ? 1 : 0, st.ti, st.wi, st.si, st.L, st.V, st.T, step.stage, step.jamo].join('|') : '');
@@ -673,7 +628,7 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
 
   const step = nextStroke(s);
   const neededJamo = step ? step.jamo : '';
-  const seqNote = step && step.compound ? ` (${step.compound} = ${JAMO_SEQ[step.compound].join(' + ')} · ${step.part}/2)` : '';
+  const seqNote = step && step.compound ? ` (${compoundPartNote(step, L)})` : '';
   let activeStepGuide;
   if (ok) activeStepGuide = L ? `🎉 완벽해요! [${tg.ch}] 글자가 완성되었습니다` : `🎉 Perfect! [${tg.ch}] is complete`;
   else if (step && step.stage === 'L') activeStepGuide = L ? `1단계 [초성] ➔ '${neededJamo}' 키를 누르세요` : `Step 1 [Initial] ➔ Press '${neededJamo}'`;
@@ -689,12 +644,9 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
   const cjSeq = step ? CJ_SEQ[step.jamo] : null;
   const cjN = cjSeq && cjTap.sig === cjSig(s, step) ? cjTap.n : 0;
   const cjTargetKey = !ok && cjSeq ? CJ_MAP[cjSeq[cjN]] : null;
-  if (isCji && cjTargetKey) {
-    const stageName = { L: L ? '1단계 [초성]' : 'Step 1 [Initial]', V: L ? '2단계 [중성]' : 'Step 2 [Vowel]', T: L ? '3단계 [종성]' : 'Step 3 [Final]' }[step.stage];
-    const compoundNote = step.compound ? `${step.compound} = ${JAMO_SEQ[step.compound].join(' + ')} · ` : '';
-    const tapNote = cjSeq.length > 1 ? `${step.jamo} = ${cjSeq.map((k) => CJ_MAP[k].label).join(' + ')} · ${cjN + 1}/${cjSeq.length}` : '';
-    const note = compoundNote || tapNote ? ` (${compoundNote}${tapNote || step.jamo})` : '';
-    activeStepGuide = L ? `${stageName} ➔ '${cjTargetKey.label}' 키를 누르세요${note}` : `${stageName} ➔ Tap '${cjTargetKey.label}'${note}`;
+  const cjGuide = isCji && cjTargetKey ? cheonjiinGuide(step, cjSeq, cjN, L) : null;
+  if (cjGuide) {
+    activeStepGuide = cjGuide.text;
     const leftThumb = cjTargetKey.col <= 1;
     activeFingerLabel = L ? `${leftThumb ? '왼손' : '오른손'} 엄지 ('${cjTargetKey.label}' 키)` : `${leftThumb ? 'Left' : 'Right'} thumb ('${cjTargetKey.label}' key)`;
   }
@@ -1067,24 +1019,55 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
             {isCji && !showCjGuide && (
               <>
                 <div className="writing-keyboard-viewport" style={{ position: 'relative', background: 'var(--bg)', border: '1px solid var(--line2)', borderRadius: '18px', padding: '16px 12px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.02)', width: '100%' }}>
-                  <div className="writing-cji-bubble-row" style={{ width: '100%', position: 'relative', height: '38px', marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div className="writing-cji-bubble" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#0F172A', color: '#FFFFFF', padding: '7px 16px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(15,23,42,0.35), 0 0 0 1px rgba(255,255,255,0.15)', border: '1.5px solid #38BDF8', whiteSpace: 'nowrap', maxWidth: '100%', zIndex: 2 }}>
-                      <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#38BDF8', boxShadow: '0 0 8px #38BDF8', flex: 'none' }} />
-                      <span style={{ fontSize: '13.5px', fontWeight: 700, letterSpacing: '-0.01em', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis' }}><Interp>{activeStepGuide}</Interp></span>
+                  <div className="writing-cji-bubble-row" style={{ width: '100%', position: 'relative', minHeight: '38px', marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="writing-cji-bubble" style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '5px', background: '#0F172A', color: '#FFFFFF', padding: '7px 16px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(15,23,42,0.35), 0 0 0 1px rgba(255,255,255,0.15)', border: '1.5px solid #38BDF8', maxWidth: '100%', zIndex: 2 }}>
+                      {cjGuide ? (
+                        <>
+                          <span className="writing-cji-guide-line">
+                            <span className="writing-cji-guide-dot" aria-hidden="true" />
+                            <span className="writing-cji-guide-stage">{cjGuide.head}</span>
+                            <span className="writing-cji-guide-action"><Interp>{cjGuide.action}</Interp></span>
+                          </span>
+                          {cjGuide.compound && <span className="writing-cji-guide-note">{cjGuide.compound}</span>}
+                          {cjGuide.chips.length > 0 && (
+                            <span className="writing-cji-guide-seq" aria-label={L ? `${cjGuide.jamo} 누르는 순서` : `Tap order for ${cjGuide.jamo}`}>
+                              <span className="writing-cji-guide-eq">{cjGuide.jamo} =</span>
+                              {cjGuide.chips.map((c, i) => (
+                                <React.Fragment key={i}>
+                                  {i > 0 && <span className="writing-cji-guide-arrow" aria-hidden="true">→</span>}
+                                  <span className={`writing-cji-chip is-${c.state}`}>{c.state === 'done' ? '✓ ' : ''}{c.label}</span>
+                                </React.Fragment>
+                              ))}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="writing-cji-guide-line">
+                          <span className="writing-cji-guide-dot" aria-hidden="true" />
+                          <span className="writing-cji-guide-action"><Interp>{activeStepGuide}</Interp></span>
+                        </span>
+                      )}
                       <div style={{ position: 'absolute', bottom: '-7px', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid #0F172A' }} />
                     </div>
                   </div>
                   <div className="writing-cji-root">
-                    <svg viewBox="-36 0 588 350" xmlns="http://www.w3.org/2000/svg" role="group" aria-label={L ? '천지인 키패드' : 'Cheonjiin keypad'}>
+                    <svg viewBox={isAppView ? CJ_APP_VIEWBOX : '-36 0 588 350'} xmlns="http://www.w3.org/2000/svg" role="group" aria-label={L ? '천지인 키패드' : 'Cheonjiin keypad'}>
                       <defs>
                         <filter id="cjKeyShadow" x="-10%" y="-10%" width="120%" height="130%">
                           <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.06)" />
                         </filter>
                       </defs>
-                      {/* 스마트폰 기기 외곽 프레임 */}
-                      <rect x="4" y="4" width="508" height="324" rx="24" fill="var(--bg)" stroke="var(--line2)" strokeWidth="1.5" opacity="0.8" />
-                      {/* 천지인 키패드 디스플레이 영역 */}
-                      <rect x="10" y="10" width={CJ_VIEWBOX.w - 20} height={CJ_VIEWBOX.h - 20} rx="20" fill="var(--card)" stroke="var(--line2)" strokeWidth="1.5" />
+                      {isAppView ? (
+                        // 앱 화면: 휴대폰 자체가 기기 틀이므로 키패드만 화면 폭 가득 크게
+                        <rect x="22" y="22" width={CJ_VIEWBOX.w - 44} height={CJ_VIEWBOX.h - 44} rx="14" fill="var(--card)" />
+                      ) : (
+                        <>
+                          {/* 스마트폰 기기 외곽 프레임 */}
+                          <rect x="4" y="4" width="508" height="324" rx="24" fill="var(--bg)" stroke="var(--line2)" strokeWidth="1.5" opacity="0.8" />
+                          {/* 천지인 키패드 디스플레이 영역 */}
+                          <rect x="10" y="10" width={CJ_VIEWBOX.w - 20} height={CJ_VIEWBOX.h - 20} rx="20" fill="var(--card)" stroke="var(--line2)" strokeWidth="1.5" />
+                        </>
+                      )}
                       <g className="keys-layer">
                         {CJ_ROWS.map((row) => row.map((k) => {
                           const isTarget = !!cjTargetKey && k.key === cjTargetKey.key;
@@ -1105,14 +1088,14 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
                             <g key={k.key} className={`key-node ${isTarget ? (isError ? 'key-error' : 'key-target') : ''}`} onClick={() => handleCjKey(k.key)} style={{ cursor: 'pointer' }}>
                               <rect x={k.x} y={k.y} width={k.w} height={k.h} rx="12" ry="12" fill={fill} stroke={stroke} strokeWidth={strokeWidth} filter="url(#cjKeyShadow)" />
                               {k.num && <text x={k.x + 11} y={k.y + 17} fontFamily="'IBM Plex Mono', monospace" fontSize="11" fontWeight="600" fill={subColor}>{k.num}</text>}
-                              <text x={k.cx} y={sub ? k.cy - 2 : k.cy + 8} textAnchor="middle" fontFamily="'Pretendard', sans-serif" fontSize={k.isSpecial ? (k.label.length > 2 ? '15' : '20') : '24'} fontWeight="700" fill={labelColor}>{k.label}</text>
-                              {sub && <text x={k.cx} y={k.cy + 18} textAnchor="middle" fontFamily="'Pretendard', sans-serif" fontSize="11.5" fontWeight="600" fill={subColor}>{sub}</text>}
+                              <text x={k.cx} y={sub ? k.cy - 2 : k.cy + 8} textAnchor="middle" fontFamily="'Pretendard', sans-serif" fontSize={k.isSpecial ? (k.label.length > 2 ? '16' : '21') : (isAppView ? '27' : '24')} fontWeight="700" fill={labelColor}>{k.label}</text>
+                              {sub && <text x={k.cx} y={k.cy + 18} textAnchor="middle" fontFamily="'Pretendard', sans-serif" fontSize={isAppView ? '13' : '11.5'} fontWeight="600" fill={subColor}>{sub}</text>}
                             </g>
                           );
                         }))}
                       </g>
                       {showHandShadow && !ok && (
-                        <CheonjiinHandGrip targetKey={cjTargetKey} opacity={1} />
+                        <CheonjiinHandGrip targetKey={cjTargetKey} tapKey={`${cjSig(s, step)}#${cjN}`} opacity={1} />
                       )}
                     </svg>
                   </div>

@@ -1,5 +1,32 @@
 # Current Task
 
+## Active Product Task — H10
+
+Milestone ID:
+
+`H10-WRITING-CJ-MOBILE-HANDS`
+
+Status:
+
+`COMPLETE` (see `git log -1` on `feat/writing-cj-mobile-hands`)
+
+Baseline HEAD:
+
+`c1a44d2`
+
+Expected files:
+
+- `frontend/src/data/cjHandModel.js`, `frontend/src/data/cjHandModel.test.js`
+- `frontend/src/pages/WritingPage.jsx`, `frontend/src/pages/WritingPage.test.js`
+- `frontend/src/styles/writing.css`
+- `.agent/*` state files
+
+Next action:
+
+- User review of the hand silhouette on a real phone. Push/merge/deploy need explicit user approval.
+
+---
+
 ## Active Product Task — H9
 
 Milestone ID:

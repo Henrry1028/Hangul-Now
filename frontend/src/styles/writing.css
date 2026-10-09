@@ -579,8 +579,8 @@
   .writing-screen.is-build.is-app-view .writing-cji-bubble {
     padding: 6px 10px !important;
   }
-  .writing-screen.is-build.is-app-view .writing-cji-bubble span:last-of-type {
-    font-size: 12px !important;
+  .writing-screen.is-build.is-app-view .writing-cji-guide-line {
+    font-size: 12.5px !important;
   }
 }
 
@@ -657,3 +657,35 @@
     padding-bottom: 2px !important;
   }
 }
+
+/* 천지인 손 그림자: 부드러운 가장자리의 실제 손 실루엣 + 손끝이 닿는 자리 */
+.cj-hand-shadow { fill: #0B0D0C; pointer-events: none; transition: opacity 150ms ease-out; }
+[data-theme="dark"] .cj-hand-shadow { fill: #FFFFFF; }
+.cj-hand-contact { transform-box: fill-box; transform-origin: center; animation: cjThumbTap 260ms ease-out; }
+@keyframes cjThumbTap {
+  0% { transform: scale(1.35); }
+  45% { transform: scale(0.82); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .cj-hand-contact { animation: none; } }
+
+/* 앱 화면: 천지인 키패드가 화면 폭을 가득 쓰도록 여백 축소 */
+@media (max-width: 859px) {
+  .writing-screen.is-build.is-app-view .writing-keyboard-card { padding: 4px !important; }
+  .writing-screen.is-build.is-app-view .writing-keyboard-viewport { padding: 4px 0 0 !important; }
+  .writing-screen.is-build.is-app-view .writing-cji-root { max-width: 640px; }
+}
+
+/* 천지인 단계 안내: 한 줄 지시 + 누르는 순서 칩 */
+.writing-cji-guide-line { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 4px 8px; font-size: 13.5px; font-weight: 700; letter-spacing: -0.01em; color: #FFFFFF; text-align: center; }
+.writing-cji-guide-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #38BDF8; box-shadow: 0 0 8px #38BDF8; flex: none; }
+.writing-cji-guide-stage { color: #7DD3FC; }
+.writing-cji-guide-note { font-size: 11.5px; font-weight: 600; color: rgba(255, 255, 255, 0.72); }
+.writing-cji-guide-seq { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.writing-cji-guide-eq { font-size: 12.5px; font-weight: 700; color: rgba(255, 255, 255, 0.8); margin-right: 2px; }
+.writing-cji-guide-arrow { font-size: 11px; color: rgba(255, 255, 255, 0.5); }
+.writing-cji-chip { font-size: 12.5px; font-weight: 700; line-height: 1; padding: 4px 8px; border-radius: 7px; border: 1px solid rgba(255, 255, 255, 0.28); color: rgba(255, 255, 255, 0.78); background: transparent; }
+.writing-cji-chip.is-done { color: rgba(255, 255, 255, 0.45); border-color: rgba(255, 255, 255, 0.14); }
+.writing-cji-chip.is-now { color: #FFFFFF; background: #B25353; border-color: #FCA5A5; box-shadow: 0 0 0 2px rgba(178, 83, 83, 0.35); }
+/* 안내가 두 줄(지시 + 순서 칩)이 될 수 있으므로 천지인 말풍선 줄은 내용 높이만큼 늘어난다 */
+.writing-keyboard-viewport > div.writing-cji-bubble-row { height: auto !important; min-height: 30px; margin-bottom: 8px !important; }
