@@ -24,6 +24,7 @@ try {
     gcloud builds submit $archiveFile --region $REGION --tag $imageTag
 
     Write-Host "🚢 [4/5] Cloud Run 프로덕션 배포 및 트래픽 100% 즉시 전환..." -ForegroundColor Cyan
+    $secrets = "GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest"
     gcloud run deploy $SERVICE_NAME `
         --image $imageTag `
         --region $REGION `
@@ -31,7 +32,11 @@ try {
         --timeout 3600 `
         --max-instances 1 `
         --allow-unauthenticated `
-        "--set-secrets=GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest"
+        --tag "rc-$sha" `
+        --set-secrets $secrets
+
+    Write-Host "🔄 최신 리비전 트래픽 100% 전환..." -ForegroundColor Cyan
+    gcloud run services update-traffic $SERVICE_NAME --region $REGION --to-latest
 
     Write-Host "🌐 [5/6] Firebase Hosting 정적 사이트 동시 배포..." -ForegroundColor Cyan
     npx firebase-tools deploy --only hosting --project $PROJECT_ID --non-interactive
