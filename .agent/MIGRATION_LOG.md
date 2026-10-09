@@ -1666,3 +1666,13 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H9 — Video Class English Toggle + Live KST Clock
+
+- 2026-10-09: Started from clean `f364583`; created `feat/videoclass-en-kst`.
+- Added a page-local English translation toggle (React context + `En` helper) to the Video Class page; tutor content uses `/api/translate` with a per-session cache and AbortController cleanup.
+- Added a live Asia/Seoul clock (`formatKst`, independent of device time zone) that re-renders only itself every second.
+- Validation PASS: changed-file ESLint; Vitest 52/52 (new formatter + render/toggle tests); Node 20 build; harness visual check.
+- Production deployment and traffic were not changed.
+
+---

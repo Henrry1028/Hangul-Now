@@ -1,5 +1,38 @@
 # Current Task
 
+## Active Product Task — H9
+
+Milestone ID:
+
+`H9-VIDEOCLASS-EN-KST`
+
+Status:
+
+`COMPLETE` (see `git log -1` on `feat/videoclass-en-kst`)
+
+Baseline HEAD:
+
+`f364583`
+
+Expected files:
+
+- `frontend/src/pages/VideoClassPage.jsx`
+- `frontend/src/pages/VideoClassPage.test.js`
+- `frontend/src/pages/VideoClassPage.test.jsx`
+- `frontend/src/styles/videoclass.css`
+- `.agent/CURRENT_TASK.md`, `.agent/MIGRATION_STATE.md`, `.agent/MIGRATION_LOG.md`
+
+Result:
+
+- English toggle (`영어 번역 보기` / `영어 번역 숨기기`) and a 1-second live KST clock added to the Video Class header.
+- ESLint PASS; Vitest 52/52; Node 20 build PASS.
+
+Next action:
+
+- Optional follow-up: translate Video Class modals. Push/merge/deploy need explicit user approval.
+
+---
+
 ## Active Product Task — H8
 
 Milestone ID:

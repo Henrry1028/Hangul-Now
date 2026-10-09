@@ -1,5 +1,20 @@
 # HangulNow React + Vite Migration State
 
+## H9 — Video Class English Toggle + Live KST Clock
+
+Status:
+
+`COMPLETE` (feature commit on `feat/videoclass-en-kst`; not pushed, not deployed)
+
+- Baseline: `f364583` on `feat/videoclass-en-kst` (branched from `feat/chat-mobile-cleanup`).
+- Scope: admin-only Video Class page (`VideoClassPage`) — "영어 번역 보기" pill toggle and a live Asia/Seoul date/time clock in the header.
+- Fixed labels on all three tabs get hand-written English; tutor intro/bio/specialties are translated on demand via `/api/translate` and cached per page session.
+- Video Class modals (`VideoClassModals`) are not translated in this milestone.
+- Validation: changed-file ESLint PASS; Vitest 52/52; Node 20 build PASS; visual check via a temporary local harness (real admin page needs an admin login).
+- Production traffic: unchanged. Deployment requires separate explicit approval.
+
+---
+
 ## H8 — Chat Mobile Toolbar + Mic Removal
 
 Status:
