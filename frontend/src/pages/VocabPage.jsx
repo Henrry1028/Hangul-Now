@@ -114,10 +114,10 @@ function VocabPage({ lang = 'ko', selectedTutorId = 'jiwoo', onNavigate }) {
   const quizItem = quiz && quiz.items[quiz.i];
 
   return (
-    <div className="notes-screen" data-screen-label="13 Word Study">
+    <div className="notes-screen" data-screen-label="13 Vocabulary">
       <header className="notes-head">
         <div>
-          <h1>{L ? '단어 학습' : 'Word Study'}</h1>
+          <h1>{L ? '단어 학습' : 'Vocabulary'}</h1>
           <p>{L ? '매일 새 단어를 조금씩 익히고, 잊을 때쯤 다시 복습해요. 모르는 단어는 오답 노트로 모여요.' : 'Learn a few new words every day and review them right before you forget. Missed words go to your mistake notes.'}</p>
           {showEn && L === 1 && <p className="notes-en">Learn a few new words every day and review them right before you forget. Missed words go to your mistake notes.</p>}
         </div>

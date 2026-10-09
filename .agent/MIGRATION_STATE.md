@@ -1,5 +1,17 @@
 # HangulNow React + Vite Migration State
 
+## H15 — Sidebar Reorder + Vocabulary Rename
+
+Status:
+
+`COMPLETE` (feature commit on `feat/nav-reorder`; not pushed, not deployed)
+
+- Sidebar order: Today → Writing → Vocabulary → Listening → Reading → Speaking → Chat → Conversation; YOU: Mistake notes, My progress.
+- English label "Word study" → "Vocabulary" (Korean "단어 학습" unchanged); screen label `13 Vocabulary`.
+- Validation: Vitest 73/73; Playwright 15 passed / 1 skip / 2 failed only from local `/api/tts` 503 (unchanged external issue); Node 20 build PASS; sidebar checked in the browser.
+
+---
+
 ## H14 — Writing Guide English Toggle + Hand Clip
 
 Status:

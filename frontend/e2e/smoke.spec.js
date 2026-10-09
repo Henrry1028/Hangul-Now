@@ -6,7 +6,7 @@ const SCREENS = [
   ['Today', '02 Today'],
   ['Tutors', '03 Tutors'],
   ['Chat', '04 Chat'],
-  ['Word study', '13 Word Study'],
+  ['Vocabulary', '13 Vocabulary'],
   ['Listening', '05 Listening'],
   ['Reading', '06 Reading'],
   ['Writing', '07 Writing'],
@@ -356,9 +356,9 @@ test('app layout: ☰ menu mirrors the web header and account menu; sub-nav only
 test("word study: today's cards go into my words with spaced review", async ({ page }) => {
   await page.goto('/');
   await page.locator('button:visible', { hasText: 'Chat' }).filter({ hasNot: page.locator('header') }).last().evaluate((button) => button.click());
-  await openMenuPage(page, 'Word study');
-  await expect.poll(() => screenLabel(page)).toBe('13 Word Study');
-  const words = page.locator('[data-screen-label="13 Word Study"]');
+  await openMenuPage(page, 'Vocabulary');
+  await expect.poll(() => screenLabel(page)).toBe('13 Vocabulary');
+  const words = page.locator('[data-screen-label="13 Vocabulary"]');
   await expect(words).toContainText('8 cards for today');
   await words.getByRole('button', { name: 'Start cards' }).click();
   await expect(words.locator('.vocab-card-word')).toContainText('안녕하세요');

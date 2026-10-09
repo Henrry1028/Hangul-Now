@@ -31,8 +31,9 @@ const LEARN_PAGES = ['home', 'chat', 'vocab', 'listening', 'reading', 'writing',
 
 function navDefs(L, videoClassAccess) {
   return [
-    { id: 'learn', label: L ? '학습' : 'LEARN', items: [['home', L ? '오늘의 학습' : 'Today', '오'], ['tutors', L ? '튜터' : 'Tutors', '튜'], ['chat', L ? '튜터 채팅' : 'Chat', '대'], ['vocab', L ? '단어 학습' : 'Word study', '단']] },
-    { id: 'practice', label: L ? '4대 영역 연습' : 'PRACTICE', items: [['listening', L ? '듣기 연습' : 'Listening', '듣'], ['reading', L ? '읽기 독해' : 'Reading', '읽'], ['writing', L ? '쓰기 조합' : 'Writing', '쓰'], ['speaking', L ? '말하기 코치' : 'Speaking', '말'], ['conversation', L ? '실시간 회화' : 'Conversation', '회']] },
+    // 사이드바 순서: Today → Writing → Vocabulary / Listening → Reading → Speaking → Chat → Conversation
+    { id: 'learn', label: L ? '학습' : 'LEARN', items: [['home', L ? '오늘의 학습' : 'Today', '오'], ['tutors', L ? '튜터' : 'Tutors', '튜'], ['writing', L ? '쓰기 조합' : 'Writing', '쓰'], ['vocab', L ? '단어 학습' : 'Vocabulary', '단']] },
+    { id: 'practice', label: L ? '4대 영역 연습' : 'PRACTICE', items: [['listening', L ? '듣기 연습' : 'Listening', '듣'], ['reading', L ? '읽기 독해' : 'Reading', '읽'], ['speaking', L ? '말하기 코치' : 'Speaking', '말'], ['chat', L ? '튜터 채팅' : 'Chat', '대'], ['conversation', L ? '실시간 회화' : 'Conversation', '회']] },
     { id: 'you', label: L ? '나의 기록' : 'YOU', items: [['mistakes', L ? '오답 노트' : 'Mistake notes', '노'], ['record', L ? '학습 기록' : 'My progress', '기'], ['resources', L ? '자료실' : 'Resources', '자'], ['about', L ? '회사 소개' : 'About us', '소']] },
     ...(videoClassAccess ? [{ id: 'videoclass', label: L ? '화상 수업 매칭' : 'LIVE VIDEO CLASS', items: [['videoclass', L ? '1:1 화상수업' : '1:1 Live Class', '화']] }] : [])
   ];

@@ -1722,3 +1722,11 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H15 — Sidebar Reorder + Vocabulary Rename
+
+- 2026-10-09: Moved Writing after Today and Chat before Conversation; renamed Word study to Vocabulary (English).
+- Validation: Vitest 73/73; Playwright 15 pass (2 TTS-503 failures unchanged); Node 20 build.
+- Production deployment and traffic were not changed.
+
+---

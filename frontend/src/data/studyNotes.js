@@ -24,7 +24,7 @@ export const MISTAKE_AREAS = {
   listening: { ko: '듣기 연습', en: 'Listening', icon: '🎧' },
   writing: { ko: '쓰기 조합', en: 'Writing', icon: '✍️' },
   speaking: { ko: '말하기 코치', en: 'Speaking', icon: '🎙️' },
-  vocab: { ko: '단어 학습', en: 'Word study', icon: '🗂️' }
+  vocab: { ko: '단어 학습', en: 'Vocabulary', icon: '🗂️' }
 };
 
 export const MISTAKE_CATEGORIES = {
