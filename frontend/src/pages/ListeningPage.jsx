@@ -4,6 +4,7 @@ import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
 import { DICTATIONS, LISTENING_TEXT, LQ, SCRIPT } from '../data/listeningData.js';
 import '../styles/listening.css';
 import { authHeaders } from '../data/authHeaders.js';
+import { recordMistake, recordMistakeFixed } from '../data/studyNotes.js';
 
 const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
 const LISTENING_SPEEDS = [0.8, 0.9, 1, 1.1, 1.2];
@@ -483,6 +484,9 @@ function ListeningPage({
     if (!value || !answer || index >= total) return;
     const clean = (text) => String(text || '').normalize('NFC').replace(/\s+/g, ' ').trim();
     const isCorrect = clean(value) === clean(answer);
+    const mistake = { area: 'listening', kind: 'dictation', prompt: answer, wrong: value, right: answer };
+    if (isCorrect) recordMistakeFixed(mistake);
+    else recordMistake(mistake);
     onRecordActivity?.({
       type: 'listening',
       module: '듣기 받아쓰기',
@@ -698,6 +702,9 @@ function ListeningPage({
                 const optionEn = q.optsEn?.[oi] || studyTrans[o] || '';
                 const pick = () => {
                   update((prev) => ({ lAns: { ...prev.lAns, [qi]: oi } }));
+                  const mistake = { area: 'listening', kind: 'quiz', prompt: q.q, wrong: o, right: q.opts[q.a] };
+                  if (right) recordMistakeFixed(mistake);
+                  else recordMistake(mistake);
                   onRecordActivity?.({
                     type: 'listening',
                     module: '듣기 퀴즈',

@@ -8,7 +8,10 @@ import {
   JIWOO_LAST_MESSAGE_TIME,
   formatTime
 } from '../data/homeData.js';
+import useStudyNotes from '../hooks/useStudyNotes.js';
+import { buildFocus, buildVocabSession } from '../data/studyNotes.js';
 import '../styles/home.css';
+import '../styles/notes.css';
 
 const cardStyle = { background: 'var(--card)', border: '1px solid var(--line)' };
 const hubCharStyle = { width: '82px', filter: 'drop-shadow(0 14px 22px rgba(0,0,0,0.22))', transition: 'transform .3s ease' };
@@ -47,8 +50,32 @@ function HomePage({ lang = 'ko', selectedTutorId = 'jiwoo', showRomanization = t
     done
   }));
 
+  // 오늘의 복습: 오답 노트 집중 복습 + 단어 카드 (모든 학습 영역의 오답이 자동으로 모인 것)
+  const notes = useStudyNotes();
+  const focus = buildFocus(notes.mistakes);
+  const words = buildVocabSession(notes.vocab);
+  const wordCount = words.due.length + words.fresh.length;
+
   return (
     <div className="home-screen" data-screen-label="02 Today">
+      <div className="home-review-strip">
+        <button type="button" onClick={navigate('mistakes')}>
+          <span className="home-review-icon" aria-hidden="true">📝</span>
+          <span>
+            <strong>{L ? `오답 집중 복습 ${focus.dueCount}개` : `${focus.dueCount} mistakes to review`}</strong>
+            <span>{focus.today.length
+              ? (L ? `오늘 틀린 내용 ${focus.today.length}개가 오답 노트에 모였어요` : `${focus.today.length} mistakes from today are in your notes`)
+              : (L ? '모든 학습에서 틀린 내용이 자동으로 모여요' : 'Mistakes from every area collect here')}</span>
+          </span>
+        </button>
+        <button type="button" onClick={navigate('vocab')}>
+          <span className="home-review-icon" aria-hidden="true">🗂️</span>
+          <span>
+            <strong>{L ? `오늘의 단어 카드 ${wordCount}장` : `${wordCount} word cards today`}</strong>
+            <span>{L ? `복습 ${words.due.length}장 · 새 단어 ${words.fresh.length}개` : `${words.due.length} reviews · ${words.fresh.length} new`}</span>
+          </span>
+        </button>
+      </div>
       <div style={{ background: 'linear-gradient(135deg, rgba(35,73,63,0.08) 0%, rgba(200,94,62,0.09) 100%)', border: '1.5px solid var(--accent)', borderRadius: '20px', padding: '24px clamp(16px,3vw,28px)', position: 'relative', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(35,73,63,0.08)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
           <div style={{ maxWidth: '660px' }}>

@@ -1696,3 +1696,13 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H12 — Word Study + Mistake Notes
+
+- 2026-10-09: Started from clean `c4bacd0`; created `feat/vocab-mistake-notes`.
+- Added studyNotes store, vocab starter deck, VocabPage, MistakesPage, menu entries, Today review shortcuts, and mistake capture hooks in chat/conversation/reading/listening/writing/speaking.
+- Server: `/api/chat` optional `focus` expressions are sanitized and appended to the tutor system instruction.
+- Validation: Vitest 73/73; Playwright 15 pass / 1 skip / 2 fail due to local TTS 503 (passes when TTS mocked); Node 20 build PASS; mobile screenshots of both new pages checked.
+- Production deployment and traffic were not changed.
+
+---

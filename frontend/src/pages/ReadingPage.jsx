@@ -12,6 +12,7 @@ import {
 import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
 import { TUTORS } from '../data/tutorsData.js';
 import { authHeaders } from '../data/authHeaders.js';
+import { addVocabWord, recordMistake, recordMistakeFixed } from '../data/studyNotes.js';
 
 const FULL_READING_TEXT = DEFAULT_READING_PARAGRAPHS
   .map((paragraph) => paragraph.map((segment) => (typeof segment === 'string' ? segment : segment[0])).join(''))
@@ -377,6 +378,11 @@ function ReadingPage({
 
   const toggleSavedWord = () => {
     if (!selectedWordKey) return;
+    // 저장한 단어는 단어 학습 카드로도 들어간다 (저장 해제해도 단어장에서는 지우지 않는다)
+    if (!saved[selectedWordKey] && selectedWord) {
+      const [ex, exEn] = String(selectedWord.ex || '').split('—').map((part) => part.trim());
+      addVocabWord({ w: selectedWord.base || selectedWordKey, en: selectedWord.en, pos: selectedWord.pos?.[1] || selectedWord.pos?.[0], ex, exEn }, 'reading');
+    }
     updateReadingState((current) => ({
       saved: {
         ...current.saved,
@@ -387,6 +393,9 @@ function ReadingPage({
 
   const answerQuizQuestion = (question, questionIndex, option, optionIndex) => {
     const isCorrect = optionIndex === question.a;
+    const mistake = { area: 'reading', kind: 'quiz', prompt: question.q, wrong: option, right: question.opts?.[question.a] };
+    if (isCorrect) recordMistakeFixed(mistake);
+    else recordMistake(mistake);
     updateReadingState((current) => ({
       quizAnswers: { ...current.quizAnswers, [questionIndex]: optionIndex }
     }));

@@ -5,6 +5,7 @@ import { SENTS, SPEAKING_TEXT } from '../data/speakingData.js';
 import useTutorSpeech from '../hooks/useTutorSpeech.js';
 import '../styles/speaking.css';
 import { authHeaders } from '../data/authHeaders.js';
+import { recordMistake, recordMistakeFixed } from '../data/studyNotes.js';
 
 const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
 
@@ -253,6 +254,18 @@ function SpeakingPage({
     // 발음 일치도 정밀 평가
     const analysis = analyzePronunciation(sent.text, spoken, sent.weak);
     setMatchResult(analysis);
+
+    // 실제로 말한 내용이 있을 때만: 85% 미만이면 오답 노트로, 90% 이상이면 복습 성공으로 친다
+    if (spoken) {
+      const weak = analysis.syllables.filter((x) => x.status !== 'good').map((x) => x.char).join(', ');
+      const mistake = {
+        area: 'speaking', kind: 'pronunciation', prompt: sent.text, wrong: spoken, right: sent.text,
+        noteKo: `발음 일치도 ${analysis.accuracy}%${weak ? ` · 다시 연습할 음절: ${weak}` : ''}`,
+        noteEn: `Pronunciation match ${analysis.accuracy}%${weak ? ` · syllables to practice: ${weak}` : ''}`
+      };
+      if (analysis.accuracy < 85) recordMistake(mistake);
+      else if (analysis.accuracy >= 90) recordMistakeFixed(mistake);
+    }
 
     onRecordActivity?.({
       type: 'speaking',

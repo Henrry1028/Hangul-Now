@@ -16,6 +16,8 @@ import ChatPage, { ChatTutorHeader } from './pages/ChatPage.jsx';
 import ConversationPage from './pages/ConversationPage.jsx';
 import AdminPage, { buildAdminView } from './pages/AdminPage.jsx';
 import VideoClassPage, { VideoClassModals } from './pages/VideoClassPage.jsx';
+import VocabPage from './pages/VocabPage.jsx';
+import MistakesPage from './pages/MistakesPage.jsx';
 import useAudioReview from './hooks/useAudioReview.js';
 import useTranslationToggle from './hooks/useTranslationToggle.js';
 import useChat from './hooks/useChat.js';
@@ -117,7 +119,7 @@ function App() {
       handleGoAdmin();
       return;
     }
-    if (target === 'intro' || target === 'about' || target === 'notice' || target === 'resources' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'speaking' || target === 'chat' || target === 'conversation') {
+    if (target === 'intro' || target === 'about' || target === 'notice' || target === 'resources' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'vocab' || target === 'mistakes' || target === 'speaking' || target === 'chat' || target === 'conversation') {
       setCurrentPage(target);
       const viewport = document.querySelector('.app-main-viewport');
       if (viewport) viewport.scrollTop = 0;
@@ -371,6 +373,12 @@ function App() {
           activityState={activityState}
           onNavigate={handleNavigate}
         />
+      )}
+      {currentPage === 'vocab' && (
+        <VocabPage lang={lang} selectedTutorId={selectedTutorId} onNavigate={handleNavigate} />
+      )}
+      {currentPage === 'mistakes' && (
+        <MistakesPage lang={lang} selectedTutorId={selectedTutorId} onNavigate={handleNavigate} />
       )}
       {currentPage === 'speaking' && (
         <SpeakingPage

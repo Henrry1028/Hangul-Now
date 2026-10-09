@@ -348,12 +348,17 @@ app.get("/api/version", (req, res) => {
 // ============================================================
 app.post("/api/chat", identifyUser, limitChat, async (req, res) => {
   try {
-    const { tutorId = "jiwoo", message, history = [] } = req.body;
+    const { tutorId = "jiwoo", message, history = [], focus = [] } = req.body;
     if (!message) {
       return res.status(400).json({ error: "message 필드가 필요합니다." });
     }
+    // 오답 노트의 '집중 복습' 표현: 최대 3개, 각 40자, 제어 문자 제거
+    const focusExpressions = (Array.isArray(focus) ? focus : [])
+      .map((item) => String(item || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 40))
+      .filter(Boolean)
+      .slice(0, 3);
 
-    const response = await generateTutorChat({ tutorId, message, history });
+    const response = await generateTutorChat({ tutorId, message, history, focus: focusExpressions });
 
     // Firebase 연동 시 대화 기록 Firestore 비동기 저장
     // 신원은 검증된 토큰(req.user.uid)만 사용한다 — body.userId는 신뢰하지 않는다

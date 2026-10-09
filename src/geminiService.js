@@ -95,8 +95,14 @@ export function normalizeTutorHistory(history = []) {
 /**
  * 1. AI 튜터 실시간 대화 응답 생성
  */
-export async function generateTutorChat({ tutorId = "jiwoo", message, history = [] }) {
+export async function generateTutorChat({ tutorId = "jiwoo", message, history = [], focus = [] }) {
   const persona = TUTOR_PERSONAS[tutorId] || TUTOR_PERSONAS.jiwoo;
+  // 학습자가 최근 자주 틀린 바른 표현: 대화 흐름이 자연스러울 때 한 번에 하나만 다시 쓰게 유도한다
+  const focusNote = focus.length
+    ? `
+
+[학습자 집중 복습 표현] 학습자가 최근 자주 틀렸던 바른 표현: ${focus.map((f) => `"${f}"`).join(", ")}. 대화 흐름에 자연스럽게 맞을 때만, 한 번에 하나씩 학습자가 이 표현을 다시 써 볼 수 있도록 질문이나 상황을 만들어 주세요. 억지로 끼워 넣거나 목록을 언급하지 마세요.`
+    : "";
 
   if (!genAI) {
     // API 키가 없을 때의 스마트 모의(Mock) 응답: 1~2문장 간결한 대화
@@ -115,7 +121,7 @@ export async function generateTutorChat({ tutorId = "jiwoo", message, history = 
 
     const model = genAI.getGenerativeModel({
       model: process.env.GEMINI_DIALOGUE_MODEL || "gemini-3.8-flash",
-      systemInstruction: persona.systemInstruction,
+      systemInstruction: persona.systemInstruction + focusNote,
       generationConfig: {
         maxOutputTokens: 800,
         temperature: 0.5,

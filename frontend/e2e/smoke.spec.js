@@ -6,16 +6,27 @@ const SCREENS = [
   ['Today', '02 Today'],
   ['Tutors', '03 Tutors'],
   ['Chat', '04 Chat'],
+  ['Word study', '13 Word Study'],
   ['Listening', '05 Listening'],
   ['Reading', '06 Reading'],
   ['Writing', '07 Writing'],
   ['Speaking', '08 Speaking'],
   ['Conversation', '08b Conversation'],
+  ['Mistake notes', '14 Mistake Notes'],
   ['My progress', '09 My progress'],
   ['About us', '10 About us']
 ];
 
 const screenLabel = (page) => page.locator('.app-main-viewport [data-screen-label]').first().getAttribute('data-screen-label');
+// 사이드바(데스크톱) 또는 ☰ 메뉴(앱)에서 학습 화면을 연다.
+const openMenuPage = async (page, label) => {
+  if ((page.viewportSize()?.width || 0) < 860) {
+    await page.locator('.mobile-menu-btn').click();
+    await page.locator('.mobile-drawer-overlay.is-open .drawer-nav__sub', { hasText: label }).click();
+  } else {
+    await page.locator('#app-sidebar button', { hasText: label }).first().click();
+  }
+};
 const dismissUpdateBanner = async (page) => {
   const close = page.getByRole('button', { name: 'Close' });
   if (await close.isVisible({ timeout: 1000 }).catch(() => false)) await close.evaluate((button) => button.click());
@@ -179,6 +190,14 @@ test('chat shows only the correction point; smart correction explains it in Engl
   await fixSpeak.click();
   await expect(fixSpeak).toHaveAttribute('data-tts-state', 'playing');
   await expect.poll(() => ttsRequests.some((request) => request.text === '어떻게' && request.tutorId === 'jiwoo')).toBe(true);
+
+  // 채팅에서 받은 교정은 오답 노트의 '오늘의 오답'에 자동으로 모인다.
+  await openMenuPage(page, 'Mistake notes');
+  await expect.poll(() => screenLabel(page)).toBe('14 Mistake Notes');
+  const notes = page.locator('[data-screen-label="14 Mistake Notes"]');
+  await expect(notes.locator('[data-mistake-area="chat"]')).toHaveCount(1);
+  await expect(notes.locator('[data-mistake-area="chat"]')).toContainText('어떻게');
+  await expect(notes).toContainText('Spelling & spacing');
   expect(problems).toEqual([]);
 });
 
@@ -322,7 +341,7 @@ test('app layout: ☰ menu mirrors the web header and account menu; sub-nav only
   const drawer = page.locator('.mobile-drawer-overlay.is-open');
   const main = await drawer.locator('.drawer-nav > button').allInnerTexts();
   expect(main.map((s) => s.trim())).toEqual(['Home', 'Tutors', 'Resources', 'About us']);
-  await expect(drawer.locator('.drawer-nav__sub')).toHaveCount(8);
+  await expect(drawer.locator('.drawer-nav__sub')).toHaveCount(10);
   for (const item of ['Change tutor', 'User guide', 'Notices', '1:1 Support']) await expect(drawer.getByText(item, { exact: true })).toBeVisible();
   await expect(drawer.locator('.drawer-community')).toHaveAttribute('href', /open\.kakao\.com/);
   await drawer.getByText('Notices', { exact: true }).click();
@@ -332,4 +351,24 @@ test('app layout: ☰ menu mirrors the web header and account menu; sub-nav only
   await page.locator('.mobile-drawer-overlay.is-open .drawer-nav__sub', { hasText: 'My progress' }).click();
   await expect.poll(() => screenLabel(page)).toBe('09 My progress');
   await expect(page.locator('.mobile-subnav-bar')).toHaveCount(0);
+});
+
+test("word study: today's cards go into my words with spaced review", async ({ page }) => {
+  await page.goto('/');
+  await page.locator('button:visible', { hasText: 'Chat' }).filter({ hasNot: page.locator('header') }).last().evaluate((button) => button.click());
+  await openMenuPage(page, 'Word study');
+  await expect.poll(() => screenLabel(page)).toBe('13 Word Study');
+  const words = page.locator('[data-screen-label="13 Word Study"]');
+  await expect(words).toContainText('8 cards for today');
+  await words.getByRole('button', { name: 'Start cards' }).click();
+  await expect(words.locator('.vocab-card-word')).toContainText('안녕하세요');
+  await words.getByRole('button', { name: 'Show meaning' }).click();
+  await expect(words.locator('.vocab-card-back')).toContainText('hello');
+  await words.getByRole('button', { name: 'I knew it' }).click();
+  await expect(words).toContainText('7 cards left');
+  await words.getByRole('tab', { name: 'My words' }).click();
+  await expect(words.locator('.vocab-list li')).toHaveCount(1);
+  await expect(words.locator('.vocab-list li')).toContainText('안녕하세요');
+  await words.getByRole('button', { name: 'Show English' }).click();
+  await expect(words.locator('.vocab-list li')).toContainText('hello');
 });

@@ -1,5 +1,21 @@
 # HangulNow React + Vite Migration State
 
+## H12 — Word Study + Mistake Notes (cross-area focus)
+
+Status:
+
+`COMPLETE` (feature commit on `feat/vocab-mistake-notes`; not pushed, not deployed)
+
+- Baseline: `c4bacd0` (branched from `feat/chat-correction-tts`).
+- New menu items: 단어 학습 (learn group) and 오답 노트 (나의 기록 group). New pages `VocabPage.jsx` / `MistakesPage.jsx`; Today page gets review shortcuts.
+- Store `frontend/src/data/studyNotes.js` (localStorage `hn-mistakes`, `hn-vocab`): mistakes from chat corrections, conversation hints, reading/listening quiz + dictation, writing wrong keys, speaking <85% match, and missed vocab are recorded automatically; same mistake is deduped and counted; Leitner boxes (0/1/3/7/14/30 days); focus score = repeats + recency + due + weakness + weak-category load.
+- Focus feeds back into learning: `/api/chat` accepts `focus` (<=3 sanitized expressions, 40 chars) appended to the tutor system instruction; correct answers in Reading/Listening/Speaking/Vocab count as successful reviews.
+- Word study: 96-word starter deck (`vocabDeck.js`), 8 new words/day (never re-introduced), flashcards with TTS, weakest-first meaning quiz, my-words list (search/filter/add/delete); Reading "save" adds cards.
+- Validation: ESLint no new errors (SpeakingPage has 27 pre-existing no-useless-escape errors); Vitest 73/73; Playwright 15 passed / 1 skip / 2 failed only because local `/api/tts` returns 503 (external TTS outage) — same test passes with TTS mocked including the new screens; Node 20 build PASS.
+- Known limits: data is per-browser (no Firestore sync yet); no AI-generated vocab beyond the starter deck and saved words.
+
+---
+
 ## H11 — Chat Corrected-Sentence Playback
 
 Status:

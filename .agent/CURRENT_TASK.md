@@ -1,5 +1,26 @@
 # Current Task
 
+## Active Product Task — H12
+
+Milestone ID:
+
+`H12-VOCAB-MISTAKE-NOTES`
+
+Status:
+
+`COMPLETE` (see `git log -1` on `feat/vocab-mistake-notes`)
+
+Baseline HEAD:
+
+`c4bacd0`
+
+Next action:
+
+- Optional follow-ups: Firestore sync for `hn-mistakes`/`hn-vocab`; AI-generated vocab sets per level. Push/merge/deploy need explicit user approval.
+- Note: local `/api/tts` currently returns 503, which fails the "every navigation target" e2e test on console errors.
+
+---
+
 ## Active Product Task — H11
 
 Milestone ID:

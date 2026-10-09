@@ -10,6 +10,7 @@ import {
   storeConversations
 } from '../data/conversationData.js';
 import { authHeaders } from '../data/authHeaders.js';
+import { recordMistake } from '../data/studyNotes.js';
 
 // Legacy Gemini Live conversation controller (preview/index.html 4979-5450). It lives at
 // App level because a legacy session keeps running while the learner visits other screens.
@@ -256,6 +257,9 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
         return;
       }
       if (msg.type === 'hint') {
+        if (msg.hint?.corrected_phrase) {
+          recordMistake({ area: 'conversation', kind: 'correction', wrong: msg.hint.error_phrase, right: msg.hint.corrected_phrase, noteKo: msg.hint.situation_rule });
+        }
         update((st) => ({ cvHints: [{ ...msg.hint, id: `h${Date.now()}${Math.random()}` }, ...(st.cvHints || [])].slice(0, 12) }));
         return;
       }

@@ -26,6 +26,7 @@ import {
   jamoHint
 } from '../data/writingData.js';
 import { CJ_THUMB_REST, cjThumbSide, thumbHand } from '../data/cjHandModel.js';
+import { recordMistake } from '../data/studyNotes.js';
 import '../styles/writing.css';
 
 export function formatTime(sec) {
@@ -279,6 +280,19 @@ export function cheonjiinGuide(step, seq, n, L) {
 // 앱 화면 천지인: 키패드(x 30~486, y 30~302)에 바짝 맞춘 보기 영역. 손바닥은 아래 모서리 밖으로 잘린다.
 const CJ_APP_VIEWBOX = '22 22 472 288';
 
+const MODIFIER_KEYS = ['SHIFT', 'SHIFTR', 'CTRL', 'CTRLR', 'ALT', 'ALTR', 'CAPS', 'TAB', 'CAPSLOCK', 'CONTROL', 'META'];
+// 자모 조합 중 틀린 키: 목표 글자와 그때 필요했던 자모를 오답 노트에 남긴다 (같은 글자·자모는 한 항목으로 모인다)
+function recordJamoMistake(st, step, pressed) {
+  const tg = getTarget(st);
+  const stage = { L: '초성', V: '모음', T: '받침' }[step.stage];
+  const stageEn = { L: 'initial', V: 'vowel', T: 'final' }[step.stage];
+  recordMistake({
+    area: 'writing', kind: 'jamo', prompt: tg.ch, wrong: pressed, right: step.compound || step.jamo,
+    noteKo: `'${tg.ch}'의 ${stage}은 ${step.compound || step.jamo}${step.compound ? ` (= ${JAMO_SEQ[step.compound].join(' + ')})` : ''}`,
+    noteEn: `The ${stageEn} of '${tg.ch}' is ${step.compound || step.jamo}`
+  });
+}
+
 // 천지인 탭 진행 상태는 지금 입력 중인 자모 단계에만 유효하다.
 const cjSig = (st, step) => (step ? [st.wTab, st.jLevel, st.reviewMode ? 1 : 0, st.ti, st.wi, st.si, st.L, st.V, st.T, step.stage, step.jamo].join('|') : '');
 
@@ -470,6 +484,7 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
       // Compound vowels/batchim: the first stroke enters the first jamo, the second completes it.
       update({ [step.stage]: step.value, isKeyError: false });
     } else {
+      if (step && !MODIFIER_KEYS.includes(keyName)) recordJamoMistake(st, step, `${keyName} 키`);
       update({ isKeyError: true });
       setTimeout(() => {
         if (stateRef.current.isKeyError) update({ isKeyError: false });
@@ -521,6 +536,7 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
         update({ isKeyError: false });
       }
     } else {
+      if (step) recordJamoMistake(st, step, `${CJ_MAP[keyId]?.label || keyId} 키`);
       update({ isKeyError: true });
       setTimeout(() => {
         if (stateRef.current.isKeyError) update({ isKeyError: false });

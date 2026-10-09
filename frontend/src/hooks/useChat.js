@@ -9,6 +9,7 @@ import {
   saveStoredChatMessages
 } from '../data/chatData.js';
 import { authHeaders } from '../data/authHeaders.js';
+import { focusExpressions, loadMistakes, recordMistake } from '../data/studyNotes.js';
 
 const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -100,6 +101,12 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `HTTP_${res.status}`);
         if (data.error) throw new Error(data.error);
+        if (data.has_error && data.wrong_span && data.fixed) {
+          recordMistake({
+            area: 'chat', kind: 'correction', prompt: sentence, wrong: data.wrong_span, right: data.fixed,
+            rule: data.rule_id, noteEn: data.explanation_en, noteKo: data.explanation_ko
+          });
+        }
         updateChatState((prev) => {
           const updatedList = (prev.msgs[tid] || []).map((message) => {
             if (message.id !== messageId) return message;
@@ -214,7 +221,8 @@ export default function useChat(chatState, updateChatState, tutorId, recordActiv
       authHeaders().then((headers) => fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headers },
-        body: JSON.stringify({ tutorId: targetTutorId, message: text, history }),
+        // 오답 노트에서 집중이 필요한 표현을 넘겨, 튜터가 대화 중에 자연스럽게 다시 연습시키게 한다
+        body: JSON.stringify({ tutorId: targetTutorId, message: text, history, focus: focusExpressions(loadMistakes()) }),
         signal: controller.signal
       }))
         .then(async (res) => {
