@@ -1,5 +1,17 @@
 # HangulNow React + Vite Migration State
 
+## H13 — Cheonjiin Hand Shadow Refinement (reference photo)
+
+Status:
+
+`COMPLETE` (feature commit on `feat/writing-cj-hands-ref`; not pushed, not deployed)
+
+- Baseline: `dfa13d3`. Per the user's reference photo/silhouette: thumbs now enter from the lower outer corners at ~25-35°, are thicker than a key (root ~108, pad ~90 units), the palm wraps the lower side edge without the high index-finger bump, and the idle thumb lies straight and is more visible (opacity 0.22, active 0.40).
+- Validation: Vitest 73/73; Writing e2e desktop/mobile 2/2; Node 20 build PASS; 16-key contact sheet and 412px Writing screen checked.
+- Note: `AGENTS.md` shows as deleted in the working tree (not by this agent); left untouched and not committed.
+
+---
+
 ## H12 — Word Study + Mistake Notes (cross-area focus)
 
 Status:

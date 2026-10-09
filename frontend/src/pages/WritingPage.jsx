@@ -236,7 +236,7 @@ function CheonjiinHandGrip({ targetKey, tapKey, opacity = 1 }) {
           key={h.side}
           className={`cj-hand-shadow ${side === h.side ? 'is-active' : ''}`}
           d={h.d}
-          opacity={(side === h.side ? 0.36 : 0.13) * opacity}
+          opacity={(side === h.side ? 0.4 : 0.22) * opacity}
         />
       ))}
       {hands.filter((h) => h.side === side).map((h) => (

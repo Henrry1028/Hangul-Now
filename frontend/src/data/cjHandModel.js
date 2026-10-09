@@ -8,11 +8,12 @@
 
 export const CJ_PAD_W = 516; // 키패드 좌우 대칭 기준 폭 (CJ_VIEWBOX.w)
 
-const LEFT_BASE = [8, 262]; // 엄지 뿌리(MCP 관절): 왼쪽 옆면, 아래쪽 두 줄 사이 높이
-export const CJ_THUMB_REST = { left: [124, 214], right: [CJ_PAD_W - 124, 214] }; // 쉬고 있는 엄지 끝(키 위에 살짝 떠 있음)
-const THUMB_LEN = 200; // 엄지를 편안히 폈을 때 뿌리~끝 길이
-const MAX_REACH = 252; // 이보다 멀면 손 전체가 목표 쪽으로 미끄러진다
-const INDEX_EDGE = 40; // 옆면을 감싼 검지가 화면 안쪽으로 비치는 x
+// 실제로 두 손으로 쥐면 엄지 뿌리는 옆면 바깥·아래쪽 줄 높이에 있고, 엄지는 안쪽 위로 25~35° 비스듬히 눕는다.
+const LEFT_BASE = [-16, 296]; // 엄지 뿌리(MCP 관절): 왼쪽 옆면 바로 바깥, 맨 아래 줄 높이
+export const CJ_THUMB_REST = { left: [178, 222], right: [CJ_PAD_W - 178, 222] }; // 쉬고 있는 엄지 끝(키 위에 살짝 떠 있음)
+const THUMB_LEN = 226; // 엄지를 편안히 폈을 때 뿌리~끝 길이
+const MAX_REACH = 268; // 이보다 멀면 손 전체가 목표 쪽으로 미끄러진다
+const EDGE_GRIP = 30; // 손바닥·검지 옆면이 화면 가장자리를 덮는 x (키패드 왼쪽 끝 30)
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
@@ -43,9 +44,10 @@ const bez = (a, c, b, t) => add(add(mul(a, (1 - t) * (1 - t)), mul(c, 2 * (1 - t
 const bezTan = (a, c, b, t) => norm(add(mul(sub(c, a), 2 * (1 - t)), mul(sub(b, c), 2 * t)));
 // 엄지 반폭(등쪽, 바닥쪽): 뿌리 → IP 관절(t≈0.5, 마디가 살짝 볼록) → 지문 패드(t≈0.8) → 끝
 function halfWidth(t) {
-  const knuckle = Math.exp(-(((t - 0.5) / 0.07) ** 2)) * 3;
-  const pad = Math.exp(-(((t - 0.8) / 0.1) ** 2)) * 3.5;
-  const taper = 47 - 12 * Math.min(t / 0.55, 1);
+  // 실제 엄지는 키 한 칸보다 굵다: 뿌리 ~108, 관절 ~84, 지문 패드 ~90 (키 폭 108)
+  const knuckle = Math.exp(-(((t - 0.52) / 0.07) ** 2)) * 3.5;
+  const pad = Math.exp(-(((t - 0.8) / 0.1) ** 2)) * 4.5;
+  const taper = 54 - 13 * Math.min(t / 0.55, 1);
   return [taper + knuckle, taper + pad - knuckle * 0.6];
 }
 
@@ -74,25 +76,27 @@ function leftOutline({ base, tip, ctrl }) {
     const r = th > 0 ? rd : rp;
     dome.push(add(domeC, add(mul(e, Math.cos(th) * (len(sub(tip, domeC)) + 24)), mul(n, Math.sin(th) * r))));
   }
-  const [bx, by] = base;
-  // 옆면을 감싼 검지: 둥근 손끝이 위쪽에서 살짝 비치고, 가운데 마디가 화면 가장자리를 따라 내려온다
-  const indexKnuckle = [INDEX_EDGE - 2, by - 96];
-  const web = lerp(indexKnuckle, dorsalSide[0], 0.5);
+  const [, by] = base;
+  // 손 바깥선: 휴대폰 옆면을 감싼 손(검지 옆면)이 엄지 뿌리 위쪽까지 가장자리를 얇게 덮고,
+  // 엄지와 검지 사이 물갈퀴에서 오목하게 꺾여 엄지 등으로 이어진다.
+  const gripTop = [EDGE_GRIP - 34, by - 140];
+  const gripMid = [EDGE_GRIP - 18, by - 96];
+  const web = lerp(gripMid, dorsalSide[0], 0.5);
+  // 엄지두덩: 엄지 바닥쪽 뿌리에서 둥글게 부풀어 휴대폰 아래 모서리를 감싸고 화면 밖으로 빠진다
+  const palmRoot = palmSide[0];
   return [
-    [-90, by - 196],
-    [12, by - 198],
-    [INDEX_EDGE - 6, by - 184],
-    [INDEX_EDGE, by - 152],
-    indexKnuckle,
-    add(web, mul(norm(sub(base, web)), 10)), // 물갈퀴는 오목
+    [-120, by - 150],
+    [-6, by - 150],
+    gripTop,
+    gripMid,
+    add(web, mul(norm(sub(base, web)), 12)), // 물갈퀴는 오목
     ...dorsalSide,
     ...dome,
     ...palmSide.slice().reverse(),
-    // 엄지두덩: 엄지 바닥쪽 뿌리에서 이어져 둥글게 부풀었다가 화면 아래로 빠진다
-    add(palmSide[0], [10, 30]),
-    add(palmSide[0], [8, 72]),
-    [palmSide[0][0] - 6, by + 170],
-    [-90, by + 170]
+    add(palmRoot, [-2, 34]),
+    add(palmRoot, [-14, 78]),
+    [palmRoot[0] - 36, by + 150],
+    [-120, by + 150]
   ];
 }
 

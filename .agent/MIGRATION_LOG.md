@@ -1706,3 +1706,11 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H13 — Cheonjiin Hand Shadow Refinement
+
+- 2026-10-09: From `dfa13d3`, branch `feat/writing-cj-hands-ref`. Reworked `cjHandModel.js` geometry to match the user's two-handed grip reference; raised idle-thumb opacity.
+- Validation PASS: Vitest 73/73; Writing e2e 2/2; Node 20 build.
+- Production deployment and traffic were not changed.
+
+---
