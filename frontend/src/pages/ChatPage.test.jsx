@@ -42,11 +42,8 @@ function stateWith(messages) {
   };
 }
 
-function mount(messages, lang = 'en') {
-  container = document.createElement('div');
-  document.body.appendChild(container);
-  root = createRoot(container);
-  act(() => root.render(
+function renderChat(messages, lang = 'en') {
+  root.render(
     <ChatPage
       lang={lang}
       selectedTutorId="jiwoo"
@@ -54,7 +51,14 @@ function mount(messages, lang = 'en') {
       chat={chat}
       onNavigate={vi.fn()}
     />
-  ));
+  );
+}
+
+function mount(messages, lang = 'en') {
+  container = document.createElement('div');
+  document.body.appendChild(container);
+  root = createRoot(container);
+  act(() => renderChat(messages, lang));
 }
 
 afterEach(() => {
@@ -119,7 +123,14 @@ describe('ChatPage message TTS', () => {
 
     expect(tutorSpeech.play).toHaveBeenNthCalledWith(1, '안녕하세요?', 'jiwoo:tutor-1');
     expect(tutorSpeech.play).toHaveBeenNthCalledWith(2, '반갑습니다.', 'jiwoo:learner-1');
-    expect(tutorSpeech.prefetch).toHaveBeenCalledWith('안녕하세요?');
+    expect(tutorSpeech.prefetch).not.toHaveBeenCalled();
+
+    act(() => renderChat([
+      { id: 'tutor-1', from: 't', text: '안녕하세요?', time: '16:45', tr: 'Hello?' },
+      { id: 'learner-1', from: 'me', text: '반갑습니다.', time: '16:46' },
+      { id: 'tutor-2', from: 't', text: '무엇을 연습할까요?', time: '16:47' }
+    ], 'ko'));
+    expect(tutorSpeech.prefetch).toHaveBeenCalledWith('무엇을 연습할까요?');
   });
 
   it('keeps per-message translation on its own control', () => {

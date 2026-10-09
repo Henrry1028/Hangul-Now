@@ -136,11 +136,21 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
     }
     return null;
   }, [msgList]);
+  const newestTutorSpeechKey = newestTutorMessage
+    ? `${selectedTutorId}:${newestTutorMessage.id || newestTutorMessage.text}`
+    : `${selectedTutorId}:none`;
+  const prefetchCursorRef = useRef({ tutorId: selectedTutorId, key: newestTutorSpeechKey });
 
-  // Warm only the newest tutor reply. Replaying any clicked bubble then uses the hook's session cache.
+  // Warm only a tutor reply that arrives while Chat is open. Historical/seed messages stay click-to-load.
   useEffect(() => {
-    if (newestTutorMessage?.text) prefetchSpeech(newestTutorMessage.text);
-  }, [newestTutorMessage?.id, newestTutorMessage?.text, selectedTutorId, prefetchSpeech]);
+    if (prefetchCursorRef.current.tutorId !== selectedTutorId) {
+      prefetchCursorRef.current = { tutorId: selectedTutorId, key: newestTutorSpeechKey };
+      return;
+    }
+    if (!newestTutorMessage?.text || prefetchCursorRef.current.key === newestTutorSpeechKey) return;
+    prefetchCursorRef.current.key = newestTutorSpeechKey;
+    prefetchSpeech(newestTutorMessage.text);
+  }, [newestTutorMessage?.text, newestTutorSpeechKey, selectedTutorId, prefetchSpeech]);
 
   // Legacy componentDidUpdate: keep the newest message in view.
   useEffect(() => {
@@ -286,7 +296,7 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
             ))}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px 12px' }}>
-            <button type="button" title="Voice" style={{ width: '38px', height: '38px', borderRadius: '50%', border: 0, background: 'var(--chip)', color: 'var(--ink2)', cursor: 'pointer', display: 'grid', placeItems: 'center', flex: 'none' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button>
+            <button type="button" className="chat-voice-button" title="Voice" aria-label={L ? '음성 입력' : 'Voice input'} style={{ width: '38px', height: '38px', borderRadius: '50%', border: 0, background: 'var(--chip)', color: 'var(--ink2)', cursor: 'pointer', display: 'grid', placeItems: 'center', flex: 'none' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button>
             <input
               value={s.draft}
               onChange={(e) => chat.setDraft(e.target.value)}

@@ -53,6 +53,11 @@
   .chat-guide-pane {
     display: none;
   }
+
+  .chat-tutor-bar,
+  .chat-voice-button {
+    display: none !important;
+  }
 }
 
 .chat-guide-card {

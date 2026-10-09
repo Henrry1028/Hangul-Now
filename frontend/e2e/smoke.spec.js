@@ -138,6 +138,18 @@ test('chat shows only the correction point; smart correction explains it in Engl
   await expect.poll(() => screenLabel(page)).toBe('04 Chat');
 
   const chatScreen = page.locator('[data-screen-label="04 Chat"]');
+  const isAppLayout = await page.evaluate(() => window.matchMedia('(max-width: 859px)').matches);
+  const mobileTutorControls = chatScreen.locator('.chat-tutor-bar');
+  const desktopTutorControls = page.locator('#app-sidebar .chat-tutor-actions');
+  const voiceInput = chatScreen.getByRole('button', { name: 'Voice input' });
+  if (isAppLayout) {
+    await expect(mobileTutorControls).toBeHidden();
+    await expect(voiceInput).toBeHidden();
+  } else {
+    await expect(desktopTutorControls).toBeVisible();
+    await expect(desktopTutorControls.getByRole('button')).toHaveCount(2);
+    await expect(voiceInput).toBeVisible();
+  }
   await chatScreen.locator('input').fill('어똥에 배달 해요?');
   await chatScreen.getByRole('button', { name: 'Send' }).click();
 
@@ -296,9 +308,9 @@ test('writing shows only the Cheonjiin keypad in the app layout (<860px)', async
 });
 
 test('app layout: ☰ menu mirrors the web header and account menu; sub-nav only on learning pages', async ({ page }) => {
-  await page.goto('/');
-  const isApp = await page.evaluate(() => window.matchMedia('(max-width: 859px)').matches);
+  const isApp = (page.viewportSize()?.width || 0) < 860;
   test.skip(!isApp, 'app (<860px) only');
+  await page.goto('/');
   await page.locator('.mobile-menu-btn').click();
   const drawer = page.locator('.mobile-drawer-overlay.is-open');
   const main = await drawer.locator('.drawer-nav > button').allInnerTexts();
