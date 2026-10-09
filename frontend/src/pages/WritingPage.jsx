@@ -222,7 +222,8 @@ function useTweenedPoint(tx, ty, ms = 170) {
 
 // 📱 두 손으로 휴대폰을 쥐고 엄지로 치는 천지인 손 그림자 (엄지 2마디 + 엄지두덩 + 검지 옆선)
 // 누를 차례인 엄지만 진하게 뻗고, 다른 엄지는 자기 쪽 아래 키 위에 떠서 쉰다. tapKey가 바뀔 때마다 손끝이 눌리는 표시.
-function CheonjiinHandGrip({ targetKey, tapKey, opacity = 1 }) {
+// screen: 손 그림자가 보일 휴대폰 화면 영역 { x, y, w, h, r } — 이 밖(손바닥·손목)은 잘라서 보이지 않게 한다.
+function CheonjiinHandGrip({ targetKey, tapKey, opacity = 1, screen }) {
   const side = targetKey ? cjThumbSide(targetKey) : null;
   const leftGoal = side === 'left' ? [targetKey.cx, targetKey.cy] : CJ_THUMB_REST.left;
   const rightGoal = side === 'right' ? [targetKey.cx, targetKey.cy] : CJ_THUMB_REST.right;
@@ -230,7 +231,14 @@ function CheonjiinHandGrip({ targetKey, tapKey, opacity = 1 }) {
   const rightTip = useTweenedPoint(rightGoal[0], rightGoal[1]);
   const hands = [thumbHand('left', leftTip), thumbHand('right', rightTip)].map((h, i) => ({ ...h, side: i ? 'right' : 'left' }));
   return (
-    <g className="cji-mobile-grip-layer" pointerEvents="none">
+    <g className="cji-mobile-grip-layer" pointerEvents="none" clipPath={screen ? 'url(#cjHandScreenClip)' : undefined}>
+      {screen && (
+        <defs>
+          <clipPath id="cjHandScreenClip">
+            <rect x={screen.x} y={screen.y} width={screen.w} height={screen.h} rx={screen.r} />
+          </clipPath>
+        </defs>
+      )}
       {hands.map((h) => (
         <path
           key={h.side}
@@ -644,13 +652,16 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
 
   const step = nextStroke(s);
   const neededJamo = step ? step.jamo : '';
-  const seqNote = step && step.compound ? ` (${compoundPartNote(step, L)})` : '';
-  let activeStepGuide;
-  if (ok) activeStepGuide = L ? `🎉 완벽해요! [${tg.ch}] 글자가 완성되었습니다` : `🎉 Perfect! [${tg.ch}] is complete`;
-  else if (step && step.stage === 'L') activeStepGuide = L ? `1단계 [초성] ➔ '${neededJamo}' 키를 누르세요` : `Step 1 [Initial] ➔ Press '${neededJamo}'`;
-  else if (step && step.stage === 'V') activeStepGuide = L ? `2단계 [중성] ➔ '${neededJamo}' 키를 누르세요${seqNote}` : `Step 2 [Vowel] ➔ Press '${neededJamo}'${seqNote}`;
-  else if (step && step.stage === 'T') activeStepGuide = L ? `3단계 [종성] ➔ '${neededJamo}' 키를 누르세요${seqNote}` : `Step 3 [Final] ➔ Press '${neededJamo}'${seqNote}`;
-  else activeStepGuide = L ? '목표 글자를 자모로 조합해 보세요' : 'Assemble the target syllable block';
+  // 단계 안내 문구 (lang 1 = 한국어, 0 = 영어). '영어 번역 보기'를 켜면 영어 문구를 한국어 아래에 함께 보여 준다.
+  const qwertyGuide = (lang) => {
+    const seqNote = step && step.compound ? ` (${compoundPartNote(step, lang)})` : '';
+    if (ok) return lang ? `🎉 완벽해요! [${tg.ch}] 글자가 완성되었습니다` : `🎉 Perfect! [${tg.ch}] is complete`;
+    if (step && step.stage === 'L') return lang ? `1단계 [초성] ➔ '${neededJamo}' 키를 누르세요` : `Step 1 [Initial] ➔ Press '${neededJamo}'`;
+    if (step && step.stage === 'V') return lang ? `2단계 [중성] ➔ '${neededJamo}' 키를 누르세요${seqNote}` : `Step 2 [Vowel] ➔ Press '${neededJamo}'${seqNote}`;
+    if (step && step.stage === 'T') return lang ? `3단계 [종성] ➔ '${neededJamo}' 키를 누르세요${seqNote}` : `Step 3 [Final] ➔ Press '${neededJamo}'${seqNote}`;
+    return lang ? '목표 글자를 자모로 조합해 보세요' : 'Assemble the target syllable block';
+  };
+  let activeStepGuide = qwertyGuide(L);
 
   const keyInfo = (!ok && neededJamo) ? JAMO_KEY_MAP[neededJamo] : null;
   let activeFingerLabel = ok ? (L ? '완성되었습니다! ➔ 다음 글자' : 'Complete! ➔ Next letter') : (keyInfo ? (L ? `${keyInfo.ko} (${keyInfo.key} 키)` : `${keyInfo.en} (${keyInfo.key} key)`) : (L ? '자유 입력' : 'Free input'));
@@ -661,6 +672,12 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
   const cjN = cjSeq && cjTap.sig === cjSig(s, step) ? cjTap.n : 0;
   const cjTargetKey = !ok && cjSeq ? CJ_MAP[cjSeq[cjN]] : null;
   const cjGuide = isCji && cjTargetKey ? cheonjiinGuide(step, cjSeq, cjN, L) : null;
+  // 영어 번역 보기: 한국어 화면에서만 켤 수 있다 (영어 화면은 안내가 이미 영어)
+  const showGuideEn = L === 1 && !!s.guideEn;
+  const cjGuideEn = showGuideEn && cjGuide ? cheonjiinGuide(step, cjSeq, cjN, 0) : null;
+  const guideEnText = showGuideEn
+    ? (cjGuideEn ? `${cjGuideEn.head} · ${cjGuideEn.action}${cjGuideEn.compound ? ` (${cjGuideEn.compound})` : ''}` : qwertyGuide(0))
+    : '';
   if (cjGuide) {
     activeStepGuide = cjGuide.text;
     const leftThumb = cjTargetKey.col <= 1;
@@ -917,6 +934,11 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                {L === 1 && (
+                  <button type="button" className={`writing-guide-en-toggle${showGuideEn ? ' is-on' : ''}`} onClick={() => update((st) => ({ guideEn: !st.guideEn }))} aria-pressed={showGuideEn}>
+                    {showGuideEn ? '영어 번역 숨기기' : '영어 번역 보기'}
+                  </button>
+                )}
                 <button type="button" onClick={() => update((st) => ({ showHandShadow: !st.showHandShadow }))} style={{ border: '1px solid var(--line3)', background: 'var(--bg2)', color: 'var(--ink)', borderRadius: '999px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all .15s' }}>
                   <span>🖐️</span>
                   <span>손 그림자</span>
@@ -1063,6 +1085,7 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
                           <span className="writing-cji-guide-action"><Interp>{activeStepGuide}</Interp></span>
                         </span>
                       )}
+                      {guideEnText && <span className="writing-guide-en" lang="en">{guideEnText}</span>}
                       <div style={{ position: 'absolute', bottom: '-7px', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid #0F172A' }} />
                     </div>
                   </div>
@@ -1111,7 +1134,12 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
                         }))}
                       </g>
                       {showHandShadow && !ok && (
-                        <CheonjiinHandGrip targetKey={cjTargetKey} tapKey={`${cjSig(s, step)}#${cjN}`} opacity={1} />
+                        <CheonjiinHandGrip
+                          targetKey={cjTargetKey}
+                          tapKey={`${cjSig(s, step)}#${cjN}`}
+                          opacity={1}
+                          screen={isAppView ? { x: 22, y: 22, w: CJ_VIEWBOX.w - 44, h: CJ_VIEWBOX.h - 44, r: 14 } : { x: 10, y: 10, w: CJ_VIEWBOX.w - 20, h: CJ_VIEWBOX.h - 20, r: 20 }}
+                        />
                       )}
                     </svg>
                   </div>
@@ -1123,10 +1151,13 @@ function WritingPage({ lang = 'ko', selectedTutorId = 'jiwoo', writingState, onW
             {!isCji && !showKbGuide && (
               <>
                 <div className="writing-keyboard-viewport" style={{ position: 'relative', background: 'var(--bg)', border: '1px solid var(--line2)', borderRadius: '18px', padding: '6px 12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.02)', width: '100%', maxWidth: '964px', margin: '0 auto' }}>
-                  <div style={{ width: '100%', maxWidth: '940px', position: 'relative', height: '36px', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                  <div className={`writing-kb-bubble-row${guideEnText ? ' has-en' : ''}`} style={{ width: '100%', maxWidth: '940px', position: 'relative', height: guideEnText ? '54px' : '36px', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
                     <div style={{ position: 'absolute', left: '21.7%', transform: 'translateX(-50%)', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#0F172A', color: '#FFFFFF', padding: '6px 14px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(15,23,42,0.35), 0 0 0 1px rgba(255,255,255,0.15)', border: '1.5px solid #38BDF8', whiteSpace: 'nowrap', zIndex: 2 }}>
                       <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#38BDF8', boxShadow: '0 0 8px #38BDF8' }} />
-                      <span style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.01em', color: '#FFFFFF' }}><Interp>{activeStepGuide}</Interp></span>
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.01em', color: '#FFFFFF' }}><Interp>{activeStepGuide}</Interp></span>
+                        {guideEnText && <span className="writing-guide-en" lang="en">{guideEnText}</span>}
+                      </span>
                       <div style={{ position: 'absolute', bottom: '-7px', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid #0F172A' }} />
                     </div>
                   </div>

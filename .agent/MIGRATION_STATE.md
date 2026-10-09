@@ -1,5 +1,18 @@
 # HangulNow React + Vite Migration State
 
+## H14 — Writing Guide English Toggle + Hand Clip
+
+Status:
+
+`COMPLETE` (feature commit on `feat/writing-cj-hands-ref`; not pushed, not deployed)
+
+- "영어 번역 보기" pill left of "손 그림자" in the Writing keyboard header (Korean UI only); when on, both the Cheonjiin and QWERTY step bubbles add the English guide line.
+- Hand shadow is clipped to the phone screen rect (desktop Cheonjiin mode previously showed palm blocks outside the phone frame).
+- Known limit: the keyboard header is hidden in the app layout (<860px), so the toggle is desktop-only for now.
+- Validation: Vitest 73/73; Writing e2e 2/2; Node 20 build PASS; desktop screenshot checked.
+
+---
+
 ## H13 — Cheonjiin Hand Shadow Refinement (reference photo)
 
 Status:

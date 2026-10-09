@@ -1714,3 +1714,11 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H14 — Writing Guide English Toggle + Hand Clip
+
+- 2026-10-09: Added the guide English toggle and English bubble lines; clipped hand shadows to the phone screen area.
+- Validation PASS: Vitest 73/73; Writing e2e 2/2; Node 20 build.
+- Production deployment and traffic were not changed.
+
+---

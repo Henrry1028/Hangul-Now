@@ -689,3 +689,10 @@
 .writing-cji-chip.is-now { color: #FFFFFF; background: #B25353; border-color: #FCA5A5; box-shadow: 0 0 0 2px rgba(178, 83, 83, 0.35); }
 /* 안내가 두 줄(지시 + 순서 칩)이 될 수 있으므로 천지인 말풍선 줄은 내용 높이만큼 늘어난다 */
 .writing-keyboard-viewport > div.writing-cji-bubble-row { height: auto !important; min-height: 30px; margin-bottom: 8px !important; }
+
+/* 영어 번역 보기: 단계 안내 말풍선 아래에 영어 안내를 함께 */
+.writing-guide-en-toggle { border: 1px solid var(--line3); background: var(--bg2); color: var(--ink); border-radius: 999px; padding: 6px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; }
+.writing-guide-en-toggle.is-on { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent); }
+.writing-guide-en { font-size: 12px; font-weight: 500; line-height: 1.4; color: rgba(255, 255, 255, 0.72); letter-spacing: 0; text-align: center; white-space: normal; }
+.writing-keyboard-viewport > div.writing-kb-bubble-row { height: 36px !important; }
+.writing-keyboard-viewport > div.writing-kb-bubble-row.has-en { height: 54px !important; }
