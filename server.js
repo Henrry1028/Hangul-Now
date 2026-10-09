@@ -336,8 +336,8 @@ app.get("/api/version", (req, res) => {
       en: "A new update has been deployed!"
     },
     description: {
-      ko: "듣기 연습 TTS 0초 즉각 재생 및 성능 최적화가 적용되었습니다.",
-      en: "Listening TTS instant playback and performance optimizations are live."
+      ko: "말하기 영어 번역 보기, Native 0초 즉각 재생 및 발화 내용 표시 기능이 적용되었습니다.",
+      en: "Speaking English translation, instant Native playback, and heard-speech display are live."
     },
     timestamp: new Date().toISOString()
   });

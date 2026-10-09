@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { CLIENT_VERSION, CLIENT_BUILD_TIME } from '../version.js';
 
 const CHECK_INTERVAL_MS = 60 * 1000; // 60초 주기
-const DISMISSED_KEY = 'hn_update_dismissed_revision';
+const APPLIED_REVISION_KEY = 'hn_applied_revision';
+const DISMISSED_REVISION_KEY = 'hn_dismissed_revision';
 
 export default function useAppUpdate() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -10,8 +10,21 @@ export default function useAppUpdate() {
   const [isApplying, setIsApplying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  const initialServerInfoRef = useRef(null);
+  const initialRevisionRef = useRef(null);
+  const latestRevisionRef = useRef(null);
   const checkingRef = useRef(false);
+
+  // 마운트 시 URL에 남은 _hn_update 쿼리 정리
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('_hn_update')) {
+        url.searchParams.delete('_hn_update');
+        window.history.replaceState({}, document.title, url.pathname + (url.search || '') + url.hash);
+      }
+    } catch {}
+  }, []);
 
   // 서버 최신 버전 검사 함수
   const checkForUpdate = useCallback(async () => {
@@ -19,7 +32,6 @@ export default function useAppUpdate() {
     checkingRef.current = true;
 
     try {
-      // 캐시 방지 쿼리 파라미터 부착
       const response = await fetch(`/api/version?_t=${Date.now()}`, {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
@@ -29,23 +41,27 @@ export default function useAppUpdate() {
       const data = await response.json();
       if (!data || data.status !== 'ok') return;
 
-      const serverRevision = String(data.revision || '');
-      const serverBootTime = String(data.bootTime || '');
+      const serverRevision = String(data.revision || data.bootTime || '');
+      if (!serverRevision) return;
 
-      // 최초 실행 시 서버 기준점 기록
-      if (!initialServerInfoRef.current) {
-        initialServerInfoRef.current = {
-          revision: serverRevision,
-          bootTime: serverBootTime
-        };
+      latestRevisionRef.current = serverRevision;
 
-        // 로컬 클라이언트 빌드 타임스탬프와 서버 부트 시각 비교 (새 배포 여부)
-        const clientTime = new Date(CLIENT_BUILD_TIME).getTime();
-        const serverTime = new Date(serverBootTime).getTime();
-        if (serverTime > 0 && clientTime > 0 && (serverTime - clientTime) > 15000) {
-          // 서버가 클라이언트 번들 빌드 이후에 새로 시작된 경우
-          const lastDismissed = sessionStorage.getItem(DISMISSED_KEY);
-          if (lastDismissed !== serverRevision && lastDismissed !== serverBootTime) {
+      // 1) 최초 실행 시
+      if (!initialRevisionRef.current) {
+        initialRevisionRef.current = serverRevision;
+
+        const storedApplied = localStorage.getItem(APPLIED_REVISION_KEY);
+
+        // 첫 방문이거나 기존 저장값이 없으면 현재 버전을 최신으로 저장
+        if (!storedApplied) {
+          localStorage.setItem(APPLIED_REVISION_KEY, serverRevision);
+          return;
+        }
+
+        // 저장된 버전과 서버의 최신 버전이 다른 경우 (새 배포 존재)
+        if (storedApplied !== serverRevision) {
+          const dismissedRev = sessionStorage.getItem(DISMISSED_REVISION_KEY);
+          if (dismissedRev !== serverRevision) {
             setVersionInfo(data);
             setUpdateAvailable(true);
           }
@@ -53,21 +69,17 @@ export default function useAppUpdate() {
         return;
       }
 
-      // 런타임 중 서버가 재배포되었거나 새 리비전으로 갱신된 경우 감지
-      const init = initialServerInfoRef.current;
-      const revisionChanged = serverRevision && init.revision && serverRevision !== init.revision;
-      const bootTimeChanged = serverBootTime && init.bootTime && serverBootTime !== init.bootTime;
-
-      if (revisionChanged || bootTimeChanged) {
-        const lastDismissed = sessionStorage.getItem(DISMISSED_KEY);
-        const currentKey = serverRevision || serverBootTime;
-        if (lastDismissed !== currentKey) {
+      // 2) 런타임 중 서버 리비전이 변경된 경우 감지
+      const currentStored = localStorage.getItem(APPLIED_REVISION_KEY) || initialRevisionRef.current;
+      if (serverRevision !== currentStored) {
+        const dismissedRev = sessionStorage.getItem(DISMISSED_REVISION_KEY);
+        if (dismissedRev !== serverRevision) {
           setVersionInfo(data);
           setUpdateAvailable(true);
         }
       }
-    } catch (err) {
-      // 오프라인이거나 네트워크 일시 장애 시 무시
+    } catch {
+      // 오프라인이거나 일시적 네트워크 에러 시 무시
     } finally {
       checkingRef.current = false;
     }
@@ -120,19 +132,15 @@ export default function useAppUpdate() {
 
   // 주기적 폴링 및 사용자 포커스/가시성 전환 시 자동 검사
   useEffect(() => {
-    // 1. 마운트 시 최초 즉시 검사
     checkForUpdate();
 
-    // 2. 주기적 백그라운드 폴링
     const timer = setInterval(() => {
       checkForUpdate();
-      // Service worker 업데이트도 수동 트리거
       if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistration().then((reg) => reg?.update?.()).catch(() => {});
       }
     }, CHECK_INTERVAL_MS);
 
-    // 3. 앱으로 복귀했을 때 (스마트폰 앱 전환, 탭 활성화 등)
     const handleFocus = () => checkForUpdate();
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') checkForUpdate();
@@ -148,9 +156,18 @@ export default function useAppUpdate() {
     };
   }, [checkForUpdate]);
 
-  // 사용자가 "지금 업데이트" 클릭 시 동작
+  // 🌟 사용자가 "지금 업데이트" 클릭 시
   const applyUpdate = useCallback(async () => {
     setIsApplying(true);
+
+    const targetRevision = latestRevisionRef.current || versionInfo?.revision || versionInfo?.bootTime;
+    if (targetRevision) {
+      try {
+        // 최신 리비전을 적용된 버전으로 영구 저장 (새로고침 후 배너 재표시 방지)
+        localStorage.setItem(APPLIED_REVISION_KEY, targetRevision);
+        sessionStorage.setItem(DISMISSED_REVISION_KEY, targetRevision);
+      } catch {}
+    }
 
     try {
       // 1. Service Worker 캐시 스토리지 전체 정리
@@ -166,11 +183,11 @@ export default function useAppUpdate() {
           reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
       }
-    } catch (e) {
-      // 캐시 정리 실패하더라도 리로드 진행
+    } catch {
+      // 무시하고 리로드 진행
     }
 
-    // 3. 강력한 캐시 버스팅 리로드
+    // 3. 캐시 버스팅 새로고침
     setTimeout(() => {
       try {
         const url = new URL(window.location.href);
@@ -180,14 +197,14 @@ export default function useAppUpdate() {
         window.location.reload();
       }
     }, 250);
-  }, []);
+  }, [versionInfo]);
 
-  // 사용자가 "나중에" / 닫기 클릭 시
+  // 사용자가 "나중에" / 닫기(✕) 클릭 시
   const dismissUpdate = useCallback(() => {
     setDismissed(true);
-    const key = versionInfo?.revision || versionInfo?.bootTime || 'dismissed';
+    const key = latestRevisionRef.current || versionInfo?.revision || versionInfo?.bootTime || 'dismissed';
     try {
-      sessionStorage.setItem(DISMISSED_KEY, key);
+      sessionStorage.setItem(DISMISSED_REVISION_KEY, key);
     } catch {}
   }, [versionInfo]);
 
