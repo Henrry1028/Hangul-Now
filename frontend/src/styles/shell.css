@@ -69,22 +69,7 @@
   transform: translateX(0);
 }
 
-/* 모바일 서브내비게이션 바 (Intro 외 학습 화면에서만 표시) */
-.mobile-subnav-bar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 8px 12px;
-  align-items: center;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.mobile-subnav-bar::-webkit-scrollbar { display: none; }
+
 
 /* 테마 토글 버튼 스타일 강화 */
 .theme-toggle-btn {

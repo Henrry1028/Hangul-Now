@@ -87,15 +87,6 @@ function AppShell({
   const asideRef = useRef(null);
   const handleRef = useRef(null);
   const mainRef = useRef(null);
-  const subnavRef = useRef(null);
-  // 앱 서브내비: 현재 페이지 버튼이 화면 밖이면 가운데로 가로 스크롤 (세로 스크롤은 건드리지 않는다)
-  useEffect(() => {
-    const bar = subnavRef.current;
-    const active = bar && bar.querySelector('[aria-current="page"]');
-    if (!bar || !active) return;
-    const left = active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2;
-    bar.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
-  }, [page, wide]);
   useEffect(() => {
     if (mainRef.current) mainRef.current.scrollTop = 0;
   }, [page]);
@@ -362,14 +353,6 @@ function AppShell({
         )}
 
         <main ref={mainRef} className="app-main-viewport" style={{ flex: 1, minWidth: 0, height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }}>
-          {/* 앱 서브내비 = 웹 사이드바: 학습 화면에서만, 학습 항목만 */}
-          {!wide && LEARN_PAGES.includes(page) && (
-            <div className="mobile-subnav-bar" ref={subnavRef}>
-              {sidebarGroups.flatMap((g) => g.items).map(navItem).map((n) => (
-                <button type="button" key={n.k} onClick={go(n.k)} aria-current={n.active ? 'page' : undefined} style={{ flex: 'none', border: `1px solid ${n.active ? 'var(--accent)' : 'var(--line)'}`, background: n.active ? 'var(--accent)' : 'var(--card)', color: n.active ? '#F5F2EB' : 'var(--ink2)', padding: '6px 12px', borderRadius: '999px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{n.label}</button>
-              ))}
-            </div>
-          )}
           {children}
         </main>
       </div>

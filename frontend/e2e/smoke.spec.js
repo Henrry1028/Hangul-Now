@@ -281,7 +281,5 @@ test('app layout: ☰ menu mirrors the web header and account menu; sub-nav only
   await page.locator('.mobile-menu-btn').click();
   await page.locator('.mobile-drawer-overlay.is-open .drawer-nav__sub', { hasText: 'My progress' }).click();
   await expect.poll(() => screenLabel(page)).toBe('09 My progress');
-  const active = page.locator('.mobile-subnav-bar [aria-current="page"]');
-  await expect(active).toHaveText('My progress');
-  await expect.poll(async () => { const b = await active.boundingBox(); return !!b && b.x >= 0 && b.x + b.width <= 390; }).toBe(true);
+  await expect(page.locator('.mobile-subnav-bar')).toHaveCount(0);
 });

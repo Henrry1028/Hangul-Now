@@ -67,18 +67,32 @@ function correctionTag(ruleId, L) {
 }
 
 // 채팅 상대 튜터 정보 + 튜터 변경 / 영어 번역 토글.
-// variant="bar": 채팅창 위 가로 막대 (모바일·사이드바 접힘), variant="sidebar": 사이드바 하단 카드.
+// variant="bar": 채팅창 위 가로 막대 (튜터 사진/프로필 영역 없이 튜터변경 및 영어번역 버튼만 표시), variant="sidebar": 사이드바 하단 카드.
 export function ChatTutorHeader({ lang = 'ko', selectedTutorId = 'jiwoo', chatState, chat, onNavigate, variant = 'bar' }) {
   const L = lang === 'ko' ? 1 : 0;
-  const t = CHAT_TEXT[lang] || CHAT_TEXT.en;
   const s = chatState;
-  const tutor = chatTutor(selectedTutorId, L);
   const translationLoading = !!(s.chatTransLoading && s.chatTransTutorId === selectedTutorId);
   const trLabel = translationLoading ? (L ? '번역 중…' : 'Translating…') : s.trAll ? (L ? '영어 번역 숨기기' : 'Hide English') : (L ? '영어 번역 보기' : 'Show English');
   const isSidebar = variant === 'sidebar';
-  const avatarSize = isSidebar ? '44px' : '46px';
+
+  if (!isSidebar) {
+    return (
+      <div className="chat-tutor-bar">
+        <div className="chat-tutor-actions">
+          <button type="button" onClick={() => onNavigate?.('tutors')} style={{ border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', borderRadius: '999px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            <span>{L ? '튜터 변경' : 'Change'}</span> ↺
+          </button>
+          <button type="button" onClick={chat.toggleAll} style={{ border: '1px solid var(--line3)', background: s.trAll ? 'var(--tbubble)' : 'transparent', color: 'var(--ink)', borderRadius: '999px', padding: '6px 12px', fontSize: '12.5px', cursor: 'pointer' }}>{trLabel}</button>
+        </div>
+      </div>
+    );
+  }
+
+  const t = CHAT_TEXT[lang] || CHAT_TEXT.en;
+  const tutor = chatTutor(selectedTutorId, L);
+  const avatarSize = '44px';
   return (
-    <div className={isSidebar ? 'chat-tutor-card' : 'chat-tutor-bar'}>
+    <div className="chat-tutor-card">
       <div className="chat-tutor-id">
         <div style={{ width: avatarSize, height: avatarSize, borderRadius: '16px', background: tutor.color, color: '#1C1F1E', display: 'grid', placeItems: 'center', fontSize: '13.5px', fontWeight: 700, flex: 'none', position: 'relative', overflow: 'hidden' }}>
           {tutor.photo ? <img src={tutor.photo} alt={tutor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : tutor.initial}
@@ -86,14 +100,13 @@ export function ChatTutorHeader({ lang = 'ko', selectedTutorId = 'jiwoo', chatSt
         </div>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.35 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: isSidebar ? '15px' : '16.5px', fontWeight: 700, color: 'var(--ink)' }}>{tutor.name}</span>
+            <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ink)' }}>{tutor.name}</span>
             <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '4px', background: 'var(--chip)', fontWeight: 600, color: 'var(--sub)' }}>{tutor.genderLabel}</span>
             <span style={{ fontSize: '11.5px', color: '#3E9B6A', fontWeight: 600, whiteSpace: 'nowrap' }}>● {t.onlineLabel}</span>
           </div>
-          {!isSidebar && <span style={{ fontSize: '12.5px', color: 'var(--sub)' }}>{tutor.role} · {tutor.pace}</span>}
         </div>
       </div>
-      {isSidebar && <span className="chat-tutor-role">{tutor.role} · {tutor.pace}</span>}
+      <span className="chat-tutor-role">{tutor.role} · {tutor.pace}</span>
       <div className="chat-tutor-actions">
         <button type="button" onClick={() => onNavigate?.('tutors')} style={{ border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', borderRadius: '999px', padding: '6px 14px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
           <span>{L ? '튜터 변경' : 'Change'}</span> ↺

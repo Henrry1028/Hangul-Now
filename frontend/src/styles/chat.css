@@ -164,10 +164,20 @@
 }
 
 
-/* 튜터 정보: 채팅창 위 가로 막대 (모바일·사이드바 접힘) */
-.chat-tutor-bar { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid rgba(0,0,0,.08); background: var(--card); flex-wrap: wrap; }
-.chat-tutor-bar .chat-tutor-id { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 140px; }
-.chat-tutor-bar .chat-tutor-actions { display: flex; align-items: center; gap: 8px; }
+/* 튜터 정보: 채팅창 위 가로 막대 (튜터 변경 / 영어 번역 버튼 전용 툴바) */
+.chat-tutor-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+}
+.chat-tutor-bar .chat-tutor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* 튜터 정보: 사이드바 하단 카드 (채팅 화면) */
 .chat-tutor-card {
@@ -219,10 +229,10 @@
 /* 빠른 답장 칩: 가로 스크롤은 유지하고 스크롤바만 숨김 */
 .chat-quick-row { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .chat-quick-row::-webkit-scrollbar { display: none; }
-/* 앱(모바일): 채팅창 위 튜터 막대를 한 단계 압축해 대화 영역을 넓힌다 */
+/* 앱(모바일): 채팅창 위 튜터 버튼 막대를 한 단계 압축해 대화 영역을 넓힌다 */
 @media (max-width: 520px) {
-  .chat-tutor-bar { padding: 10px 14px; gap: 8px 10px; }
-  .chat-tutor-bar .chat-tutor-actions button { padding: 5px 11px !important; font-size: 12px !important; }
+  .chat-tutor-bar { padding: 8px 12px; gap: 8px; }
+  .chat-tutor-bar .chat-tutor-actions button { padding: 5px 12px !important; font-size: 12px !important; }
 }
 
 /* 💻 노트북(세로 820px 이하) 전용 한눈에 쏙 들어오는 컴팩트 보정 */
