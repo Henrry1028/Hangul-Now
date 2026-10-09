@@ -29,7 +29,7 @@
 | **Backend Runtime** | **Node.js 20/22**, **tsx** | TypeScript/ESM 기반 Express 백엔드 런타임 |
 | **Backend Framework** | **Express 4.21** | REST API 서버, 정적 파일 서빙, SPA 라우팅 폴백 |
 | **Realtime Protocol** | **WebSocket (`ws`)** | 브라우저와 서버, 서버와 Gemini Live 간 양방향 실시간 오디오/텍스트 스트리밍 |
-| **AI & LLM Engine** | **Google Gemini API** (`@google/generative-ai`) | `gemini-3.8-flash` (대화/작문), `gemini-3.8-live-extended-thinking` (실시간 회화), `gemini-2.5-flash` (STT/발음 평가), `gemini-3.8-flash-tts` |
+| **AI & LLM Engine** | **Google Gemini API** (`@google/generative-ai`) | `gemini-3.8-flash` (대화/작문), `gemini-3.5-flash-lite` (듣기·읽기·말하기 초고속 자료생성), `gemini-3.8-live-extended-thinking` (실시간 회화), `gemini-2.5-flash` (STT/발음 평가), `gemini-3.8-flash-tts` |
 | **NLP & 형태소 분석** | **Kiwi-NLP (`kiwi-nlp`)** + 자체 POS 엔진 | 한국어 형태소 분석, 5품사 분류, 문장 성분(주어/서술어 등) 태깅, 국립국어원 로마자 표기 |
 | **Multi-Agent** | 자체 오케스트레이터 (`orchestrator.mjs`) | 문법 에이전트, 발음 에이전트, 어휘 에이전트 병렬 협업 분석 |
 | **Voice & Speech (TTS)** | **Google Cloud TTS** (`@google-cloud/text-to-speech`) | Neural2 한국어 전문 성우 보이스 백업 및 보완 |
@@ -291,6 +291,7 @@ npm run deploy:prod
 
 | 일자 | 작업 유형 | 변경 내용 및 상세 설명 | 상태 |
 | :--- | :---: | :--- | :---: |
+| **2026-10-09** | **성능 최적화** | • '새로 생성(듣기·읽기·말하기)' 모델을 `gemini-3.5-flash-lite`로 교체하여 생성 지연 시간 대폭 단축 (12~21초 ➡️ 3~7초, 약 65% 절감)<br>• 고급(TOPIK 5~6급) 레벨의 사자성어/관용구/격식체 어휘 방어 프롬프트 지침 보강 및 JSON 스키마 안전망(정규화) 구축 | **완료** |
 | **2026-10-09** | **사용자 안내** | • '이용매뉴얼(IntroPage)' 상단에 모바일 앱(PWA) 최신 업데이트 반영 가이드 공지 추가<br>• 안드로이드(Galaxy/Chrome) 및 애플(iPhone/Safari) 맞춤형 단계별 갱신 절차(홈 화면 재추가, 캐시 삭제) 및 다국어 지원 제공<br>• 공지사항(NoticePage)에도 동일 공지 항목 등록 | **완료** |
 | **2026-10-09** | **배포 자동화** | • 모바일 PWA 및 웹 통합 원클릭 Cloud Run 배포 스크립트(`scripts/deploy-production.ps1`, `npm run deploy:prod`) 구축<br>• 향후 '푸시하고 배포해줘' 요청 시 Cloud Run 100% 트래픽 전환까지 전자동 수행 원칙 확립 | **완료** |
 | **2026-10-09** | **CI/CD 자동화** | • `deploy.yml` 파이프라인 확장: `hardening/post-launch` 푸시 시 Firebase Hosting과 Google Cloud Run(모바일 PWA 프로덕션) 동시 자동 배포 적용 | **완료** |

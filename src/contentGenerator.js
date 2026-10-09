@@ -1,13 +1,13 @@
 // ============================================================
 // 학습자료 생성 (듣기 · 읽기 · 말하기)
-// gemini-3.8-flash로 난이도에 맞는 새 자료를 만든다.
+// gemini-3.5-flash-lite로 초고속(1~3초) 난이도 맞춤형 새 자료를 만든다.
 // 전역 규칙: 이미 학습한 주제는 제외하고 매번 새로운 내용을 만든다.
 // ============================================================
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getLearned, recordLearned } from "./learningHistory.js";
 
-const MODEL = process.env.GEMINI_CONTENT_MODEL || "gemini-3.8-flash";
+const MODEL = process.env.GEMINI_CONTENT_MODEL || "gemini-3.5-flash-lite";
 const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_CONTENT_TIMEOUT_MS) || 25_000;
 const READING_CORE_TOKENS = { beginner: 900, intermediate: 1300, advanced: 1700 };
 const READING_DETAIL_TOKENS = { beginner: 1000, intermediate: 1200, advanced: 1400 };
@@ -16,7 +16,7 @@ const READING_DETAIL_TOKENS = { beginner: 1000, intermediate: 1200, advanced: 14
 export const LEVEL_SPEC = {
   beginner: {
     ko: "초급", topik: "TOPIK 1~2급",
-    listening: "2~3문장씩 오가는 짧은 대화 6줄. 아주 흔한 상황(주문, 인사, 길 묻기). 천천히 또박또박한 말투.",
+    listening: "2~3문장씩 오가는 짧은 대화 6줄. 아주 흔한 일상 상황(주문, 인사, 길 묻기). 천천히 또박또박한 말투.",
     reading: "3문장짜리 문단 2개. 현재형 위주, 기초 단어만.",
     speaking: "6~10자 내외의 짧은 문장. 받침과 기본 연음 위주."
   },
@@ -28,9 +28,9 @@ export const LEVEL_SPEC = {
   },
   advanced: {
     ko: "고급", topik: "TOPIK 5~6급",
-    listening: "10줄 정도의 대화. 협상·불만 접수·의견 충돌처럼 미묘한 장면. 자연스러운 구어체와 줄임말.",
-    reading: "5~6문장짜리 문단 3개. 관용 표현, 사회·문화 소재, 함축된 의미.",
-    speaking: "20자 이상의 긴 문장. 억양과 끊어 읽기가 중요한 문장."
+    listening: "10줄 정도의 대화. 협상·불만 접수·사회적 이슈·의견 충돌처럼 깊이 있는 장면. 사자성어, 관용구, 자연스러운 고급 구어체 포함. 단순 일상 표현을 지양하고 수준 높은 어휘 사용.",
+    reading: "5~6문장짜리 문단 3개. 사자성어, 관용 표현, 한국 문화·사회적 깊이 있는 소재, 격식체(하십시오체 또는 설명문 해라체). 어학당 고급 교재 수준의 풍부한 어휘 사용.",
+    speaking: "20자 이상의 긴 문장. 복합 받침 연음, 비음화, 유음화 등 고급 음운 변동과 끊어 읽기 호흡이 중요한 문장."
   }
 };
 
@@ -41,14 +41,17 @@ function genAI() {
 }
 
 async function askJson(prompt, { maxOutputTokens = 2200, operation = "content" } = {}) {
+  const generationConfig = {
+    responseMimeType: "application/json",
+    maxOutputTokens
+  };
+  // 모델에 따라 thinkingBudget 처리 (3.8 등 reasoning 모델일 경우 사고 지연 차단)
+  if (MODEL.includes("3.8") || MODEL.includes("thinking")) {
+    generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  }
   const model = genAI().getGenerativeModel({
     model: MODEL,
-    generationConfig: {
-      responseMimeType: "application/json",
-      maxOutputTokens,
-      // '새로생성' 지연 해소를 위해 사고 토큰을 완전 차단하여 즉시 출력(0.3~0.5초)으로 전환
-      thinkingConfig: { thinkingBudget: 0 }
-    }
+    generationConfig
   });
   const startedAt = Date.now();
   console.info("[content.generate] gemini:start", { operation, model: MODEL, maxOutputTokens });
@@ -58,6 +61,7 @@ async function askJson(prompt, { maxOutputTokens = 2200, operation = "content" }
     const parsed = JSON.parse(raw);
     console.info("[content.generate] gemini:success", { operation, durationMs: Date.now() - startedAt });
     return parsed;
+
   } catch (error) {
     console.error("[content.generate] gemini:failed", {
       operation,
@@ -108,10 +112,48 @@ function normalizeDictations(data) {
   return normalized.slice(0, 3);
 }
 
+function normalizeSpeaking(data, level = "beginner") {
+  const sentences = Array.isArray(data?.sentences) ? data.sentences : [];
+  const normalized = sentences.slice(0, 3).map((item, index) => {
+    const text = String(item?.text || "").trim();
+    return {
+      text: text || (level === "advanced" ? "끊임없는 자기 성찰과 학습이 필요합니다." : "안녕하세요, 만나서 반갑습니다."),
+      roman: String(item?.roman || "").trim(),
+      en: String(item?.en || "").trim(),
+      pron: String(item?.pron || `[${text || ""}]`).trim(),
+      weakIndex: Array.isArray(item?.weakIndex) ? item.weakIndex.filter((n) => Number.isInteger(n)) : [0, 2],
+      tipKo: String(item?.tipKo || "자연스러운 연음과 받침 발음에 유의하세요.").trim(),
+      tipEn: String(item?.tipEn || "Pay attention to natural linking and final consonants.").trim()
+    };
+  });
+  return {
+    topic: String(data?.topic || "일상 표현"),
+    sentences: normalized.length ? normalized : [{
+      text: "안녕하세요, 만나서 반갑습니다.",
+      roman: "annyeonghaseyo, mannaseo bangapssumnida",
+      en: "Hello, nice to meet you.",
+      pron: "[안녕핫세여, 만나서 반갑씀니다]",
+      weakIndex: [0, 4],
+      tipKo: "부드럽게 이어 발음하세요.",
+      tipEn: "Pronounce smoothly."
+    }]
+  };
+}
+
 const avoidBlock = (covered) =>
   covered.length
     ? `\n[이미 학습한 주제 — 반드시 피할 것]\n${covered.map((t) => "- " + t).join("\n")}\n위와 겹치지 않는 완전히 새로운 소재로 만들어라.\n`
     : "";
+
+const levelPromptGuidance = (level) => {
+  if (level === "advanced") {
+    return "\n[고급 레벨 필수 지침: TOPIK 5~6급]\n단순한 일상 대화에 머물지 말고, 사자성어, 관용구, 비유적 표현, 사회·문화적 어휘를 풍부하게 활용하여 깊이 있고 격식 있는 한국어로 구성하라.\n";
+  }
+  if (level === "intermediate") {
+    return "\n[중급 레벨 지침: TOPIK 3~4급]\n이유·원인(-아서/어서, -기 때문에), 비교, 과거 경험 등 복문 구조와 다양한 연결어미를 적절히 사용하라.\n";
+  }
+  return "\n[초급 레벨 지침: TOPIK 1~2급]\n기초 어휘와 명확한 주어-서술어 구조 위주로 이해하기 쉽게 구성하라.\n";
+};
 
 // ── 듣기 ────────────────────────────────────────────────
 export async function generateListening({ level = "beginner", covered = [] }) {
@@ -119,6 +161,7 @@ export async function generateListening({ level = "beginner", covered = [] }) {
   const data = await askJson(`너는 한국어 교재를 만드는 30년차 어학당 교사다.
 ${L.ko}(${L.topik}) 학습자를 위한 '듣기 연습' 자료를 하나 만들어라.
 조건: ${L.listening}
+${levelPromptGuidance(level)}
 ${avoidBlock(covered)}
 반드시 아래 JSON 형식으로만 답하라.
 {
@@ -139,6 +182,7 @@ export async function generateReadingCore({ level = "beginner", covered = [] }) 
   return askJson(`너는 한국어 교재를 만드는 30년차 어학당 교사다.
 ${L.ko}(${L.topik}) 학습자를 위한 '읽기 독해' 지문을 하나 만들어라.
 조건: ${L.reading}
+${levelPromptGuidance(level)}
 ${avoidBlock(covered)}
 반드시 아래 JSON 형식으로만 답하라.
 {
@@ -165,7 +209,7 @@ export async function generateReadingEnrichment({ level = "beginner", reading })
 제목: ${String(reading?.title || "").slice(0, 200)}
 본문:
 ${paragraphs.map((text, index) => `${index + 1}. ${text}`).join("\n")}
-
+${levelPromptGuidance(level)}
 반드시 아래 JSON 형식으로만 답하라.
 {
   "paragraphWords": [["각 문단에서 꼭 배울 단어 최대 2개"]],
@@ -197,9 +241,10 @@ export async function generateReading({ level = "beginner", covered = [] }) {
 // ── 말하기 ──────────────────────────────────────────────
 export async function generateSpeaking({ level = "beginner", covered = [] }) {
   const L = LEVEL_SPEC[level] || LEVEL_SPEC.beginner;
-  const data = await askJson(`너는 한국어 발음을 가르치는 30년차 어학당 교사다.
+  const rawData = await askJson(`너는 한국어 발음을 가르치는 30년차 어학당 교사다.
 ${L.ko}(${L.topik}) 학습자를 위한 '말하기(발음) 연습' 문장을 3개 만들어라.
 조건: ${L.speaking}
+${levelPromptGuidance(level)}
 ${avoidBlock(covered)}
 반드시 아래 JSON 형식으로만 답하라.
 {
@@ -215,8 +260,9 @@ ${avoidBlock(covered)}
   }]
 }
 weakIndex는 text에서 발음이 어려운 글자의 위치(0부터, 공백 포함)를 2개 정도 넣어라.`, { maxOutputTokens: 1800 });
-  return data;
+  return normalizeSpeaking(rawData, level);
 }
+
 
 export async function generateContent({ kind, level = "beginner", userId = null, seenTopics = [], phase = "full", baseContent = null }) {
   if (kind === "reading" && phase === "enrichment") {
