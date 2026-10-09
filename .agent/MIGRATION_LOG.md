@@ -11,7 +11,7 @@ If correcting an entry, add a dated correction note rather than silently replaci
 
 Status:
 
-`READY_TO_COMMIT`
+`COMPLETE` in commit `79356ec` (not deployed).
 
 Baseline:
 
@@ -36,6 +36,12 @@ Validation:
 Concurrent baseline:
 
 - Another process pushed PWA/Speaking commits `6a22524`, `f67da12`, and `6234954` during validation. They are preserved and do not overlap the H6 product files.
+
+Result:
+
+- Listening now offers 0.8, 0.9, 1.0, 1.1, and 1.2 playback speeds.
+- Users can seek on the progress track, mark A and B, enable or pause section repeat, and clear the range.
+- Server audio loops continuously from B back to A; device-speech fallback remains playable with repeat controls disabled.
 
 ---
 

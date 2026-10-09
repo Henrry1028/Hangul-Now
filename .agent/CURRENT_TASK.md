@@ -12,7 +12,7 @@ Milestone Name:
 
 Status:
 
-`READY_TO_COMMIT`
+`COMPLETE` (commit `79356ec`)
 
 Baseline HEAD:
 
@@ -56,6 +56,11 @@ Result so far:
 - Korean 390 x 844 visual check PASS: all five speed buttons and the A/B controls fit inside the player without horizontal overflow.
 - `git diff --check` PASS.
 - Concurrent Git note: PWA/Speaking commits `6a22524`, `f67da12`, and `6234954` were committed and pushed by another process while H6 validation ran. They do not overlap H6 files and are preserved as the remote baseline.
+- Feature commit complete: `79356ec` (`feat: add Listening speed steps and section repeat`).
+
+Next action:
+
+- None for this bounded task. Production deployment/traffic remains unchanged and requires separate explicit approval.
 
 ---
 
