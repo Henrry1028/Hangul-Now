@@ -1687,3 +1687,12 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H11 — Chat Corrected-Sentence Playback
+
+- 2026-10-09: Started from clean `85fab26`; created `feat/chat-correction-tts`.
+- Added `FixSpeakButton` beside the corrected sentence in the Chat correction panel and the inline correction card; it uses the existing tutor TTS hook and session cache.
+- Validation PASS: ESLint; Vitest 61/61; Playwright 15 pass / 1 expected skip; Node 20 build; desktop panel screenshot check.
+- Production deployment and traffic were not changed.
+
+---

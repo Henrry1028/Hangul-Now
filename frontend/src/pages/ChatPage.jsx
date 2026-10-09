@@ -118,6 +118,30 @@ export function ChatTutorHeader({ lang = 'ko', selectedTutorId = 'jiwoo', chatSt
   );
 }
 
+// 교정된 문장 듣기: 말풍선과 같은 튜터 목소리·캐시로 바른 문장을 읽어 준다. 다시 누르면 멈춘다.
+function FixSpeakButton({ speech, text, speechKey, L }) {
+  const loading = speech.isLoading(speechKey);
+  const playing = speech.isPlaying(speechKey);
+  const label = loading
+    ? (L ? '음성을 준비하고 있어요' : 'Preparing audio')
+    : playing
+      ? (L ? '읽기 중지' : 'Stop reading')
+      : (L ? '교정된 문장 듣기' : 'Listen to the corrected sentence');
+  return (
+    <button
+      type="button"
+      className={`chat-fix-speak${loading ? ' is-loading' : ''}${playing ? ' is-playing' : ''}`}
+      onClick={() => speech.play(text, speechKey)}
+      title={label}
+      aria-label={`${label}: ${text}`}
+      aria-pressed={playing}
+      data-tts-state={loading ? 'loading' : playing ? 'playing' : 'idle'}
+    >
+      <span aria-hidden="true">{loading ? '···' : playing ? '■' : '▶'}</span>
+    </button>
+  );
+}
+
 function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = true, chatState, chat, onNavigate, tutorInSidebar = false }) {
   // 앱(<860px)에는 오른쪽 '실시간 문장 첨삭' 패널이 없으므로, 고쳐 쓰기 카드에서 자세한 영어 설명을 펼쳐 본다.
   const [openFix, setOpenFix] = useState({});
@@ -262,7 +286,7 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
                     {!!m.fix && inlineCorrections && (
                       <div style={{ background: 'var(--tbubble)', borderRadius: '12px', padding: '12px 14px', maxWidth: 'min(76%,440px)', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '14px', lineHeight: 1.5, border: '1px solid rgba(0,0,0,.05)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}><span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-ink)', letterSpacing: '.06em' }}>{t.correction}</span><span style={{ fontSize: '11.5px', color: 'var(--faint)' }}>{t.savedNotes}</span></div>
-                        <span><span style={{ textDecoration: 'line-through', color: 'var(--hot)' }}>{m.fix.wrong}</span> → <b style={{ color: 'var(--accent-ink)' }}>{m.fix.right}</b></span>
+                        <span className="chat-fix-line"><span><span style={{ textDecoration: 'line-through', color: 'var(--hot)' }}>{m.fix.wrong}</span> → <b style={{ color: 'var(--accent-ink)' }}>{m.fix.right}</b></span><FixSpeakButton speech={speech} text={m.fix.right} speechKey={`${selectedTutorId}:fix:${fixKey}`} L={L} /></span>
                         {!!fixBrief.ko && <span style={{ color: 'var(--sub)', fontSize: '13px' }}>{fixBrief.ko}</span>}
                         {!!(s.trAll && fixBrief.en && fixBrief.en !== fixBrief.ko) && <span style={{ color: 'var(--sub)', fontSize: '12.5px', borderTop: '1px dashed var(--line3)', paddingTop: '6px' }}>{fixBrief.en}</span>}
                         {!!fixDetailEn && (
@@ -364,6 +388,7 @@ function ChatPage({ lang = 'ko', selectedTutorId = 'jiwoo', inlineCorrections = 
                     <span className="chat-correction-wrong">{message.fix.wrong}</span>
                     <span className="chat-correction-arrow">→</span>
                     <span className="chat-correction-right">{message.fix.right}</span>
+                    <FixSpeakButton speech={speech} text={message.fix.right} speechKey={`${selectedTutorId}:fix:${message.id || `fix-${index}`}`} L={L} />
                   </div>
                   {!!note && <span className="chat-correction-desc" lang="en">💡 {note}</span>}
                 </div>

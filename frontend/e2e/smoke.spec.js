@@ -172,6 +172,13 @@ test('chat shows only the correction point; smart correction explains it in Engl
   await tutorBubble.click();
   await expect(tutorBubble).toHaveAttribute('data-tts-state', 'playing');
   await expect.poll(() => ttsRequests.some((request) => request.text === '배달 앱으로 주문할 수 있어요.' && request.tutorId === 'jiwoo')).toBe(true);
+
+  // 교정된 문장 옆 ▶ 버튼은 바른 문장을 튜터 목소리로 읽는다 (데스크톱: 첨삭 패널, 앱: 고쳐 쓰기 카드).
+  const fixSpeak = chatScreen.locator('.chat-fix-speak:visible').first();
+  await expect(fixSpeak).toBeVisible();
+  await fixSpeak.click();
+  await expect(fixSpeak).toHaveAttribute('data-tts-state', 'playing');
+  await expect.poll(() => ttsRequests.some((request) => request.text === '어떻게' && request.tutorId === 'jiwoo')).toBe(true);
   expect(problems).toEqual([]);
 });
 

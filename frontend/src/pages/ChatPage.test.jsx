@@ -142,3 +142,26 @@ describe('ChatPage message TTS', () => {
     expect(tutorSpeech.play).not.toHaveBeenCalled();
   });
 });
+
+describe('ChatPage corrected-sentence TTS', () => {
+  it('plays the corrected sentence from the correction panel and the inline card', () => {
+    mount([{
+      id: 'message-9',
+      from: 'me',
+      text: '몰르겠어',
+      time: '16:50',
+      correctionChecked: true,
+      fix: { wrong: '몰르겠어', right: '모르겠어', ruleId: 'SPELLING_ERROR', note: ['Spell it 모르겠어.', '모르겠어가 맞아요.'] }
+    }], 'ko');
+
+    const panelButton = container.querySelector('[data-correction-source="live-chat"] .chat-fix-speak');
+    expect(panelButton.getAttribute('aria-label')).toContain('교정된 문장 듣기');
+    act(() => panelButton.click());
+    expect(tutorSpeech.play).toHaveBeenLastCalledWith('모르겠어', 'jiwoo:fix:message-9');
+
+    const inlineButton = [...container.querySelectorAll('.chat-fix-speak')].find((b) => !b.closest('[data-correction-source]'));
+    act(() => inlineButton.click());
+    expect(tutorSpeech.play).toHaveBeenCalledTimes(2);
+    expect(tutorSpeech.play).toHaveBeenLastCalledWith('모르겠어', 'jiwoo:fix:message-9');
+  });
+});

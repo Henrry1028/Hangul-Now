@@ -1,5 +1,30 @@
 # Current Task
 
+## Active Product Task — H11
+
+Milestone ID:
+
+`H11-CHAT-CORRECTION-TTS`
+
+Status:
+
+`COMPLETE` (see `git log -1` on `feat/chat-correction-tts`)
+
+Baseline HEAD:
+
+`85fab26`
+
+Expected files:
+
+- `frontend/src/pages/ChatPage.jsx`, `frontend/src/pages/ChatPage.test.jsx`, `frontend/src/styles/chat.css`, `frontend/e2e/smoke.spec.js`
+- `.agent/*` state files
+
+Next action:
+
+- None. Push/merge/deploy need explicit user approval.
+
+---
+
 ## Active Product Task — H10
 
 Milestone ID:

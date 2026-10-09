@@ -1,5 +1,17 @@
 # HangulNow React + Vite Migration State
 
+## H11 — Chat Corrected-Sentence Playback
+
+Status:
+
+`COMPLETE` (feature commit on `feat/chat-correction-tts`; not pushed, not deployed)
+
+- Baseline: `85fab26` (branched from `feat/writing-cj-mobile-hands`).
+- A ▶ button next to each corrected sentence (desktop "실시간 문장 첨삭" panel and the app's inline 고쳐 쓰기 card) reads `fix.right` in the selected tutor's voice through the shared `useTutorSpeech` hook (same cache; press again to stop; loading/playing states).
+- Validation: ESLint clean; Vitest 61/61; Playwright 15 passed / 1 expected skip (Chat e2e now clicks the button and asserts the `/api/tts` payload); Node 20 build PASS.
+
+---
+
 ## H10 — Writing Cheonjiin Mobile Keypad + Realistic Grip Hands + Guide
 
 Status:
