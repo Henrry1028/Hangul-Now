@@ -1,5 +1,12 @@
-// Legacy Conversation (Gemini Live) labels, constants and local history (preview/index.html).
-export const TUTOR_SESSION_SECONDS = 10 * 60;
+// Tutor lessons use a server-validated duration. Roleplay keeps its existing untimed flow.
+export const TUTOR_SESSION_MINUTE_OPTIONS = Object.freeze([10, 20, 30, 40, 50]);
+export const DEFAULT_TUTOR_SESSION_MINUTES = 10;
+export const TUTOR_SESSION_SECONDS = DEFAULT_TUTOR_SESSION_MINUTES * 60;
+
+export function normalizeTutorSessionMinutes(value) {
+  const minutes = Number(value);
+  return TUTOR_SESSION_MINUTE_OPTIONS.includes(minutes) ? minutes : DEFAULT_TUTOR_SESSION_MINUTES;
+}
 
 export const CONVERSATION_TEXT = {
   en: {
@@ -103,6 +110,7 @@ export function createInitialConversationState() {
     cvModel: '',
     cvHistory: loadConversations(),
     cvMode: 'tutor',
+    cvDurationMinutes: DEFAULT_TUTOR_SESSION_MINUTES,
     cvScenario: 'market',
     cvHints: [],
     cvReport: null,

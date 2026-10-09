@@ -106,11 +106,19 @@ const finalizeSessionTool = {
   }]
 };
 
-function buildSystemInstruction(tutorId, level, session = {}) {
+export const TUTOR_SESSION_MINUTE_OPTIONS = Object.freeze([10, 20, 30, 40, 50]);
+
+export function normalizeLessonDurationMinutes(value) {
+  const minutes = Number(value);
+  return TUTOR_SESSION_MINUTE_OPTIONS.includes(minutes) ? minutes : 10;
+}
+
+export function buildSystemInstruction(tutorId, level, session = {}) {
   const p = TUTOR_PROFILES[tutorId] || TUTOR_PROFILES.jiwoo;
   const lv = LEVEL_NOTE[level] || LEVEL_NOTE.beginner;
   const userNickname = cleanNickname(session.userNickname) || "학습자";
   const feedbackLanguage = String(session.feedbackLanguage || "English").trim().slice(0, 80) || "English";
+  const lessonDurationMinutes = normalizeLessonDurationMinutes(session.lessonDurationMinutes);
   // 관심사: 클라이언트가 보낸 ID 중 서버 표에 있는 것만, 우선순위 순서 그대로 최대 5개
   const interests = (Array.isArray(session.interests) ? session.interests : [])
     .filter((id) => INTEREST_TOPICS[id]).slice(0, 5);
@@ -173,6 +181,8 @@ ${mistakes}
 5. 답변 마지막에는 항상 학습자가 말을 이어갈 수 있도록 짧은 질문을 덧붙이세요.
 
 [수업 진행]
+- 이 수업에서 선택된 총 대화 시간은 ${lessonDurationMinutes}분이다. 학생과 ${lessonDurationMinutes}분 동안 대화가 이어지도록 적극적으로 질문하고 반응한다.
+- 시간이 끝나기 전에 스스로 수업을 종료하거나 작별 인사를 하지 않는다. '[SYSTEM: WRAP_UP_NOW]' 신호가 올 때까지 새 질문과 연습으로 자연스럽게 대화를 계속한다.
 ${todayInterest
   ? `- 네가 먼저 인사하고, 위의 '오늘 수업 주제'로 바로 말을 건다. 주제를 학생에게 고르라고 묻지 않는다.`
   : `- 네가 먼저 "오늘은 어떤 얘기를 해 볼까요?"처럼 가볍게 말을 걸어 주제를 정하고, 대화를 계속 이끈다.`}
@@ -230,8 +240,9 @@ export function attachLiveConversation(server, { path: wsPath = "/api/live" } = 
     };
 
     // mode: 'tutor'(어학당 선생님) | 'roleplay'(Survival Korean 롤플레잉 + 치명적 오류 힌트)
-    const startSession = async ({ tutorId = "jiwoo", level = "beginner", mode = "tutor", scenarioId = "market", userId = null, review = false, userNickname = "학습자", feedbackLanguage = "English", lessonTopic = "자유 회화", targetGrammar = "", nationality = "", interests = [], lessonInterest = "" }) => {
+    const startSession = async ({ tutorId = "jiwoo", level = "beginner", mode = "tutor", scenarioId = "market", userId = null, review = false, userNickname = "학습자", feedbackLanguage = "English", lessonTopic = "자유 회화", targetGrammar = "", nationality = "", interests = [], lessonInterest = "", lessonDurationMinutes = 10 }) => {
       if (upstream) return;
+      const sessionDurationMinutes = normalizeLessonDurationMinutes(lessonDurationMinutes);
       // 전역 규칙: 이미 다룬 주제를 프롬프트에 넘겨 오늘은 새로운 소재로 이끌게 한다
       const [coveredTopics, memory] = await Promise.all([
         userId ? getCoveredTopics(userId) : [],
@@ -255,7 +266,8 @@ export function attachLiveConversation(server, { path: wsPath = "/api/live" } = 
               tools: [learningCardTool, finalizeSessionTool],
               systemInstruction: { parts: [{ text: buildSystemInstruction(tutorId, level, {
                 userNickname, feedbackLanguage, lessonTopic, targetGrammar, memory,
-                nationality, interests, lessonInterest, coveredTopics
+                nationality, interests, lessonInterest, coveredTopics,
+                lessonDurationMinutes: sessionDurationMinutes
               }) }] },
               inputAudioTranscription: {},
               outputAudioTranscription: {}
@@ -317,7 +329,8 @@ export function attachLiveConversation(server, { path: wsPath = "/api/live" } = 
             tutor: roleplay ? (sc?.title?.[0] || "롤플레잉") : p.name,
             voice: roleplay ? sc?.voice : p.voice,
             model: roleplay ? RP_MODEL : LIVE_MODEL,
-            mode
+            mode,
+            lessonDurationMinutes: roleplay ? undefined : sessionDurationMinutes
           });
           upstream.send(JSON.stringify({
             clientContent: {

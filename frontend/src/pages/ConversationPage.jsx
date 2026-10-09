@@ -1,6 +1,6 @@
 import React from 'react';
 import { TUTORS } from '../data/tutorsData.js';
-import { CONVERSATION_TEXT, TUTOR_SESSION_SECONDS } from '../data/conversationData.js';
+import { CONVERSATION_TEXT, TUTOR_SESSION_MINUTE_OPTIONS, TUTOR_SESSION_SECONDS } from '../data/conversationData.js';
 import '../styles/conversation.css';
 
 const SCENARIOS = [['market', '🧥 동대문 옷가게', '🧥 Clothing store'], ['restaurant', '🍜 분식집 주문', '🍜 Snack bar'], ['taxi', '🚕 택시 타기', '🚕 Taxi'], ['hospital', '🏥 병원 접수', '🏥 Clinic']];
@@ -20,6 +20,8 @@ function ConversationPage({ lang = 'ko', selectedTutorId = 'jiwoo', conversation
   const tutor = { ...raw, name: L ? raw.ko : raw.en, role: raw.role[L] };
   const isRoleplay = s.cvMode === 'roleplay';
   const live = s.cvStatus === 'live';
+  const durationLocked = live || s.cvStatus === 'connecting';
+  const durationMinutes = s.cvDurationMinutes || 10;
   const remaining = s.cvRemainingSeconds ?? TUTOR_SESSION_SECONDS;
   const cvTimeLabel = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
   const statusLabel = live
@@ -115,6 +117,31 @@ function ConversationPage({ lang = 'ko', selectedTutorId = 'jiwoo', conversation
         <span style={{ font: "700 11.5px 'Pretendard',sans-serif", color: 'var(--accent-ink)', flex: 'none', whiteSpace: 'nowrap' }}>{t.cvLevelLabel}</span>
         <span style={{ fontSize: '13px', lineHeight: 1.5, color: 'var(--ink2)' }}>{levelDesc}</span>
       </div>
+
+      {!isRoleplay && (
+        <div className="cv-duration-panel" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '14px', padding: '12px 16px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap' }}>{L ? '수업 시간' : 'Lesson time'}</span>
+          <div role="group" aria-label={L ? '수업 시간 선택' : 'Choose lesson duration'} style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', background: 'var(--seg)', borderRadius: '11px', padding: '4px' }}>
+            {TUTOR_SESSION_MINUTE_OPTIONS.map((minutes) => (
+              <button
+                type="button"
+                key={minutes}
+                disabled={durationLocked}
+                aria-pressed={durationMinutes === minutes}
+                onClick={() => conversation.setDuration(minutes)}
+                style={{ ...segButton(durationMinutes === minutes, '7px 12px'), opacity: durationLocked && durationMinutes !== minutes ? 0.48 : 1, cursor: durationLocked ? 'not-allowed' : 'pointer' }}
+              >
+                {minutes}{L ? '분' : ' min'}
+              </button>
+            ))}
+          </div>
+          <span role="note" style={{ flex: '1 1 260px', fontSize: '12.5px', lineHeight: 1.5, color: 'var(--sub)' }}>
+            {L
+              ? `선택한 ${durationMinutes}분 동안 튜터와 대화하며, 종료 1분 전에는 오늘 배운 내용을 함께 마무리해요.`
+              : `Your tutor keeps the conversation going for the selected ${durationMinutes} minutes, then wraps up the lesson during the final minute.`}
+          </span>
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '16px', padding: '14px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>

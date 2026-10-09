@@ -223,6 +223,20 @@ test('reading shows the passage before practice enrichment finishes', async ({ p
   await expect(readingScreen).not.toContainText('Passage ready · adding practice…');
 });
 
+test('tutor lesson offers 10 to 50 minute duration choices', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('button:visible', { hasText: 'Conversation' }).filter({ hasNot: page.locator('header') }).last().evaluate((button) => button.click());
+  await expect.poll(() => screenLabel(page)).toBe('08b Conversation');
+
+  const screen = page.locator('[data-screen-label="08b Conversation"]');
+  const durationGroup = screen.getByRole('group', { name: 'Choose lesson duration' });
+  await expect(durationGroup.getByRole('button')).toHaveText(['10 min', '20 min', '30 min', '40 min', '50 min']);
+  await durationGroup.getByRole('button', { name: '30 min' }).click();
+  await expect(durationGroup.getByRole('button', { name: '30 min' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(screen).toContainText('selected 30 minutes');
+  await expect(screen).toContainText('30:00');
+});
+
 test('listening offers five speed steps and A-B section repeat', async ({ page, request }) => {
   const sampleAudio = await request.get('/assets/tutors/audio/jiwoo.wav');
   expect(sampleAudio.ok()).toBeTruthy();

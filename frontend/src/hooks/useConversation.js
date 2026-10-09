@@ -4,9 +4,9 @@ import { loadLearnedTopics, recordLearnedTopic } from '../data/learnedData.js';
 import { INTERESTS } from '../data/profileData.js';
 import {
   SCENARIO_NAMES,
-  TUTOR_SESSION_SECONDS,
   createInitialConversationState,
   loadConversations,
+  normalizeTutorSessionMinutes,
   storeConversations
 } from '../data/conversationData.js';
 import { authHeaders } from '../data/authHeaders.js';
@@ -76,11 +76,13 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
       update({ cvWrapUpSent: true });
     };
 
-    const startTutorClock = () => {
+    const startTutorClock = (rawMinutes) => {
       clearTutorClock();
       r.wrapUpTriggered = false;
-      r.endsAt = Date.now() + TUTOR_SESSION_SECONDS * 1000;
-      update({ cvRemainingSeconds: TUTOR_SESSION_SECONDS, cvWrapUpSent: false });
+      const minutes = normalizeTutorSessionMinutes(rawMinutes ?? stateRef.current.cvDurationMinutes);
+      const durationSeconds = minutes * 60;
+      r.endsAt = Date.now() + durationSeconds * 1000;
+      update({ cvDurationMinutes: minutes, cvRemainingSeconds: durationSeconds, cvWrapUpSent: false });
       r.timerIv = setInterval(() => {
         const remaining = Math.max(0, Math.ceil((r.endsAt - Date.now()) / 1000));
         update({ cvRemainingSeconds: remaining });
@@ -245,8 +247,9 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
 
     const onLiveMessage = (msg) => {
       if (msg.type === 'ready') {
-        update({ cvStatus: 'live', cvTutorName: msg.tutor, cvModel: msg.model });
-        if (stateRef.current.cvMode !== 'roleplay') startTutorClock();
+        const durationMinutes = normalizeTutorSessionMinutes(msg.lessonDurationMinutes ?? stateRef.current.cvDurationMinutes);
+        update({ cvStatus: 'live', cvTutorName: msg.tutor, cvModel: msg.model, cvDurationMinutes: durationMinutes });
+        if (stateRef.current.cvMode !== 'roleplay') startTutorClock(durationMinutes);
         return;
       }
       if (msg.type === 'error') { update({ cvError: msg.message, cvStatus: 'idle' }); return; }
@@ -301,6 +304,7 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
           scenarioTitle: st.cvMode === 'roleplay' ? (SCENARIO_NAMES[st.cvScenario] || '롤플레잉') : (st.cvTutorName || '튜터 수업'),
           partnerName: st.cvTutorName || '상대',
           userName: propsRef.current.currentUser?.displayName || '',
+          lessonDurationMinutes: st.cvMode === 'roleplay' ? undefined : normalizeTutorSessionMinutes(st.cvDurationMinutes),
           startedAt: r.startedAt || Date.now(),
           endedAt: Date.now()
         }
@@ -351,6 +355,8 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
     const start = async () => {
       const st0 = stateRef.current;
       if (st0.cvStatus === 'connecting' || st0.cvStatus === 'live') return;
+      const durationMinutes = normalizeTutorSessionMinutes(st0.cvDurationMinutes);
+      const durationSeconds = durationMinutes * 60;
       clearTutorClock();
       clearTimeout(r.reviewPollTt); r.reviewPollTt = null;
       r.reviewStarted = false;
@@ -358,7 +364,7 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
       r.sessionId = `cv${Date.now()}`;
       update({
         cvStatus: 'connecting', cvError: '', cvTurns: [], cvPartial: { user: '', tutor: '' },
-        cvHints: [], cvCards: [], cvReport: null, cvReportError: '', cvRemainingSeconds: TUTOR_SESSION_SECONDS,
+        cvHints: [], cvCards: [], cvReport: null, cvReportError: '', cvDurationMinutes: durationMinutes, cvRemainingSeconds: durationSeconds,
         cvWrapUpSent: false, cvFinalizePayload: null, cvReviewStatus: 'idle', cvReviewStage: '', cvReviewUrl: '', cvReviewError: ''
       });
       r.startedAt = Date.now();
@@ -393,7 +399,8 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
             nationality: activeProfile.nationality || '', interests: activeProfile.interests || [],
             lessonInterest: interest ? interest.id : '',
             feedbackLanguage: isKo ? 'Korean' : 'English',
-            lessonTopic: interest ? interest.ko : (tutor.role[isKo ? 1 : 0] || (isKo ? '자유 회화' : 'Free conversation'))
+            lessonTopic: interest ? interest.ko : (tutor.role[isKo ? 1 : 0] || (isKo ? '자유 회화' : 'Free conversation')),
+            lessonDurationMinutes: durationMinutes
           }));
           startMicCapture(stream, ws);
         };
@@ -492,12 +499,19 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
       update({ [key]: value });
     };
 
+    const setDuration = (value) => {
+      if (['connecting', 'live'].includes(stateRef.current.cvStatus)) return;
+      const minutes = normalizeTutorSessionMinutes(value);
+      update({ cvDurationMinutes: minutes, cvRemainingSeconds: minutes * 60 });
+    };
+
     return {
       start,
       stop,
       toggleMute: () => update((st) => ({ cvMuted: !st.cvMuted })),
       setMode: pick('cvMode'),
       setLevel: pick('cvLevel'),
+      setDuration,
       setScenario: pick('cvScenario'),
       deleteConversation,
       downloadRecord,
