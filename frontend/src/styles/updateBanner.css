@@ -82,10 +82,10 @@ body[data-theme="light"] .hn-update-banner {
   border-radius: 50%;
   background: #38BDF8;
   box-shadow: 0 0 8px #38BDF8;
-  animation: hnP шоPulse 1.8s ease-in-out infinite;
+  animation: hnPulse 1.8s ease-in-out infinite;
 }
 
-@keyframes hnP шоPulse {
+@keyframes hnPulse {
   0% { transform: scale(0.9); opacity: 0.9; }
   50% { transform: scale(1.3); opacity: 1; }
   100% { transform: scale(0.9); opacity: 0.9; }
