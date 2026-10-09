@@ -1,5 +1,20 @@
 # HangulNow React + Vite Migration State
 
+## H7 — Chat Message Click TTS
+
+Status:
+
+`COMPLETE` (commit `0143ee7`; not deployed)
+
+- Baseline: `a46dbd5` on `feat/chat-click-tts`.
+- Scope: all Chat message bubbles, selected-tutor voice continuity, newest-reply prefetch, and the low-latency Gemini TTS default.
+- Existing translation, correction, Cloud TTS/device fallback, and other product domains remain in place.
+- Real Gemini validation: HTTP 200 from `gemini-3.8-flash-lite-tts` with tutor `jiwoo`, pinned voice `Aoede`, and a valid WAV payload.
+- Validation: server syntax PASS; changed-file ESLint PASS; Vitest 48/48; Node 20 build PASS; Playwright 15 passed / 1 expected skip.
+- Production traffic: unchanged. Deployment requires separate explicit approval.
+
+---
+
 ## H6 — Listening Speed Steps + A-B Repeat
 
 Status:

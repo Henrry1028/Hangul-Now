@@ -1643,3 +1643,15 @@ Validation:
 
 - Scoped ESLint, Node 20 build, desktop navigation/overflow Playwright, and candidate asset checks PASS.
 - All 9 packaged Tutor/QR assets returned 200; candidate and production ERROR logs 0, HTTP 5xx 0.
+
+# H7 — Chat Message Click TTS
+
+- 2026-10-09: Started from clean `a46dbd5` on `feat/chat-click-tts`; remote divergence `0 0`.
+- Audited the current React Chat bubbles, shared `useTutorSpeech` cache/fallback behavior, and `/api/tts` tutor voice mapping.
+- Confirmed the bounded plan: every message bubble plays with the selected tutor voice; only the newest tutor reply is prefetched; per-message translation remains a separate control; default Gemini model changes to `gemini-3.8-flash-lite-tts`.
+- Implemented and committed as `0143ee7`: clickable/keyboard-accessible tutor and learner bubbles, active playback state, newest-reply prefetch, session cache reuse, tutor-change stop, and separate per-message translation control.
+- Real local `/api/tts` PASS with `Gemini-gemini-3.8-flash-lite-tts`, `jiwoo` / `Aoede`, WAV 209,634 bytes.
+- Validation PASS: server syntax; changed-file ESLint; Vitest 48/48; Node 20 build; focused Chat Playwright 2/2; full Playwright 15 pass / 1 expected skip.
+- Production deployment and traffic were not changed.
+
+---

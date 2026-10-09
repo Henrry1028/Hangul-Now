@@ -1,5 +1,70 @@
 # Current Task
 
+## Active Product Task — H7
+
+Milestone ID:
+
+`H7-CHAT-CLICK-TTS`
+
+Milestone Name:
+
+`CHAT MESSAGE CLICK TTS`
+
+Status:
+
+`COMPLETE` (commit `0143ee7`)
+
+Baseline HEAD:
+
+`a46dbd5ad7bb1c6f580ca78a90d1e1d8608b2777`
+
+Branch:
+
+`feat/chat-click-tts`
+
+Expected files:
+
+- `server.js`
+- `frontend/src/hooks/useTutorSpeech.js`
+- `frontend/src/pages/ChatPage.jsx`
+- `frontend/src/pages/ChatPage.test.jsx`
+- `frontend/src/styles/chat.css`
+- `.agent/CURRENT_TASK.md`
+- `.agent/MIGRATION_STATE.md`
+- `.agent/MIGRATION_LOG.md`
+
+Intended scope:
+
+- Make every tutor and learner chat bubble clickable for Korean TTS playback.
+- Keep the selected tutor's pinned Gemini voice for every message and expose loading/playing state accessibly.
+- Prefetch only the newest tutor reply and reuse the existing in-memory audio cache to minimize click latency without synthesizing the full seven-day history.
+- Change the default interactive TTS model to `gemini-3.8-flash-lite-tts`, while retaining the environment override and Google Cloud TTS/device fallbacks.
+- Preserve per-message translation through a separate compact control and keep the global translation control unchanged.
+
+First required action:
+
+- Connect `useTutorSpeech` to `ChatPage`, then add focused component/runtime coverage for tutor and learner bubbles.
+
+Result so far:
+
+- Handoff validation PASS: clean tree at `a46dbd5`; branch and origin were `0 0`; migration checkpoint is an ancestor of HEAD.
+- Source audit complete: `/api/tts` already pins one Gemini prebuilt voice per tutor and falls back to Google Cloud Neural2; `useTutorSpeech` already provides request de-duplication, in-memory audio caching, and device fallback.
+- Official model audit complete: the low-latency model ID is `gemini-3.8-flash-lite-tts` and uses the same Interactions API audio contract already present in this repository.
+- Implementation complete: every tutor and learner message bubble is a keyboard-accessible TTS control with loading/playing state; the prior per-message translation action now has its own `EN` control.
+- The newest tutor reply is prefetched, repeated playback uses the shared session cache, tutor changes stop the previous voice, and other history is synthesized only when clicked.
+- Interactive TTS now defaults to `gemini-3.8-flash-lite-tts`; the environment override plus Google Cloud Neural2 and device-speech fallbacks remain intact.
+- Real local API validation PASS: HTTP 200, provider `Gemini-gemini-3.8-flash-lite-tts`, tutor `jiwoo`, voice `Aoede`, `audio/wav`, 209,634 bytes.
+- Server syntax PASS; changed-file ESLint 0 errors / 0 warnings; full Vitest 48/48 PASS; Node 20 production build PASS.
+- Focused Playwright Chat desktop/mobile 2/2 PASS; full Playwright regression 15 PASS / 1 expected desktop-only skip.
+- A pre-existing mobile Writing test navigation selector was stabilized with the same programmatic drawer click pattern already used elsewhere; the Writing scenario then passed.
+- Feature commit complete: `0143ee7` (`feat(chat): add click-to-speak tutor voice playback`).
+
+Next action:
+
+- None for this bounded task. Production deployment/traffic remains unchanged and requires separate explicit approval.
+
+---
+
 ## Active Product Task — H6
 
 Milestone ID:
