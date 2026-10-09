@@ -22,6 +22,8 @@ import useChat from './hooks/useChat.js';
 import useConversation from './hooks/useConversation.js';
 import useAuthProfile from './hooks/useAuthProfile.js';
 import useVideoClass from './hooks/useVideoClass.js';
+import useAppUpdate from './hooks/useAppUpdate.js';
+import UpdateNotificationBanner from './components/UpdateNotificationBanner.jsx';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import { INITIAL_WRITING_STATE } from './data/writingData.js';
 import { INITIAL_LISTENING_STATE } from './data/listeningData.js';
@@ -102,6 +104,8 @@ function App() {
   const auth = useAuthProfile({ selectedTutorId, onRestoreTutor: handleRestoreTutor });
   // Admin-only Video Class preview: legacy admin UI flag + signed-in + server-verified admin.
   const videoClass = useVideoClass({ isAdminFlag: auth.isAdmin, currentUser: auth.currentUser });
+  // 앱 내 실시간 업데이트 감지 (In-App Push)
+  const appUpdate = useAppUpdate();
   // Legacy app-wide admin console state (adminData/adminLoading/adminSearch/adminFilter).
   const [adminData, setAdminData] = useState(null);
   const [, setAdminLoading] = useState(false);
@@ -255,6 +259,15 @@ function App() {
 
   return (
     <SitePasswordGate>
+      {appUpdate.updateAvailable && (
+        <UpdateNotificationBanner
+          lang={lang}
+          versionInfo={appUpdate.versionInfo}
+          isApplying={appUpdate.isApplying}
+          onApply={appUpdate.applyUpdate}
+          onDismiss={appUpdate.dismissUpdate}
+        />
+      )}
       <AppShell
       lang={lang}
       theme={theme}

@@ -319,6 +319,31 @@ app.get("/api/health", (req, res) => {
 });
 
 // ============================================================
+// 1-1. 앱 버전 및 실시간 업데이트 확인 API (In-App Push 지원)
+// ============================================================
+const SERVER_BOOT_TIME = new Date().toISOString();
+const APP_VERSION = process.env.APP_VERSION || "1.1.0";
+
+app.get("/api/version", (req, res) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.json({
+    status: "ok",
+    version: APP_VERSION,
+    revision: process.env.K_REVISION || process.env.GIT_COMMIT_SHA || "local-dev",
+    bootTime: SERVER_BOOT_TIME,
+    title: {
+      ko: "새로운 업데이트가 배포되었습니다!",
+      en: "A new update has been deployed!"
+    },
+    description: {
+      ko: "듣기 연습 TTS 0초 즉각 재생 및 성능 최적화가 적용되었습니다.",
+      en: "Listening TTS instant playback and performance optimizations are live."
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ============================================================
 // 2. AI 튜터 실시간 대화 API (Gemini 3.8 Flash)
 // ============================================================
 app.post("/api/chat", identifyUser, limitChat, async (req, res) => {
