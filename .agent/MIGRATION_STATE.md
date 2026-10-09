@@ -1,5 +1,20 @@
 # HangulNow React + Vite Migration State
 
+## H9 — Selectable Tutor Lesson Duration
+
+Status:
+
+`COMPLETE` (commit `8791ed3`; not deployed)
+
+- Baseline: `f364583` on `feat/tutor-session-duration` in an isolated worktree.
+- Scope: Tutor lesson choices 10–50 minutes, matching timer/stop behavior, and Gemini Live duration instruction.
+- Roleplay and the fixed post-session audio review remain unchanged.
+- Selected duration is server-validated and shared by the Gemini instruction, Live ready contract, frontend countdown, 60-second wrap-up, and automatic stop.
+- Validation: server syntax/instruction PASS; changed-file ESLint PASS; Vitest 51/51; Node 20 build PASS; Playwright 17 passed / 1 expected skip.
+- Production traffic: unchanged. Deployment requires separate explicit approval.
+
+---
+
 ## H8 — Chat Mobile Toolbar + Mic Removal
 
 Status:

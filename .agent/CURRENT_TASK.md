@@ -1,5 +1,71 @@
 # Current Task
 
+## Active Product Task — H9
+
+Milestone ID:
+
+`H9-TUTOR-SESSION-DURATION`
+
+Milestone Name:
+
+`SELECTABLE TUTOR LESSON DURATION`
+
+Status:
+
+`COMPLETE` (commit `8791ed3`)
+
+Baseline HEAD:
+
+`f3645832a42b20a74fc2fe063473d47b0dcdfeed`
+
+Branch:
+
+`feat/tutor-session-duration`
+
+Worktree:
+
+`C:\\tmp\\hangulnow-tutor-duration` (isolated to preserve unrelated dirty Video Class work in the primary checkout)
+
+Expected files:
+
+- `frontend/src/data/conversationData.js`
+- `frontend/src/hooks/useConversation.js`
+- `frontend/src/pages/ConversationPage.jsx`
+- `frontend/src/pages/ConversationPage.test.jsx`
+- `src/liveConversation.js`
+- `.agent/CURRENT_TASK.md`
+- `.agent/MIGRATION_STATE.md`
+- `.agent/MIGRATION_LOG.md`
+
+Intended scope:
+
+- Offer 10, 20, 30, 40, and 50 minute Tutor lesson choices before a session starts.
+- Use the selected duration for the visible timer, automatic stop, and existing 60-second wrap-up trigger.
+- Send the duration through `/api/live`, validate it server-side, and explicitly instruct Gemini to sustain conversation for the selected lesson time without ending early.
+- Keep Roleplay timing behavior and the fixed post-session audio-review length unchanged.
+
+First required action:
+
+- Add a normalized duration field to Conversation state and carry it through the Live start/ready contract.
+
+Result so far:
+
+- Handoff validation found unrelated uncommitted Video Class changes in the primary checkout; they are preserved untouched in an isolated worktree.
+- Source audit complete: the frontend currently hard-codes 600 seconds and sends no lesson duration to `buildSystemInstruction`; wrap-up already triggers at 60 seconds remaining.
+- Implementation complete: Tutor lessons offer 10/20/30/40/50-minute choices; the selected value drives the idle display, Live start payload, server-validated ready response, countdown, automatic stop, and stored session metadata.
+- Gemini Live instruction explicitly states the selected total conversation time, requires the tutor to sustain the conversation for that duration, and forbids early closing before `WRAP_UP_NOW`.
+- Duration controls lock while connecting/live; Roleplay remains untimed and the post-session audio review remains fixed at 10 minutes.
+- Hook contract validation PASS: 30-minute payload and 30:00 clock; `WRAP_UP_NOW` sent at 01:00 remaining. Server instruction validation PASS for 30 and 50 minutes; invalid values normalize to 10.
+- Changed-file ESLint PASS; server syntax PASS; full Vitest 51/51 PASS; Node 20 production build PASS.
+- Focused duration Playwright desktop/mobile 2/2 PASS; full Playwright regression 17 PASS / 1 expected desktop-only skip, with no horizontal overflow.
+- Feature commit complete: `8791ed3` (`feat(conversation): add selectable tutor lesson duration`).
+
+Next action:
+
+- None for this bounded task. Production deployment/traffic remains unchanged and requires separate explicit approval.
+
+---
+
 ## Active Product Task — H8
 
 Milestone ID:

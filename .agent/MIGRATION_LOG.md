@@ -1666,3 +1666,15 @@ Validation:
 - Production deployment and traffic were not changed.
 
 ---
+
+# H9 — Selectable Tutor Lesson Duration
+
+- 2026-10-09: Started from `f364583` in isolated worktree `C:\\tmp\\hangulnow-tutor-duration` to preserve unrelated dirty Video Class work in the primary checkout.
+- Audited the Tutor Live path: fixed frontend 600-second clock, WebSocket start payload, server `buildSystemInstruction`, 60-second wrap-up signal, and automatic stop.
+- Bounded plan: expose 10/20/30/40/50 minutes for Tutor lessons and carry one server-validated duration through instruction and timer; leave Roleplay and audio-review duration unchanged.
+- Implemented and committed as `8791ed3`: selectable duration UI, normalized Conversation state, WebSocket start/ready contract, duration-specific Gemini instruction, countdown, 60-second wrap-up, auto-stop, and session metadata.
+- Hook validation PASS for 30-minute start and 01:00 wrap-up; backend instruction validation PASS for 30/50 minutes and invalid-value fallback to 10.
+- Validation PASS: server syntax; changed-file ESLint; Vitest 51/51; Node 20 build; focused duration Playwright 2/2; full Playwright 17 pass / 1 expected skip.
+- Primary checkout's unrelated dirty Video Class work remained untouched. Production deployment and traffic were not changed.
+
+---
