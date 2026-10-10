@@ -11,6 +11,7 @@
     "test:db": "node --env-file=.env --test \"src/**/*.test.js\"",
     "db:migrate": "node --env-file=.env scripts/migrate.mjs",
     "db:import-firebase": "node --env-file=.env scripts/migrate-firebase-data.mjs",
+    "secrets:sync": "node scripts/sync-secrets.mjs",
     "deploy:prod": "pwsh -File ./scripts/deploy-production.ps1"
   },
   "dependencies": {

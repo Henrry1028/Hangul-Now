@@ -27,7 +27,20 @@ try {
     gcloud builds submit $archiveFile --region $REGION --tag $imageTag
 
     Write-Host "🚢 [5/7] Cloud Run 프로덕션 배포 및 트래픽 100% 즉시 전환..." -ForegroundColor Cyan
-    $secrets = "GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest"
+    $secretsList = @(
+        "GEMINI_API_KEY=hn-staging-gemini-api-key:latest",
+        "FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest",
+        "ADMIN_EMAILS=hn-staging-admin-emails:latest",
+        "SUPABASE_DB_URL=hn-prod-supabase-db-url:latest",
+        "SUPABASE_URL=hn-prod-supabase-url:latest",
+        "SUPABASE_SECRET_KEY=hn-prod-supabase-secret-key:latest",
+        "SUPABASE_PUBLISHABLE_KEY=hn-prod-supabase-pub-key:latest",
+        "R2_ACCOUNT_ID=hn-prod-r2-account-id:latest",
+        "R2_BUCKET_NAME=hn-prod-r2-bucket-name:latest",
+        "R2_ACCESS_KEY_ID=hn-prod-r2-access-key-id:latest",
+        "R2_SECRET_ACCESS_KEY=hn-prod-r2-secret-access-key:latest"
+    )
+    $secrets = $secretsList -join ","
     gcloud run deploy $SERVICE_NAME `
         --image $imageTag `
         --region $REGION `
