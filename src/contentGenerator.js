@@ -213,7 +213,7 @@ ${levelPromptGuidance(level)}
 반드시 아래 JSON 형식으로만 답하라.
 {
   "paragraphWords": [["각 문단에서 꼭 배울 단어 최대 2개"]],
-  "glossary": [{"word":"본문에 실제 등장한 단어","pos":"noun","en":"짧은 영어 뜻","ex":"짧은 한국어 예문 — 영어 번역"}],
+  "glossary": [{"word":"본문에 실제 등장한 단어","pos":"noun","ko":"짧고 쉬운 한국어 뜻풀이","en":"짧은 영어 뜻","ex":"짧은 한국어 예문 — 영어 번역"}],
   "questions": [{"q":"한국어 질문","en":"영어 질문","opts":["보기1","보기2","보기3"],"a":0}],
   "grammar": [{"form":"문법 형태","ko":"문법 설명 한 줄","example":"본문과 연결된 짧은 예문"}]
 }
@@ -297,6 +297,77 @@ export async function generateContent({ kind, level = "beginner", userId = null,
   return { ...data, level, phase };
 }
 
+const VOCAB_LEVEL_GUIDANCE = {
+  starter: "입문(Pre-A1~A1). 한글 자모 결합 원리와 기초 명사·동사를 고르고 로마자 발음을 반드시 병기한다. 예문은 '사과예요', '물을 마셔요'처럼 아주 짧게 쓴다.",
+  beginner: "초급(TOPIK 1~2급). 기본 시제와 조사, 해요체와 기본형을 익힐 수 있는 여행·식당·쇼핑 중심 생활 표현을 고른다.",
+  intermediate: "중급(TOPIK 3~4급). 유의어의 미묘한 뉘앙스, 자주 쓰는 연어와 관용 표현을 고르고 드라마 대사처럼 자연스러운 복문 예문을 쓴다.",
+  advanced: "고급(TOPIK 5~6급). 한자어 어원, 사자성어, 시사·비즈니스·추상 개념어를 고르고 신문·칼럼·격식 발표 문체의 예문을 쓴다."
+};
+
+const VOCAB_THEME_LABELS = {
+  kdrama: "K-드라마 단골 표현",
+  cafe: "카페 주문",
+  business: "비즈니스 이메일",
+  emotion: "감정 표현"
+};
+
+export async function generateVocabularyDailySet({ level = "beginner", theme = "kdrama", exclude = [] }) {
+  const guidance = VOCAB_LEVEL_GUIDANCE[level] || VOCAB_LEVEL_GUIDANCE.beginner;
+  const themeLabel = VOCAB_THEME_LABELS[theme] || VOCAB_THEME_LABELS.kdrama;
+  const excluded = (Array.isArray(exclude) ? exclude : []).map((word) => String(word || "").trim()).filter(Boolean).slice(0, 80);
+  const data = await askJson(`너는 외국인을 위한 한국어 어휘 교재를 만드는 전문 교사다.
+오늘 5분 동안 배울 단어를 정확히 5개 만든다.
+
+[학습자 수준]
+${guidance}
+
+[오늘의 테마]
+${themeLabel}
+
+${excluded.length ? `[이미 단어장에 있는 단어 — 가능한 한 피할 것]\n${excluded.join(", ")}` : ""}
+
+각 단어는 실제 한국어 사용에서 자연스러워야 하고 서로 중복되지 않아야 한다. AI 원포인트 팁에는 어감 차이, 한자 의미, 활용형 또는 함께 자주 쓰는 말 중 가장 유용한 하나를 짧게 설명한다.
+반드시 아래 JSON 형식으로만 답하라.
+{
+  "words": [{
+    "w": "한국어 단어 또는 짧은 표현",
+    "rom": "로마자 발음",
+    "posKo": "한국어 품사",
+    "posEn": "English part of speech",
+    "en": "concise natural English meaning",
+    "ex": "수준과 테마에 맞는 실사용 한국어 예문",
+    "exEn": "natural English translation",
+    "ex2": "두 번째 짧은 실사용 한국어 예문",
+    "ex2En": "natural English translation",
+    "tipKo": "AI 원포인트 팁 한국어",
+    "tipEn": "AI one-point tip in English",
+    "hanja": "관련 한자가 있을 때만 표기, 없으면 빈 문자열"
+  }]
+}
+words는 정확히 5개이며 모든 필드를 빠짐없이 채운다.`, {
+    maxOutputTokens: 2300,
+    operation: `vocabulary.daily.${level}.${theme}`
+  });
+
+  const seen = new Set();
+  const words = (Array.isArray(data?.words) ? data.words : []).map((word) => ({
+    w: String(word?.w || "").trim(),
+    rom: String(word?.rom || "").trim(),
+    posKo: String(word?.posKo || "표현").trim(),
+    posEn: String(word?.posEn || "expression").trim(),
+    en: String(word?.en || "").trim(),
+    ex: String(word?.ex || "").trim(),
+    exEn: String(word?.exEn || "").trim(),
+    ex2: String(word?.ex2 || "").trim(),
+    ex2En: String(word?.ex2En || "").trim(),
+    tipKo: String(word?.tipKo || "").trim(),
+    tipEn: String(word?.tipEn || "").trim(),
+    hanja: String(word?.hanja || "").trim()
+  })).filter((word) => word.w && word.en && !seen.has(word.w) && seen.add(word.w)).slice(0, 5);
+  if (words.length !== 5) throw new Error("데일리 단어 5개를 완성하지 못했습니다. 다시 시도해 주세요.");
+  return { level, theme, words };
+}
+
 // ── 회화·채팅 번역 (영어 번역 보기 토글용) ───────────────
 // 한 요청을 작은 묶음으로 나누어 긴 대화도 모델 출력 한도에 걸리지 않게 한다.
 // 문장 수뿐 아니라 글자 수도 제한해 유난히 긴 한 문장이 다른 번역을 밀어내지 않게 한다.
@@ -360,6 +431,47 @@ export async function translateLines(lines = []) {
   const result = items.map((item) => item.t ? (translated.get(item.i) || "") : "");
   if (items.some((item) => item.t && !result[item.i])) {
     throw new Error("일부 문장의 영어 번역이 누락되었습니다. 다시 시도해 주세요.");
+  }
+  return result;
+}
+
+// 읽기 본문에서 사용자가 직접 선택한 한국어 단어·짧은 표현을 문맥에 맞게 풀이한다.
+export async function lookupKoreanWord(word, context = "") {
+  const selected = String(word || "").trim().slice(0, 40);
+  const sentence = String(context || "").replace(/\s+/g, " ").trim().slice(0, 1200);
+  if (!selected) throw new Error("조회할 단어가 필요합니다.");
+
+  const data = await askJson(`너는 외국인 한국어 학습자를 위한 간결하고 정확한 양한영 사전이다.
+아래 선택된 한국어 단어 또는 짧은 표현을 본문 문맥에 맞게 풀이하라.
+
+선택: ${selected}
+본문 문맥: ${sentence || "문맥 없음"}
+
+조사나 어미가 붙어 있으면 base에는 기본형을 적고, 문맥에서 실제로 쓰인 뜻만 설명한다.
+반드시 아래 JSON 형식으로만 답하라.
+{
+  "word": "선택된 표기",
+  "base": "사전 기본형",
+  "posKo": "한국어 품사",
+  "posEn": "영어 품사",
+  "meaningKo": "초급 학습자도 이해할 수 있는 짧은 한국어 뜻풀이",
+  "meaningEn": "short natural English meaning",
+  "exampleKo": "이 뜻으로 쓴 짧은 한국어 예문",
+  "exampleEn": "natural English translation of the example"
+}`, { maxOutputTokens: 650, operation: "dictionary.lookup" });
+
+  const result = {
+    word: selected,
+    base: String(data?.base || data?.word || selected).trim(),
+    posKo: String(data?.posKo || "표현").trim(),
+    posEn: String(data?.posEn || "expression").trim(),
+    meaningKo: String(data?.meaningKo || "").trim(),
+    meaningEn: String(data?.meaningEn || "").trim(),
+    exampleKo: String(data?.exampleKo || "").trim(),
+    exampleEn: String(data?.exampleEn || "").trim()
+  };
+  if (!result.meaningKo || !result.meaningEn) {
+    throw new Error("단어 뜻을 완성하지 못했습니다. 다시 선택해 주세요.");
   }
   return result;
 }

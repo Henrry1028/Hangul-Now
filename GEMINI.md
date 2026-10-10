@@ -35,7 +35,7 @@
 | **Voice & Speech (TTS)** | **Google Cloud TTS** (`@google-cloud/text-to-speech`) | Neural2 한국어 전문 성우 보이스 백업 및 보완 |
 | **Database & Auth** | **Firebase (Admin SDK & Web SDK)** | Firebase Auth (Google OAuth), Cloud Firestore, Cloud Storage |
 | **Report Generation** | **PDFKit**, **Puppeteer** | 학습 세션 요약 및 복습 리포트 PDF 동적 렌더링 및 다운로드 |
-| **Cloud Infrastructure** | **Google Cloud Run**, **Secret Manager** | 완전관리형 컨테이너 배포 (서울 리전 `asia-northeast3`), 암호화된 시크릿 인젝션 |
+| **Cloud Infrastructure** | **Google Cloud Run**, **Secret Manager** | 완전관리형 컨테이너 배포 (미국 버지니아 북부 `us-east4`), 암호화된 시크릿 인젝션 |
 | **Testing** | **Vitest**, **Playwright** | 단위 테스트 및 브라우저 엔드투엔드(E2E) 스모크 테스트 |
 
 ---
@@ -144,7 +144,7 @@ flowchart TB
     end
 
     subgraph Security["보안 및 인프라 경계"]
-        CloudRun["Google Cloud Run (asia-northeast3)"]
+        CloudRun["Google Cloud Run (us-east4 - 버지니아 북부)"]
         SecretMgr["Google Secret Manager (암호화 시크릿 주입)"]
         SecretMgr -.->|GEMINI_API_KEY, SA_KEY| CloudRun
     end
@@ -291,6 +291,7 @@ npm run deploy:prod
 
 | 일자 | 작업 유형 | 변경 내용 및 상세 설명 | 상태 |
 | :--- | :---: | :--- | :---: |
+| **2026-10-10** | **인프라 최적화** | • **[글로벌 레이턴시 단축] Cloud Run 서버 및 DB 리전 버지니아 북부(`us-east4` / `us-east-1`) 통일**<br>• 영어권 글로벌 학습자 대상 실시간 응답(Gemini Live 음성 등) 극대화를 위해 Cloud Run 배포 리전을 `asia-northeast3`에서 `us-east4`로 전환<br>• Supabase DB(`aws-0-us-east-1`)와 동일 메트로폴리탄(Ashburn, Northern Virginia) 위치로 DB 왕복 지연 1~2ms 및 북미 TPU 백본 15ms 미만 초저지연망 구축<br>• `deploy-production.ps1`, `firebase.json`, `server.js` CORS, `useConversation.js` WebSocket 도메인 해석 로직 동기화 완료 | **완료** |
 | **2026-10-09** | **기능 개선** | • **[튜터 채팅] 과거 하드코딩 대화 제거, 기본 첫 인사 자동 생성 및 7일 메시지 보존/자동 만료 정책 구현**<br>• 매번 접속 시 나오던 과거 목업 대화(2026-09-26 에마 씨 주말 대화)를 완전 제거<br>• 튜터 채팅 진입 시 또는 튜터 변경 시 대화가 없으면 튜터의 첫 마디로 `안녕하세요! 오늘은 어떤 얘기를 해볼까요?` 자동 출력<br>• 사용자와 나눈 대화는 `localStorage`(`hn_chat_history_v1`)에 영속화되며, 7일(604,800,000ms)이 지난 메시지는 로드 및 저장 시 자동 삭제(만료) | **완료** |
 | **2026-10-09** | **UI/UX 개선** | • **[모바일 UX] 상단 서브내비게이션 바 제거 및 튜터 채팅 헤더 컴팩트 툴바화**<br>• 모바일 화면 로고 헤더 바로 아래 '오늘의 학습'~'학습 기록' 가로 탭 바(`mobile-subnav-bar`)를 전면 제거하여 대화/학습 본문 세로 영역 확장 (좌측 ☰ 햄버거 드로어로 내비게이션 통합)<br>• 튜터 채팅 화면 상단의 대형 프로필 사진 및 소개글 영역을 제거하고, `[튜터 변경 ↺]`과 `[영어 번역 보기]` 버튼만 남긴 슬림 액션 바로 개편하여 말풍선 시인성 극대화 | **완료** |
 | **2026-10-09** | **버그 수정** | • **[인앱 푸시] '지금 업데이트' 클릭 후 배너 무한 재표시 루프 버그 수정**<br>• 클라이언트 빌드 시각과 서버 부팅 시각의 정적 시간차 비교 로직 제거 (Docker 다단계 빌드 시차로 인한 오작동 원천 차단)<br>• `hn_applied_revision` 로컬 스토리지 키 기반 정밀 버전 판정 및 `_hn_update` 리로드 쿼리 정리 적용 | **완료** |

@@ -15,7 +15,7 @@ export const SRS_DAYS = [0, 1, 3, 7, 14, 30];
 export const MASTERED_BOX = 5;
 const MAX_MISTAKES = 400;
 const REPEAT_GUARD_MS = 4000; // 같은 실수를 연달아 누른 것은 한 번으로 친다
-export const NEW_WORDS_PER_DAY = 8;
+export const NEW_WORDS_PER_DAY = 5;
 
 export const MISTAKE_AREAS = {
   chat: { ko: '튜터 채팅', en: 'Tutor chat', icon: '💬' },
@@ -149,7 +149,10 @@ export function applyAddWord(store, word, source = 'manual', now = Date.now()) {
   const w = clean(word.w);
   if (!w) return store;
   const prev = store[w];
-  const fields = Object.fromEntries(['rom', 'en', 'pos', 'ex', 'exEn', 'topic'].map((k) => [k, clean(word[k])]).filter(([, v]) => v));
+  const fields = Object.fromEntries([
+    'rom', 'en', 'pos', 'posKo', 'posEn', 'ex', 'exEn', 'ex2', 'ex2En',
+    'tipKo', 'tipEn', 'topic', 'theme', 'level', 'hanja'
+  ].map((k) => [k, clean(word[k])]).filter(([, v]) => v));
   if (prev) return { ...store, [w]: { ...fields, ...prev, ...Object.fromEntries(Object.entries(fields).filter(([k]) => !prev[k])) } };
   return { ...store, [w]: { w, ...fields, source, addedAt: now, addedDay: dayKey(now), box: 0, nextReviewAt: now, correct: 0, wrong: 0, mastered: false } };
 }
@@ -157,7 +160,28 @@ export function applyAddWord(store, word, source = 'manual', now = Date.now()) {
 export function applyWordReview(store, w, correct, now = Date.now()) {
   const card = store[w];
   if (!card) return store;
-  const reviewed = applyReview(card, correct, now);
+  let reviewed;
+  if (!correct) {
+    reviewed = {
+      ...applyReview(card, false, now),
+      weakStep: 0,
+      nextReviewAt: now + DAY
+    };
+  } else if (Number.isInteger(card.weakStep)) {
+    const nextWeakStep = card.weakStep + 1;
+    if (nextWeakStep <= 2) {
+      reviewed = {
+        ...applyReview(card, true, now),
+        weakStep: nextWeakStep,
+        nextReviewAt: now + [0, 3, 7][nextWeakStep] * DAY,
+        mastered: false
+      };
+    } else {
+      reviewed = { ...applyReview(card, true, now), weakStep: null };
+    }
+  } else {
+    reviewed = applyReview(card, true, now);
+  }
   return { ...store, [w]: { ...reviewed, correct: (card.correct || 0) + (correct ? 1 : 0), wrong: (card.wrong || 0) + (correct ? 0 : 1) } };
 }
 

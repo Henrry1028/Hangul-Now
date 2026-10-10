@@ -113,3 +113,66 @@
 .mistake-answer { display: flex; flex-direction: column; align-items: center; gap: 8px; border-top: 1px dashed var(--line3); padding-top: 12px; width: 100%; }
 .mistake-answer .mistake-diff { justify-content: center; font-size: 18px; }
 .mistake-answer .mistake-diff .notes-speak { margin-left: 0; }
+
+/* 5분 데일리 단어 루틴 */
+.vocab-routine-screen { max-width: 1040px; }
+.vocab-routine-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.vocab-routine-summary > div { min-height: 66px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); display: flex; flex-direction: column; justify-content: center; }
+.vocab-routine-summary strong { color: var(--ink); font-size: 22px; line-height: 1; }
+.vocab-routine-summary span { margin-top: 5px; color: var(--sub); font-size: 12px; }
+.vocab-routine-summary .vocab-streak { position: relative; padding-left: 48px; }
+.vocab-routine-summary .vocab-streak > span:first-child { position: absolute; left: 15px; margin: 0; font-size: 25px; }
+.vocab-routine-start { display: flex; flex-direction: column; gap: 20px; }
+.vocab-routine-copy { text-align: center; }
+.vocab-routine-copy h2 { margin: 8px 0 5px; color: var(--ink); font-size: clamp(20px, 4vw, 28px); }
+.vocab-routine-copy p { max-width: 620px; margin: 0 auto; color: var(--sub); font-size: 13.5px; line-height: 1.6; }
+.vocab-option-group { display: flex; flex-direction: column; gap: 9px; }
+.vocab-option-group > strong { color: var(--ink); font-size: 13.5px; }
+.vocab-level-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.vocab-level-grid button { border: 1px solid var(--line); border-radius: 13px; padding: 11px 8px; background: var(--bg); color: var(--ink2); cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+.vocab-level-grid button b { color: inherit; font-size: 14px; }
+.vocab-level-grid button span { color: var(--faint); font-size: 11px; }
+.vocab-level-grid button.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); box-shadow: inset 0 0 0 1px var(--accent); }
+.vocab-theme-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.vocab-theme-chips button { border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; background: var(--bg); color: var(--ink2); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.vocab-theme-chips button.is-active { border-color: var(--accent); background: var(--accent); color: #fff; }
+.vocab-start-button { align-self: center; min-width: min(100%, 310px); padding: 13px 22px; font-size: 15px; }
+.vocab-routine-notice { align-self: center; margin: 0; border-radius: 10px; padding: 8px 12px; background: var(--hot-soft); color: var(--hot); font-size: 12.5px; text-align: center; }
+.vocab-calendar { display: grid; grid-template-columns: repeat(14, minmax(30px, 1fr)); gap: 5px; width: 100%; }
+.vocab-calendar > div { min-height: 45px; border: 1px solid var(--line2); border-radius: 9px; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.vocab-calendar span { color: var(--faint); font-size: 9px; }
+.vocab-calendar b { color: var(--sub); font-size: 11px; }
+.vocab-calendar .is-stamped { border-color: #ffb44a; background: #fff5e6; }
+.vocab-calendar .is-today { box-shadow: inset 0 0 0 1px var(--accent); }
+.vocab-progress { position: relative; width: 100%; max-width: 560px; height: 8px; overflow: visible; border-radius: 999px; background: var(--line2); }
+.vocab-progress span { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .25s ease; }
+.vocab-progress b { position: absolute; right: 0; top: -20px; color: var(--sub); font-size: 11px; }
+.vocab-daily-card { min-height: 350px; max-width: 560px; justify-content: center; touch-action: pan-y; user-select: none; }
+.vocab-daily-card .vocab-card-word { font-size: clamp(38px, 9vw, 58px); }
+.vocab-example-block { width: min(100%, 450px); padding: 10px 12px; border-radius: 11px; background: var(--card); display: flex; flex-direction: column; gap: 3px; }
+.vocab-example-block span { color: var(--ink); font-size: 15px; line-height: 1.5; }
+.vocab-example-block small { color: var(--sub); font-size: 12px; }
+.vocab-ai-tip { width: min(100%, 450px); box-sizing: border-box; margin-top: 4px; padding: 11px 13px; border: 1px solid var(--accent); border-radius: 12px; background: var(--accent-soft); display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.vocab-ai-tip b { color: var(--accent-ink); font-size: 12px; }
+.vocab-ai-tip span { color: var(--ink2); font-size: 13px; line-height: 1.5; }
+.vocab-ai-tip small { color: var(--sub); font-size: 11.5px; }
+.vocab-quiz-prompt { margin: 12px 0; color: var(--ink); font-size: clamp(19px, 4vw, 26px); line-height: 1.5; text-align: center; }
+.vocab-puzzle-answer { width: 100%; max-width: 560px; min-height: 64px; box-sizing: border-box; padding: 10px; border: 1.5px dashed var(--accent); border-radius: 13px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
+.vocab-puzzle-answer span, .vocab-puzzle-blocks button { border: 1px solid var(--line); border-radius: 9px; padding: 8px 11px; background: var(--card); color: var(--ink); font-size: 14px; }
+.vocab-puzzle-blocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.vocab-puzzle-blocks button { cursor: pointer; }
+.vocab-puzzle-blocks button:disabled { opacity: .35; cursor: default; }
+.vocab-quiz-result { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; max-width: 560px; }
+.vocab-complete { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 12px 0; text-align: center; }
+.vocab-complete-fire { font-size: 48px; }
+.vocab-complete h2 { margin: 0; color: var(--ink); }
+.vocab-complete p { margin: 0 0 8px; color: var(--sub); font-size: 13.5px; }
+
+@media (max-width: 700px) {
+  .vocab-routine-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vocab-level-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vocab-calendar { grid-template-columns: repeat(7, minmax(30px, 1fr)); }
+  .vocab-calendar > div:nth-child(-n+7) { display: none; }
+  .vocab-daily-card { min-height: 320px; }
+  .vocab-quiz-result { flex-direction: column; }
+}

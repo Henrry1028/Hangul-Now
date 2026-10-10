@@ -97,6 +97,39 @@
   font-size: 13.5px;
 }
 
+.reading-wordbook-guide {
+  border: 1px solid var(--line);
+  background: var(--accent-soft);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.reading-wordbook-guide-label {
+  flex: none;
+  color: var(--accent-ink);
+  font: 700 10.5px 'IBM Plex Mono', monospace;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+
+.reading-wordbook-guide p {
+  margin: 0;
+  color: var(--sub);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 620px) {
+  .reading-wordbook-guide {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
 .reading-content-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
@@ -316,6 +349,20 @@
 
 .reading-word-meaning {
   font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.reading-word-meaning b {
+  color: #A9C1B6;
+  font: 600 10px 'IBM Plex Mono', monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.reading-word-meaning-ko {
+  color: #F5F2EB;
 }
 
 .reading-word-example {
@@ -342,6 +389,151 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.reading-selection-card {
+  position: fixed;
+  z-index: 1200;
+  width: min(340px, calc(100vw - 24px));
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  background: #23493F;
+  color: #F5F2EB;
+  border: 1px solid rgba(245, 242, 235, .2);
+  border-radius: 17px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  box-shadow: 0 18px 44px rgba(20, 35, 31, .3);
+  animation: reading-selection-in .16s ease-out both;
+}
+
+.reading-selection-card.is-above {
+  transform: translate(-50%, -100%);
+  transform-origin: center bottom;
+}
+
+.reading-selection-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reading-selection-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reading-selection-head strong {
+  font: 700 25px 'Gowun Batang', serif;
+}
+
+.reading-selection-head span {
+  color: #A9C1B6;
+  font-size: 11px;
+}
+
+.reading-selection-head button {
+  border: 0;
+  background: rgba(245, 242, 235, .1);
+  color: #F5F2EB;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.reading-selection-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #DCE5E0;
+  font-size: 13px;
+}
+
+.reading-selection-loading i {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(245, 242, 235, .28);
+  border-top-color: #F5F2EB;
+  border-radius: 50%;
+  animation: reading-selection-spin .7s linear infinite;
+}
+
+.reading-selection-meanings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reading-selection-meanings p {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 8px;
+  align-items: start;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.reading-selection-meanings em {
+  color: #A9C1B6;
+  font: 600 10px 'IBM Plex Mono', monospace;
+  font-style: normal;
+  letter-spacing: .05em;
+  padding-top: 3px;
+}
+
+.reading-selection-example {
+  border-top: 1px solid rgba(245, 242, 235, .16);
+  padding-top: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #DCE5E0;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.reading-selection-example span:last-child {
+  color: #A9C1B6;
+}
+
+.reading-selection-error {
+  color: #FFD4C7;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.reading-selection-save {
+  border: 0;
+  border-radius: 999px;
+  background: #F5F2EB;
+  color: #23493F;
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+@keyframes reading-selection-in {
+  from { opacity: 0; scale: .97; }
+  to { opacity: 1; scale: 1; }
+}
+
+@keyframes reading-selection-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reading-selection-card { animation: none; }
+  .reading-selection-loading i { animation-duration: 1.4s; }
 }
 
 .reading-word-speech-button,

@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  FIREBASE_CONFIG, INTERESTS, INTEREST_MAX, NATIONALITIES,
+  INTEREST_MAX, NATIONALITIES,
   emptyProfileDraft, profileStorageKey, sanitizeProfile
 } from '../data/profileData.js';
+import { authClient } from '../data/authClient.js';
 
 // 관리자 표시 여부는 서버 판정(GET /api/admin/status)으로만 정한다.
 // 클라이언트 휴리스틱(?admin=1, 이메일 패턴)은 쓰지 않는다. 데이터 보호는 항상 서버가 맡는다.
-async function fetchAdminStatus(user) {
+async function fetchAdminStatus() {
   try {
-    const token = await user.getIdToken();
+    const token = await authClient.getToken();
     if (!token) return false;
     const res = await fetch('/api/admin/status', { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) return false;
@@ -56,15 +57,10 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
   }, []);
 
   useEffect(() => {
-    const firebase = window.firebase;
-    if (!firebase) return undefined;
-    if (!firebase.apps.length) {
-      try { firebase.initializeApp(FIREBASE_CONFIG); } catch (error) { console.warn('[Firebase] Init:', error); }
-    }
     let alive = true;
     let authGeneration = 0;
     try {
-      const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+      const unsubscribe = authClient.subscribe(async (user) => {
         const generation = ++authGeneration;
         if (!alive) return;
         if (!user) {
@@ -82,15 +78,13 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
         };
         setCurrentUser(userObject);
         setIsAdmin(false);
-        fetchAdminStatus(user).then((admin) => {
+        fetchAdminStatus().then((admin) => {
           if (alive && generation === authGeneration) setIsAdmin(admin);
         });
         let profileApplied = false;
         try {
-          const userRef = firebase.firestore().collection('users').doc(user.uid);
-          const snapshot = await userRef.get();
+          const userData = await authClient.loadProfile(user.uid);
           if (!alive || generation !== authGeneration) return;
-          const userData = snapshot.exists ? (snapshot.data() || {}) : {};
           let tutorId = tutorRef.current;
           if (userData.selectedTutorId) {
             const restored = restoreTutorRef.current?.(userData.selectedTutorId);
@@ -98,16 +92,14 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
           }
           applyProfile(userObject, userData);
           profileApplied = true;
-          await userRef.set({
+          await authClient.recordLogin({
             uid: user.uid,
             email: user.email || '',
             displayName: user.displayName || '',
-            photoURL: user.photoURL || '',
-            selectedTutorId: tutorId,
-            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
+            photoURL: user.photoURL || ''
+          }, tutorId);
         } catch (error) {
-          console.warn('[Firestore] Sync Warning:', error);
+          console.warn('[Profile] Sync Warning:', error);
           if (!profileApplied && alive && generation === authGeneration) applyProfile(userObject, {});
         }
       });
@@ -117,7 +109,7 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
         if (typeof unsubscribe === 'function') unsubscribe();
       };
     } catch (error) {
-      console.warn('[Firebase Auth] Listener Warning:', error);
+      console.warn('[Auth] Listener Warning:', error);
       return undefined;
     }
   }, [applyProfile]);
@@ -189,16 +181,9 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
     try { localStorage.setItem(profileStorageKey(currentUser.uid), JSON.stringify(nextProfile)); } catch { /* ignore */ }
     let warning = '';
     try {
-      const firebase = window.firebase;
-      if (firebase?.firestore) {
-        await firebase.firestore().collection('users').doc(currentUser.uid).set({
-          ...nextProfile,
-          onboardedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      }
+      await authClient.saveProfile(currentUser.uid, nextProfile);
     } catch (error) {
-      console.warn('[Firestore] Profile save error:', error);
+      console.warn('[Profile] Save error:', error);
       warning = ko ? '서버 저장에 실패해 이 브라우저에만 저장했어요.' : 'Saved in this browser only — the server save failed.';
     }
     setProfile(nextProfile);
@@ -209,31 +194,24 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
   }, [currentUser, obDraft]);
 
   const login = useCallback(async () => {
-    const firebase = window.firebase;
-    if (!firebase?.auth) {
-      window.alert('Firebase 인증 모듈을 로드하는 중입니다. 잠시 후 다시 시도해 주세요.');
+    if (!authClient.available()) {
+      window.alert('인증 모듈을 로드하는 중입니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
     try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      await firebase.auth().signInWithPopup(provider);
+      await authClient.signInWithGoogle();
     } catch (error) {
       console.error('[Google Login Error]', error);
-      if (error.code === 'auth/popup-blocked') {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithRedirect(provider);
-      } else if (error.code !== 'auth/popup-closed-by-user') {
+      if (error.code !== 'auth/popup-closed-by-user') {
         window.alert(`Google 로그인 실패: ${error.message || error.code}`);
       }
     }
   }, []);
 
   const logout = useCallback(async () => {
-    const firebase = window.firebase;
-    if (!firebase?.auth) return;
+    if (!authClient.available()) return;
     try {
-      await firebase.auth().signOut();
+      await authClient.signOut();
       setCurrentUser(null);
     } catch (error) {
       console.error('[Logout Error]', error);
@@ -243,15 +221,9 @@ export default function useAuthProfile({ selectedTutorId, onRestoreTutor }) {
   const persistTutor = useCallback(async (id) => {
     if (!currentUser) return;
     try {
-      const firebase = window.firebase;
-      if (firebase?.firestore) {
-        await firebase.firestore().collection('users').doc(currentUser.uid).set({
-          selectedTutorId: id,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      }
+      await authClient.saveTutor(currentUser.uid, id);
     } catch (error) {
-      console.warn('[Firestore] Tutor update error:', error);
+      console.warn('[Profile] Tutor update error:', error);
     }
   }, [currentUser]);
 

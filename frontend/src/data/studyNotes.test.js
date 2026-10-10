@@ -107,7 +107,18 @@ describe('단어 학습', () => {
     let store = {};
     ['사람', '친구'].forEach((w) => { store = applyAddWord(store, { w, en: w }, 'manual', T0); });
     store = applyWordReview(store, '친구', false, T0);
-    expect(buildVocabSession(store, T0 + 1000).due.map((c) => c.w)).toEqual(['친구', '사람']);
+    expect(buildVocabSession(store, T0 + 1000).due.map((c) => c.w)).toEqual(['사람']);
+    expect(buildVocabSession(store, T0 + DAY).due.map((c) => c.w)).toEqual(['친구', '사람']);
+  });
+
+  it('schedules an Again word after 1, 3, and 7 days', () => {
+    let store = applyAddWord({}, { w: '눈치', en: 'social awareness' }, 'daily', T0);
+    store = applyWordReview(store, '눈치', false, T0);
+    expect(store['눈치']).toMatchObject({ weakStep: 0, nextReviewAt: T0 + DAY });
+    store = applyWordReview(store, '눈치', true, T0 + DAY);
+    expect(store['눈치']).toMatchObject({ weakStep: 1, nextReviewAt: T0 + 4 * DAY });
+    store = applyWordReview(store, '눈치', true, T0 + 4 * DAY);
+    expect(store['눈치']).toMatchObject({ weakStep: 2, nextReviewAt: T0 + 11 * DAY });
   });
 
   it('builds four distinct meaning choices that include the answer', () => {

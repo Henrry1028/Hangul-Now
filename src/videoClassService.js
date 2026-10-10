@@ -6,7 +6,7 @@
 import express from 'express';
 import { authenticateUser, authenticateOptionalUser } from './authMiddleware.js';
 import { isEffectiveAdmin } from './adminPolicy.js';
-import { auth } from './firebase.js';
+import { authAvailable, authUserExists } from './authProvider.js';
 
 // HangulNow Effective Admin 인가 가드 미들웨어
 const requireEffectiveAdmin = (req, res, next) => {
@@ -276,21 +276,29 @@ router.post('/tutors/profile', async (req, res) => {
     if (hasCandidateUid) {
       const candidateUid = tutorUid.trim();
 
-      // Firebase Admin Auth 서비스 가용성 확인
-      if (!auth) {
+      // 인증 서비스 가용성 확인
+      if (!authAvailable) {
         return res.status(503).json({
           success: false,
           error: '인증 서비스를 사용할 수 없어 튜터 UID를 검증할 수 없습니다.'
         });
       }
 
-      // 1. Firebase Auth에 실제 존재하는 사용자 UID인지 확인
+      // 1. 실제 존재하는 사용자 UID인지 확인
+      let uidExists = false;
       try {
-        await auth.getUser(candidateUid);
+        uidExists = await authUserExists(candidateUid);
       } catch (err) {
+        console.warn('[VideoClass] 튜터 UID 확인 실패:', err.message);
+        return res.status(503).json({
+          success: false,
+          error: '인증 서비스를 사용할 수 없어 튜터 UID를 검증할 수 없습니다.'
+        });
+      }
+      if (!uidExists) {
         return res.status(400).json({
           success: false,
-          error: '존재하지 않는 Firebase 사용자 UID입니다.'
+          error: '존재하지 않는 사용자 UID입니다.'
         });
       }
 

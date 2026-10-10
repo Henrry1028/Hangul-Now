@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { authClient } from '../data/authClient.js';
 
 // Legacy 1:1 Video Class controller (preview/index.html 4216-4636). Admin-only preview:
 // `isAdminFlag` is the server-verified admin status (GET /api/admin/status) for the signed-in
@@ -47,10 +48,8 @@ const createInitialState = () => ({
   vcAdminTutorLanguages: '한국어 (Native), English (Fluent)'
 });
 
-const firebaseUser = () => {
-  const firebase = window.firebase;
-  return firebase && firebase.auth ? firebase.auth().currentUser : null;
-};
+// 로그인한 사용자(토큰을 꺼낼 수 있는 객체) 또는 null — 로그인 방식(Firebase/Supabase)과 무관하다
+const firebaseUser = () => authClient.currentUser();
 
 export default function useVideoClass({ isAdminFlag, currentUser }) {
   const [state, setState] = useState(createInitialState);

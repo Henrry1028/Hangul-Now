@@ -5,7 +5,7 @@
 $ErrorActionPreference = "Stop"
 
 $PROJECT_ID = "hnageul-copilot-dev-918"
-$REGION = "asia-northeast3"
+$REGION = "us-east4"
 $SERVICE_NAME = "hangul-now-api"
 $SERVICE_ACCOUNT = "hangul-now-api-runtime@hnageul-copilot-dev-918.iam.gserviceaccount.com"
 

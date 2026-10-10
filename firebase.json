@@ -11,7 +11,7 @@
         "source": "/api/**",
         "run": {
           "serviceId": "hangul-now-api",
-          "region": "asia-northeast3"
+          "region": "us-east4"
         }
       },
       {

@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { db, storage, isInitialized as isFirebaseReady } from "./firebase.js";
+import { db, isInitialized as isFirebaseReady } from "./firebase.js";
+import { fileStore } from "./fileStore.js";
+import { pgStore } from "./dataStore.js";
 import fs from "fs/promises";
 import path from "path";
 
@@ -59,7 +61,13 @@ export function normalizeFinalizePayload(value = {}) {
 
 export async function getTutorMemory(userId) {
   const id = safeId(userId);
-  if (isFirebaseReady && db) {
+  if (pgStore) {
+    try {
+      return normalizeTutorMemory(await pgStore.getTutorMemory(id));
+    } catch (error) {
+      console.warn("[Tutor memory] Postgres 조회 실패, 로컬 기억으로 대체:", error.message);
+    }
+  } else if (isFirebaseReady && db) {
     try {
       const snapshot = await db.doc(`users/${id}/meta/memory`).get();
       return normalizeTutorMemory(snapshot.exists ? snapshot.data() : {});
@@ -84,7 +92,13 @@ export async function updateTutorMemory(userId, finalizePayload = {}) {
     });
   };
 
-  if (isFirebaseReady && db) {
+  if (pgStore) {
+    try {
+      return await pgStore.updateTutorMemory(id, mergeMemory);
+    } catch (error) {
+      console.warn("[Tutor memory] Postgres 갱신 실패, 로컬 기억으로 대체:", error.message);
+    }
+  } else if (isFirebaseReady && db) {
     try {
       const ref = db.doc(`users/${id}/meta/memory`);
       let updated;
@@ -244,16 +258,19 @@ export async function createTutorAudioReview({
   const memory = await memoryPromise;
 
   let audioReviewUrl;
+  let audioReviewPath = null;
   let archived = false;
   let storageBackend = "local-disk";
-  if (isFirebaseReady && storage) {
+  if (fileStore) {
     try {
-      const file = storage.bucket().file(`audio-reviews/${safeId(userId)}/${safeSessionId}.wav`);
-      await file.save(audio, { contentType: "audio/wav", metadata: { cacheControl: "private,max-age=3600" } });
-      [audioReviewUrl] = await file.getSignedUrl({ action: "read", expires: "2035-01-01" });
-      storageBackend = "firebase-storage";
+      const key = `audio-reviews/${safeId(userId)}/${safeSessionId}.wav`;
+      await fileStore.put(key, audio, { contentType: "audio/wav", cacheControl: "private,max-age=3600" });
+      // Firebase는 2035년까지, R2는 한도인 7일짜리 링크
+      audioReviewUrl = await fileStore.signedReadUrl(key, { expiresAt: Date.parse("2035-01-01") });
+      audioReviewPath = key;
+      storageBackend = fileStore.backend;
     } catch (error) {
-      console.warn("[Tutor review] Firebase Storage 보관 실패, 로컬 음원으로 대체:", error.message);
+      console.warn(`[Tutor review] ${fileStore.backend} 보관 실패, 로컬 음원으로 대체:`, error.message);
     }
   }
   if (!audioReviewUrl) {
@@ -266,21 +283,24 @@ export async function createTutorAudioReview({
     audioReviewUrl = `/api/session/audio-review/${encodeURIComponent(safeSessionId)}`;
   }
 
-  if (db) {
+  if (pgStore || db) {
     try {
-      await db.doc(`users/${safeId(userId)}/sessions/${safeSessionId}`).set({
+      const record = {
         type: "tutor-lesson",
         tutorId: tutor.id,
         tutorName: tutor.name,
         audioReviewUrl,
+        audioReviewPath,
         audioReviewStorage: storageBackend,
         audioReviewScript: scriptParts.join("\n\n"),
         finalizePayload: normalizedPayload,
         completedAt: new Date().toISOString()
-      }, { merge: true });
+      };
+      if (pgStore) await pgStore.saveSession(safeId(userId), safeSessionId, record);
+      else await db.doc(`users/${safeId(userId)}/sessions/${safeSessionId}`).set(record, { merge: true });
       archived = true;
     } catch (error) {
-      console.warn("[Tutor review] Firestore 세션 보관 실패:", error.message);
+      console.warn("[Tutor review] 세션 보관 실패:", error.message);
     }
   }
 

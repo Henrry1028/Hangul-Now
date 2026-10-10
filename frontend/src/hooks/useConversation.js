@@ -376,9 +376,10 @@ export default function useConversation({ tutorId, lang, reviewMode, recordActiv
           window.location.hostname === '127.0.0.1' ||
           window.location.hostname.endsWith('.local')
         );
-        const wsHost = isLocal
+        const isRunApp = typeof window !== 'undefined' && window.location.hostname.endsWith('run.app');
+        const wsHost = (isLocal || isRunApp)
           ? window.location.host
-          : (import.meta.env.VITE_LIVE_WS_HOST || 'hangul-now-api-313423647793.asia-northeast3.run.app');
+          : (import.meta.env.VITE_LIVE_WS_HOST || 'hangul-now-api-313423647793.us-east4.run.app');
         const ws = new WebSocket(`${proto}://${wsHost}/api/live`);
         r.ws = ws;
         ws.onopen = () => {

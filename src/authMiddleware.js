@@ -1,8 +1,9 @@
 // ============================================================
-// Hangul Now Firebase ID Token 인증 미들웨어 (Authentication Foundation)
+// Hangul Now 로그인 토큰 인증 미들웨어 (Authentication Foundation)
+// 토큰 검증은 authProvider.js가 맡는다 (Supabase Auth 또는 Firebase Auth).
 // ============================================================
 
-import { auth } from "./firebase.js";
+import { authAvailable, verifyAccessToken } from "./authProvider.js";
 import { isEffectiveAdmin } from "./adminPolicy.js";
 
 /**
@@ -10,8 +11,8 @@ import { isEffectiveAdmin } from "./adminPolicy.js";
  *
  * [Trust Boundary 원칙]
  * - Authorization: Bearer <token> 헤더에서 추출된 토큰만 검증 대상으로 인정합니다.
- * - Firebase Admin auth.verifyIdToken(token, true)로 토큰의 서명 및 revocation 상태를 검증합니다.
- * - 검증 성공 시 오직 decodedToken에서만 추출된 정보로 { uid, email, adminClaim }을 만듭니다.
+ * - 토큰의 서명과 유효 기간을 검증합니다 (Firebase는 폐기 여부까지, Supabase는 만료까지 유효).
+ * - 검증 성공 시 오직 검증된 토큰에서만 추출된 정보로 { uid, email, adminClaim }을 만듭니다.
  * - 임의의 body, query, param 등의 비검증 값은 절대 uid로 수용하지 않습니다.
  *
  * @returns {Promise<{ kind: "absent" | "malformed" | "unavailable" | "invalid" | "ok", user?: object, error?: Error }>}
@@ -22,17 +23,9 @@ async function verifyBearer(req) {
   if (typeof authHeader !== "string" || !authHeader.startsWith("Bearer ")) return { kind: "malformed" };
   const token = authHeader.slice(7).trim();
   if (!token) return { kind: "malformed" };
-  if (!auth) return { kind: "unavailable" };
+  if (!authAvailable) return { kind: "unavailable" };
   try {
-    const decoded = await auth.verifyIdToken(token, true);
-    return {
-      kind: "ok",
-      user: {
-        uid: decoded.uid,
-        email: decoded.email || null,
-        adminClaim: decoded.admin === true
-      }
-    };
+    return { kind: "ok", user: await verifyAccessToken(token) };
   } catch (error) {
     return { kind: "invalid", error };
   }
@@ -41,7 +34,7 @@ async function verifyBearer(req) {
 const TOKEN_REQUIRED = "인증 토큰이 필요합니다. (Authorization: Bearer <token>)";
 
 /**
- * Firebase ID Token 인증 미들웨어
+ * 로그인 토큰 인증 미들웨어
  * - 본 미들웨어는 오직 'Authentication(신원 확인)'만 수행하며, 역할/권한 인가(Authorization)는 수행하지 않습니다.
  */
 export const authenticateUser = async (req, res, next) => {
@@ -61,7 +54,7 @@ export const authenticateUser = async (req, res, next) => {
 };
 
 /**
- * Firebase ID Token 선택적 인증 미들웨어 (Optional Authentication)
+ * 로그인 토큰 선택적 인증 미들웨어 (Optional Authentication)
  * - Authorization 헤더가 아예 없는 경우: Guest 요청으로 인정하여 req.user = null 설정 후 통과.
  * - 헤더가 존재하나 형식이 잘못되었거나 토큰이 유효하지 않은 경우: Guest로 downgrade하지 않고 401.
  */

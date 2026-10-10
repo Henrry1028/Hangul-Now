@@ -3,11 +3,13 @@
 // 사용자가 직접 요청하거나 '복습'을 요청했을 때만 학습한 내용을 다시 낸다.
 //
 // 저장 위치
-//  - 로그인: Firestore  users/{userId}/learned/{type}  (키 → {firstAt, lastAt, count})
+//  - 로그인: Postgres learned 테이블(SUPABASE_DB_URL 설정 시) 또는 Firestore users/{userId}/learned/{type}
+//          (키 → {firstAt, lastAt, count})
 //  - 비로그인: 브라우저 localStorage (클라이언트가 보내 준 seenKeys로 대체)
 // ============================================================
 
 import { db, isInitialized } from "./firebase.js";
+import { pgStore } from "./dataStore.js";
 
 // 학습 이력을 남기는 콘텐츠 종류
 export const LEARN_TYPES = ["syllable", "word", "topic", "reading", "listening", "speaking"];
@@ -18,6 +20,14 @@ const memKey = (userId, type) => `${userId}::${type}`;
 /** 해당 사용자가 이미 학습한 항목 { key: {firstAt, lastAt, count} } */
 export async function getLearned(userId, type) {
   if (!userId) return {};
+  if (pgStore) {
+    try {
+      return await pgStore.getLearned(userId, type);
+    } catch (err) {
+      console.warn("[learningHistory] 조회 실패:", err.message);
+      return {};
+    }
+  }
   if (!isInitialized) return memoryStore.get(memKey(userId, type)) || {};
   try {
     const snap = await db.collection("users").doc(userId).collection("learned").doc(type).get();
@@ -46,6 +56,16 @@ export async function recordLearned(userId, type, items = [], existingItems = nu
       lastAt: now,
       count: (before?.count || 0) + 1
     };
+  }
+  if (pgStore) {
+    try {
+      await pgStore.setLearned(userId, type, next, now);
+      return { recorded: items.length, store: "postgres" };
+    } catch (err) {
+      console.warn("[learningHistory] 기록 실패:", err.message);
+      memoryStore.set(memKey(userId, type), next);
+      return { recorded: items.length, store: "memory", error: err.message };
+    }
   }
   if (!isInitialized) {
     memoryStore.set(memKey(userId, type), next);

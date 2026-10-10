@@ -5,7 +5,10 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { buildReviewPdf } from "./reportPdf.js";
-import { db, storage, isInitialized } from "./firebase.js";
+import { db, isInitialized } from "./firebase.js";
+import { fileStore } from "./fileStore.js";
+import { refreshFileUrls } from "./objectStore.js";
+import { pgStore } from "./dataStore.js";
 
 const REVIEW_MODEL = process.env.GEMINI_REVIEW_MODEL || "gemini-3.8-flash";
 
@@ -82,32 +85,29 @@ corrections는 최대 5개, vocabulary는 최대 6개, nextSteps는 2~3개로 �
   }
 }
 
-// ── 3. Firebase 영구 아카이빙 ───────────────────────────────
-// Storage: users/{userId}/sessions/{sessionId}.pdf
-// Firestore: users/{userId}/sessions/{sessionId}
+// ── 3. 영구 아카이빙 ────────────────────────────────────────
+// 파일 저장소(R2 또는 Firebase Storage): users/{userId}/sessions/{sessionId}.pdf
+// 기록: Postgres sessions 테이블(SUPABASE_DB_URL 설정 시) 또는 Firestore users/{userId}/sessions/{sessionId}
 export async function archiveSession({ userId, sessionId, pdfBuffer, meta, turns, hints, review }) {
-  if (!isInitialized || !userId) {
+  if (!(pgStore || isInitialized) || !fileStore || !userId) {
     return { archived: false, reason: !userId ? "not-signed-in" : "firebase-unavailable" };
   }
   const storagePath = `users/${userId}/sessions/${sessionId}.pdf`;
   let downloadUrl = null;
   try {
-    const bucket = storage.bucket();
-    const file = bucket.file(storagePath);
-    await file.save(pdfBuffer, {
+    await fileStore.put(storagePath, pdfBuffer, {
       contentType: "application/pdf",
-      metadata: { metadata: { sessionId, scenario: meta.scenarioId || "", level: meta.level || "" } }
+      metadata: { sessionId, scenario: meta.scenarioId || "", level: meta.level || "" }
     });
-    // 만료 없는 읽기 링크 (Firebase 다운로드 토큰 방식)
-    const [signed] = await file.getSignedUrl({ action: "read", expires: Date.now() + 365 * 864e5 });
-    downloadUrl = signed;
+    // 읽기 링크: Firebase는 1년, R2는 한도인 7일 (R2 보관분은 목록 조회 때마다 새로 발급)
+    downloadUrl = await fileStore.signedReadUrl(storagePath, { expiresAt: Date.now() + 365 * 864e5 });
   } catch (err) {
     console.warn("[sessionReport] Storage 업로드 실패:", err.message);
     return { archived: false, reason: "storage-failed", error: err.message };
   }
 
   try {
-    await db.collection("users").doc(userId).collection("sessions").doc(sessionId).set({
+    const record = {
       sessionId,
       scenarioId: meta.scenarioId || "",
       scenarioTitle: meta.scenarioTitle || "",
@@ -122,12 +122,15 @@ export async function archiveSession({ userId, sessionId, pdfBuffer, meta, turns
       })),
       summary: review?.summary || "",
       pdfPath: storagePath,
+      pdfStorage: fileStore.backend,
       pdfUrl: downloadUrl,
       createdAt: new Date()
-    }, { merge: true });
+    };
+    if (pgStore) await pgStore.saveSession(userId, sessionId, record);
+    else await db.collection("users").doc(userId).collection("sessions").doc(sessionId).set(record, { merge: true });
   } catch (err) {
-    console.warn("[sessionReport] Firestore 저장 실패:", err.message);
-    return { archived: false, reason: "firestore-failed", error: err.message, pdfUrl: downloadUrl };
+    console.warn("[sessionReport] 세션 기록 저장 실패:", err.message);
+    return { archived: false, reason: pgStore ? "db-failed" : "firestore-failed", error: err.message, pdfUrl: downloadUrl };
   }
 
   return { archived: true, pdfUrl: downloadUrl, pdfPath: storagePath };
@@ -149,11 +152,17 @@ export async function buildSessionReport({ userId, sessionId, turns = [], hints 
 
 // 대시보드용 — 저장된 세션 목록
 export async function listSessions(userId, limit = 50) {
-  if (!isInitialized || !userId) return [];
+  if (!(pgStore || isInitialized) || !userId) return [];
   try {
-    const snap = await db.collection("users").doc(userId).collection("sessions")
-      .orderBy("endedAt", "desc").limit(limit).get();
-    return snap.docs.map((d) => d.data());
+    let sessions;
+    if (pgStore) {
+      sessions = await pgStore.listSessions(userId, limit);
+    } else {
+      const snap = await db.collection("users").doc(userId).collection("sessions")
+        .orderBy("endedAt", "desc").limit(limit).get();
+      sessions = snap.docs.map((d) => d.data());
+    }
+    return await Promise.all(sessions.map((session) => refreshFileUrls(fileStore, session)));
   } catch (err) {
     console.warn("[sessionReport] 세션 목록 조회 실패:", err.message);
     return [];

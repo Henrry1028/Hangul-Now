@@ -1,7 +1,7 @@
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import ReadingPage from './ReadingPage.jsx';
+import ReadingPage, { normalizeSelectedKorean } from './ReadingPage.jsx';
 
 vi.mock('../data/authHeaders.js', () => ({ authHeaders: vi.fn(async () => ({})) }));
 
@@ -21,12 +21,21 @@ function mount() {
 }
 
 afterEach(() => {
-  act(() => root.unmount());
-  container.remove();
+  if (root) act(() => root.unmount());
+  container?.remove();
+  root = undefined;
+  container = undefined;
   vi.unstubAllGlobals();
 });
 
 describe('ReadingPage staged material generation', () => {
+  it('normalizes Korean text selected with a mouse or touch gesture', () => {
+    expect(normalizeSelectedKorean('  “분위기”  ')).toBe('분위기');
+    expect(normalizeSelectedKorean('한국 사회')).toBe('한국 사회');
+    expect(normalizeSelectedKorean('English only')).toBe('');
+    expect(normalizeSelectedKorean('가'.repeat(41))).toBe('');
+  });
+
   it('shows the passage before enrichment finishes and then merges practice content', async () => {
     let resolveEnrichment;
     const fetchMock = vi.fn()
@@ -44,6 +53,9 @@ describe('ReadingPage staged material generation', () => {
       .mockImplementationOnce(() => new Promise((resolve) => { resolveEnrichment = resolve; }));
     vi.stubGlobal('fetch', fetchMock);
     mount();
+
+    expect(container.textContent).toContain('BUILD YOUR WORD BANK');
+    expect(container.textContent).toContain('Vocabulary → My words');
 
     const generateButton = [...container.querySelectorAll('button')].find((button) => button.textContent === 'New material');
     act(() => generateButton.dispatchEvent(new MouseEvent('click', { bubbles: true })));

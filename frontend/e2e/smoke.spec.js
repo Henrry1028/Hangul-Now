@@ -249,6 +249,65 @@ test('reading shows the passage before practice enrichment finishes', async ({ p
   await expect(readingScreen).not.toContainText('Passage ready · adding practice…');
 });
 
+test('reading selection shows bilingual meaning and opens the saved word in My words', async ({ page }) => {
+  if (process.env.LIVE_DICTIONARY !== '1') {
+    await page.route('**/api/dictionary/lookup', async (route) => {
+      expect(route.request().postDataJSON().word).toBe('매년');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          word: '매년',
+          base: '매년',
+          posKo: '부사',
+          posEn: 'adverb',
+          meaningKo: '해마다, 한 해 한 해마다',
+          meaningEn: 'every year; annually',
+          exampleKo: '우리는 매년 봄에 여행을 가요.',
+          exampleEn: 'We travel every spring.'
+        })
+      });
+    });
+  }
+
+  await page.goto('/');
+  await page.locator('button:visible', { hasText: 'Reading' }).filter({ hasNot: page.locator('header') }).last().evaluate((button) => button.click());
+  await expect.poll(() => screenLabel(page)).toBe('06 Reading');
+  await expect(page.locator('.reading-wordbook-guide')).toContainText('BUILD YOUR WORD BANK');
+  await expect(page.locator('.reading-wordbook-guide')).toContainText('Vocabulary → My words');
+
+  const paragraph = page.locator('.reading-paragraph').first();
+  await paragraph.evaluate((element) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node && !node.nodeValue.includes('매년')) node = walker.nextNode();
+    const start = node.nodeValue.indexOf('매년');
+    const range = document.createRange();
+    range.setStart(node, start);
+    range.setEnd(node, start + 2);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    element.dispatchEvent(window.innerWidth < 860
+      ? new Event('touchend', { bubbles: true })
+      : new MouseEvent('mouseup', { bubbles: true }));
+  });
+
+  const card = page.locator('.reading-selection-card');
+  await expect(card).toBeVisible();
+  await expect(card.locator('.reading-selection-meanings p')).toHaveCount(2);
+  await expect(card).toContainText('한국어');
+  await expect(card).toContainText('English');
+  await card.getByRole('button', { name: 'Save to word bank' }).click();
+
+  await expect.poll(() => screenLabel(page)).toBe('13 Vocabulary');
+  const vocabulary = page.locator('[data-screen-label="13 Vocabulary"]');
+  await expect(vocabulary.getByRole('tab', { name: 'My words' })).toHaveAttribute('aria-selected', 'true');
+  await expect(vocabulary.locator('.vocab-list li')).toContainText('매년');
+  await vocabulary.getByRole('button', { name: 'Show English' }).click();
+  await expect(vocabulary.locator('.vocab-list-en')).not.toHaveText('—');
+});
+
 test('listening offers five speed steps and A-B section repeat', async ({ page, request }) => {
   const sampleAudio = await request.get('/assets/tutors/audio/jiwoo.wav');
   expect(sampleAudio.ok()).toBeTruthy();

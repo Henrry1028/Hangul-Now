@@ -20,6 +20,17 @@ const FULL_READING_TEXT = DEFAULT_READING_PARAGRAPHS
 
 const STUDY_LEVELS = ['beginner', 'intermediate', 'advanced'];
 const GENERATION_TIMEOUT_MS = 30_000;
+const DICTIONARY_TIMEOUT_MS = 18_000;
+
+export function normalizeSelectedKorean(value) {
+  const selected = String(value || '')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^[^가-힣ㄱ-ㅎㅏ-ㅣ0-9]+|[^가-힣ㄱ-ㅎㅏ-ㅣ0-9]+$/g, '');
+  if (!selected || selected.length > 40 || !/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(selected)) return '';
+  return selected;
+}
 
 async function requestReadingGeneration(payload) {
   const controller = new AbortController();
@@ -41,6 +52,19 @@ async function requestReadingGeneration(payload) {
   } finally {
     globalThis.clearTimeout(timeoutId);
   }
+}
+
+async function requestDictionaryLookup(payload, signal) {
+  const response = await fetch('/api/dictionary/lookup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+    body: JSON.stringify(payload),
+    signal
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `서버 응답 ${response.status}`);
+  if (data.error) throw new Error(data.error);
+  return data;
 }
 
 function splitGeneratedParagraph(text, words) {
@@ -86,11 +110,13 @@ function ReadingPage({
   readingState,
   onReadingStateChange,
   onRecordActivity,
+  onNavigate,
   userId = null
 }) {
   const [localReadingState, setLocalReadingState] = useState(INITIAL_READING_STATE);
   const [speechStatus, setSpeechStatus] = useState('idle');
   const [speechKey, setSpeechKey] = useState('');
+  const [selectionCard, setSelectionCard] = useState(null);
   const state = readingState || localReadingState;
   const {
     selectedWordKey,
@@ -121,6 +147,8 @@ function ReadingPage({
   const generationLoadingRef = useRef(generationLoading);
   const mountedRef = useRef(true);
   const previousTutorIdRef = useRef(selectedTutorId);
+  const passageRef = useRef(null);
+  const dictionaryRequestRef = useRef(null);
 
   const L = lang === 'ko' ? 1 : 0;
   const t = READING_TEXT[lang] || READING_TEXT.ko;
@@ -135,6 +163,7 @@ function ReadingPage({
     ? Object.fromEntries((generatedReading.glossary || []).map((item) => [item.word, {
       base: item.word,
       pos: [item.pos || '', item.pos || ''],
+      ko: item.ko || '',
       en: item.en || '',
       ex: item.ex || ''
     }]))
@@ -151,6 +180,9 @@ function ReadingPage({
     : DEFAULT_READING_QUESTIONS;
   const selectedWord = selectedWordKey ? readingGlossary[selectedWordKey] : null;
   const selectedTutor = TUTORS.find((tutor) => tutor.id === selectedTutorId) || TUTORS[0];
+  const readingPlainText = readingParagraphs
+    .map((paragraph) => paragraph.map((segment) => (typeof segment === 'string' ? segment : segment[0])).join(''))
+    .join(' ');
 
   const updateSpeechState = useCallback((status, key) => {
     speechStatusRef.current = status;
@@ -277,6 +309,7 @@ function ReadingPage({
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      dictionaryRequestRef.current?.abort();
       stopTutorSpeech(false);
     };
   }, [stopTutorSpeech]);
@@ -376,19 +409,87 @@ function ReadingPage({
     generateReadingMaterial(level);
   };
 
-  const toggleSavedWord = () => {
-    if (!selectedWordKey) return;
-    // 저장한 단어는 단어 학습 카드로도 들어간다 (저장 해제해도 단어장에서는 지우지 않는다)
-    if (!saved[selectedWordKey] && selectedWord) {
-      const [ex, exEn] = String(selectedWord.ex || '').split('—').map((part) => part.trim());
-      addVocabWord({ w: selectedWord.base || selectedWordKey, en: selectedWord.en, pos: selectedWord.pos?.[1] || selectedWord.pos?.[0], ex, exEn }, 'reading');
-    }
+  const saveWordAndOpenVocab = (wordKey, wordData) => {
+    if (!wordKey || !wordData) return;
+    const [legacyExampleKo, legacyExampleEn] = String(wordData.ex || '').split('—').map((part) => part.trim());
+    const savedWord = wordData.base || wordData.word || wordKey;
+    addVocabWord({
+      w: savedWord,
+      en: wordData.meaningEn || wordData.en || '',
+      pos: wordData.posKo || wordData.pos?.[1] || wordData.pos?.[0] || '',
+      ex: wordData.exampleKo || legacyExampleKo || '',
+      exEn: wordData.exampleEn || legacyExampleEn || ''
+    }, 'reading');
     updateReadingState((current) => ({
       saved: {
         ...current.saved,
-        [selectedWordKey]: !current.saved[selectedWordKey]
+        [wordKey]: true,
+        [savedWord]: true
       }
     }));
+    onNavigate?.('vocab', { tab: 'list' });
+  };
+
+  const toggleSavedWord = () => saveWordAndOpenVocab(selectedWordKey, selectedWord);
+
+  const lookupSelection = async () => {
+    const selection = window.getSelection?.();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+    const range = selection.getRangeAt(0);
+    const commonNode = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+      ? range.commonAncestorContainer.parentNode
+      : range.commonAncestorContainer;
+    if (!passageRef.current?.contains(commonNode)) return;
+
+    const word = normalizeSelectedKorean(selection.toString());
+    if (!word) return;
+    const rect = range.getBoundingClientRect();
+    const fallback = readingGlossary[word];
+    const placeAbove = rect.bottom + 280 > window.innerHeight;
+    const position = {
+      left: Math.max(16, Math.min(window.innerWidth - 16, rect.left + rect.width / 2)),
+      top: placeAbove ? Math.max(12, rect.top - 10) : Math.min(window.innerHeight - 12, rect.bottom + 10),
+      placeAbove
+    };
+    const initialData = fallback ? {
+      word,
+      base: fallback.base || word,
+      posKo: fallback.pos?.[1] || '',
+      posEn: fallback.pos?.[0] || '',
+      meaningKo: fallback.ko || '',
+      meaningEn: fallback.en || '',
+      exampleKo: String(fallback.ex || '').split('—')[0]?.trim() || '',
+      exampleEn: String(fallback.ex || '').split('—')[1]?.trim() || ''
+    } : null;
+    setSelectionCard({ word, status: 'loading', data: initialData, error: '', ...position });
+
+    dictionaryRequestRef.current?.abort();
+    const controller = new AbortController();
+    dictionaryRequestRef.current = controller;
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), DICTIONARY_TIMEOUT_MS);
+    try {
+      const data = await requestDictionaryLookup({ word, context: readingPlainText }, controller.signal);
+      setSelectionCard((current) => current?.word === word ? { ...current, status: 'ready', data, error: '' } : current);
+    } catch (error) {
+      if (controller.signal.aborted && dictionaryRequestRef.current !== controller) return;
+      const message = controller.signal.aborted
+        ? (lang === 'ko' ? '뜻 조회 시간이 초과되었습니다. 다시 선택해 주세요.' : 'The lookup timed out. Please select the word again.')
+        : (error?.message || String(error));
+      setSelectionCard((current) => current?.word === word ? { ...current, status: initialData ? 'ready' : 'error', error: message } : current);
+    } finally {
+      globalThis.clearTimeout(timeoutId);
+      if (dictionaryRequestRef.current === controller) dictionaryRequestRef.current = null;
+    }
+  };
+
+  const handleTextSelection = (event) => {
+    if (event.target.closest?.('.reading-selection-card')) return;
+    lookupSelection();
+  };
+
+  const handleTouchSelection = (event) => {
+    if (event.target.closest?.('.reading-selection-card')) return;
+    globalThis.setTimeout(lookupSelection, 120);
   };
 
   const answerQuizQuestion = (question, questionIndex, option, optionIndex) => {
@@ -487,20 +588,34 @@ function ReadingPage({
         </div>
       </div>
 
+      <section className="reading-wordbook-guide" aria-label={lang === 'ko' ? '단어장 기능 안내' : 'Word bank guide'}>
+        <span className="reading-wordbook-guide-label">{lang === 'ko' ? '단어장 활용법' : 'BUILD YOUR WORD BANK'}</span>
+        <p>
+          {lang === 'ko'
+            ? '모르는 단어를 드래그하거나 길게 눌러 한글·영어 뜻을 확인하세요. ‘단어장 저장’을 누르면 단어 학습의 내 단어장에서 다시 공부할 수 있어요.'
+            : 'Select an unfamiliar word to see its Korean and English meanings. Save it to review later in Vocabulary → My words.'}
+        </p>
+      </section>
+
       {generationError && (
         <div className="reading-generation-error" role="alert">{generationError}</div>
       )}
 
       <div className="reading-content-grid">
-        <div className="reading-passage-card">
+        <div
+          className="reading-passage-card"
+          ref={passageRef}
+          onMouseUp={handleTextSelection}
+          onTouchEnd={handleTouchSelection}
+        >
           <div className="reading-toolbar">
-            <span>밑줄 친 단어를 누르면 뜻을 볼 수 있어요.</span>
+            <span>{lang === 'ko' ? '단어를 드래그하거나 길게 선택하면 한국어·영어 뜻과 단어장 저장 버튼이 나타나요.' : 'Select any Korean word to see both meanings and save it to your word bank.'}</span>
             <div className="reading-toolbar-actions">
               <button
                 type="button"
                 title={fullSpeechTitle}
                 aria-label={fullSpeechTitle}
-                onClick={() => playTutorSpeech(FULL_READING_TEXT, fullSpeechKey)}
+                onClick={() => playTutorSpeech(readingPlainText || FULL_READING_TEXT, fullSpeechKey)}
                 className={fullSpeechActive
                   ? 'reading-speech-button reading-full-speech-button is-active'
                   : 'reading-speech-button reading-full-speech-button'}
@@ -518,6 +633,54 @@ function ReadingPage({
               </button>
             </div>
           </div>
+
+          {selectionCard && (
+            <section
+              className={`reading-selection-card${selectionCard.placeAbove ? ' is-above' : ''}`}
+              style={{ left: `${selectionCard.left}px`, top: `${selectionCard.top}px` }}
+              role="dialog"
+              aria-label={lang === 'ko' ? `${selectionCard.word} 단어 뜻` : `Meaning of ${selectionCard.word}`}
+              onMouseUp={(event) => event.stopPropagation()}
+              onTouchEnd={(event) => event.stopPropagation()}
+            >
+              <div className="reading-selection-head">
+                <div>
+                  <strong lang="ko">{selectionCard.data?.base || selectionCard.word}</strong>
+                  <span>{lang === 'ko' ? '선택한 단어' : 'Selected word'}</span>
+                </div>
+                <button type="button" onClick={() => setSelectionCard(null)} aria-label={lang === 'ko' ? '닫기' : 'Close'}>×</button>
+              </div>
+              {selectionCard.status === 'loading' && !selectionCard.data && (
+                <div className="reading-selection-loading" role="status">
+                  <i />{lang === 'ko' ? '문맥에 맞는 뜻을 찾고 있어요…' : 'Looking up the meaning in context…'}
+                </div>
+              )}
+              {selectionCard.data && (
+                <div className="reading-selection-meanings">
+                  <p><em>한국어</em><span>{selectionCard.data.meaningKo || (lang === 'ko' ? '한국어 뜻을 불러오는 중…' : 'Loading Korean meaning…')}</span></p>
+                  <p><em>English</em><span>{selectionCard.data.meaningEn || 'Loading English meaning…'}</span></p>
+                  {(selectionCard.data.exampleKo || selectionCard.data.exampleEn) && (
+                    <div className="reading-selection-example">
+                      {!!selectionCard.data.exampleKo && <span lang="ko">{selectionCard.data.exampleKo}</span>}
+                      {!!selectionCard.data.exampleEn && <span>{selectionCard.data.exampleEn}</span>}
+                    </div>
+                  )}
+                </div>
+              )}
+              {!!selectionCard.error && <span className="reading-selection-error">{selectionCard.error}</span>}
+              {selectionCard.data && (
+                <button
+                  type="button"
+                  className="reading-selection-save"
+                  onClick={() => saveWordAndOpenVocab(selectionCard.word, selectionCard.data)}
+                >
+                  {saved[selectionCard.word] || saved[selectionCard.data.base]
+                    ? (lang === 'ko' ? '내 단어장 보기 →' : 'Open my word bank →')
+                    : (lang === 'ko' ? '단어장 저장' : 'Save to word bank')}
+                </button>
+              )}
+            </section>
+          )}
 
           {readingParagraphs.map((paragraph, paragraphIndex) => (
             <div className="reading-paragraph-block" key={`paragraph-${paragraphIndex}`}>
@@ -606,7 +769,10 @@ function ReadingPage({
                   <SpeakerIcon size={15} />
                 </button>
               </div>
-              <span className="reading-word-meaning">{selectedWord.en}</span>
+              {!!selectedWord.ko && (
+                <span className="reading-word-meaning reading-word-meaning-ko"><b>한국어</b>{selectedWord.ko}</span>
+              )}
+              <span className="reading-word-meaning"><b>English</b>{selectedWord.en}</span>
               <span className="reading-word-example">{selectedWord.ex}</span>
               <div className="reading-glossary-actions">
                 <button className="reading-save-button" type="button" onClick={toggleSavedWord}>

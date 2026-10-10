@@ -9,9 +9,9 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 운영 URL | https://hangul-now-api-313423647793.asia-northeast3.run.app |
-| 스테이징 | https://hangulnow-staging-313423647793.asia-northeast3.run.app |
-| 구성 | Cloud Run 단일 서비스(`hangul-now-api`, `asia-northeast3`)가 React 빌드 + Express API + WebSocket을 같은 출처로 서빙 |
+| 운영 URL | https://hangul-now-api-313423647793.us-east4.run.app (또는 이전 asia-northeast3) |
+| 스테이징 | https://hangulnow-staging-313423647793.us-east4.run.app |
+| 구성 | Cloud Run 단일 서비스(`hangul-now-api`, `us-east4` / 미국 버지니아 북부)가 React 빌드 + Express API + WebSocket을 같은 출처로 서빙 (Supabase DB `aws-0-us-east-1`와 동일 지역) |
 | 운영 리비전 | 트래픽이 검증된 리비전에 **고정**되어 있음 (자동 전환 없음) |
 | Firebase Hosting / 커스텀 도메인 | 사용하지 않음 |
 | 비용 알림 | 결제 계정 예산 ₩140,000/월 (앱 프로젝트 + Gemini 키 프로젝트 `gen-lang-client-0898376857`), 50/90/100%·예상 100%에 이메일 |
@@ -50,6 +50,9 @@ cp .env.example .env   # 값을 채운다 — .env는 절대 커밋·압축 공�
 | `FIREBASE_SERVICE_ACCOUNT_KEY` | 예 | 서비스 계정 JSON 또는 Base64. 없으면 Mock 모드(관리자 API 503, 서버 기록 없음) |
 | `ADMIN_EMAILS` | 예 | 관리자 이메일(쉼표 구분). 비우면 관리자 콘솔·화상수업 미리보기가 사라짐 (또는 Firebase custom claim `admin`) |
 | `FIREBASE_STORAGE_BUCKET` | 아니오 | 기본 `<project_id>.firebasestorage.app` |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | 아니오 | 네 값을 모두 채우면 복습 PDF·오디오 리뷰를 Cloudflare R2에 저장. 하나라도 비면 Firebase Storage. 현재 백엔드는 `/api/health`의 `fileStorage`로 확인 |
+| `SUPABASE_DB_URL` | 아니오 | 채우면 서버 기록(학습 이력·수업 기록·튜터 기억·채팅·오답 노트)을 Postgres(Supabase)에 저장. 비면 Firestore. 테이블 생성은 `npm run db:migrate`, 현재 백엔드는 `/api/health`의 `dataStore`로 확인 |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | 아니오 | 채우면 로그인을 Supabase Auth로 전환(서버 토큰 검증 + 화면 로그인 방식). `SUPABASE_DB_URL`과 반드시 함께 켜고 끈다. 현재 방식은 `/api/health`의 `authProvider`로 확인 |
 | `ALLOWED_ORIGINS` | 아니오 | CORS 허용 출처(쉼표). 기본값은 운영·스테이징·localhost |
 | `RATE_LIMIT_SCALE`, `RATE_LIMIT_DISABLED`, `TRUST_PROXY_HOPS` | 아니오 | 요청 제한 배율·비활성(로컬 테스트용)·프록시 홉 수(기본 1) |
 | `GEMINI_*_MODEL` 등 | 아니오 | 모델 오버라이드 (`.env.example` 참조) |
@@ -113,14 +116,14 @@ npm run test:e2e    # Playwright 스모크 — 실행 중인 서버 대상, 기�
 ```bash
 # 배포 절차 (예: 커밋 <sha>, 운영 서비스)
 git -c core.autocrlf=false archive --format=tar.gz -o hn-<sha>.tgz <sha>
-gcloud builds submit hn-<sha>.tgz --region asia-northeast3 \
-  --tag asia-northeast3-docker.pkg.dev/hnageul-copilot-dev-918/cloud-run-source-deploy/hangul-now-api:<sha>
-gcloud run deploy hangul-now-api --image <위 태그> --region asia-northeast3 \
+gcloud builds submit hn-<sha>.tgz --region us-east4 \
+  --tag us-east4-docker.pkg.dev/hnageul-copilot-dev-918/cloud-run-source-deploy/hangul-now-api:<sha>
+gcloud run deploy hangul-now-api --image <위 태그> --region us-east4 \
   --no-traffic --tag rc-<sha> --service-account hangul-now-api-runtime@hnageul-copilot-dev-918.iam.gserviceaccount.com \
   --timeout 3600 --max-instances 1 \
   --set-secrets GEMINI_API_KEY=hn-staging-gemini-api-key:latest,FIREBASE_SERVICE_ACCOUNT_KEY=hn-staging-firebase-sa-key:latest,ADMIN_EMAILS=hn-staging-admin-emails:latest
 # 태그 URL 확인 후
-gcloud run services update-traffic hangul-now-api --to-revisions <새 리비전>=100 --region asia-northeast3
+gcloud run services update-traffic hangul-now-api --to-revisions <새 리비전>=100 --region us-east4
 ```
 
 ### 보안과 데이터

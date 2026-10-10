@@ -25,6 +25,7 @@ import useConversation from './hooks/useConversation.js';
 import useAuthProfile from './hooks/useAuthProfile.js';
 import useVideoClass from './hooks/useVideoClass.js';
 import useAppUpdate from './hooks/useAppUpdate.js';
+import { authHeaders } from './data/authHeaders.js';
 import UpdateNotificationBanner from './components/UpdateNotificationBanner.jsx';
 import { appendActivity, loadActivityState, persistActivityState } from './data/activityData.js';
 import { INITIAL_WRITING_STATE } from './data/writingData.js';
@@ -113,13 +114,15 @@ function App() {
   const [, setAdminLoading] = useState(false);
   const [adminSearch, setAdminSearch] = useState('');
   const [adminFilter, setAdminFilter] = useState('all');
+  const [vocabInitialMode, setVocabInitialMode] = useState('cards');
 
-  const handleNavigate = (target) => {
+  const handleNavigate = (target, options = {}) => {
     if (target === 'admin') {
       handleGoAdmin();
       return;
     }
     if (target === 'intro' || target === 'about' || target === 'notice' || target === 'resources' || target === 'home' || target === 'tutors' || target === 'reading' || target === 'writing' || target === 'listening' || target === 'record' || target === 'vocab' || target === 'mistakes' || target === 'speaking' || target === 'chat' || target === 'conversation') {
+      if (target === 'vocab') setVocabInitialMode(options.tab === 'list' ? 'list' : 'cards');
       setCurrentPage(target);
       const viewport = document.querySelector('.app-main-viewport');
       if (viewport) viewport.scrollTop = 0;
@@ -152,14 +155,7 @@ function App() {
   const loadAdminDashboard = useCallback(async () => {
     setAdminLoading(true);
     try {
-      let token = '';
-      const firebase = window.firebase;
-      if (firebase && firebase.auth && firebase.auth().currentUser) {
-        token = await firebase.auth().currentUser.getIdToken();
-      }
-      const res = await fetch('/api/admin/dashboard', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      const res = await fetch('/api/admin/dashboard', { headers: await authHeaders() });
       const data = await res.json();
       if (data && data.success) {
         setAdminData(data);
@@ -336,6 +332,7 @@ function App() {
           readingState={readingState}
           onReadingStateChange={updateReadingState}
           onRecordActivity={handleRecordActivity}
+          onNavigate={handleNavigate}
           userId={auth.currentUser?.uid || null}
         />
       )}
@@ -375,7 +372,14 @@ function App() {
         />
       )}
       {currentPage === 'vocab' && (
-        <VocabPage lang={lang} selectedTutorId={selectedTutorId} onNavigate={handleNavigate} />
+        <VocabPage
+          lang={lang}
+          selectedTutorId={selectedTutorId}
+          studyLevel={studyLevel}
+          onStudyLevelChange={setStudyLevel}
+          onNavigate={handleNavigate}
+          initialMode={vocabInitialMode}
+        />
       )}
       {currentPage === 'mistakes' && (
         <MistakesPage lang={lang} selectedTutorId={selectedTutorId} onNavigate={handleNavigate} />

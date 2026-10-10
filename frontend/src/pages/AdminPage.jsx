@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { XLSX_MIME, buildXlsx, downloadBlob, stamp, toCsv } from '../utils/tableExport.js';
-import { driveErrorMessage, saveCsvAsGoogleSheet } from '../utils/googleDrive.js';
+import { driveErrorMessage, prepareDriveSave, saveCsvAsGoogleSheet } from '../utils/googleDrive.js';
 import { GENDERS, INTERESTS, NATIONALITIES } from '../data/profileData.js';
 
 // Legacy "09 Admin Console" (preview/index.html 2990-3205, derivations 6946-7017).
@@ -254,6 +254,7 @@ function TutorBar({ label, count, width, color }) {
 function AdminPage({ view, adminSearch, onAdminSearch, onAdminFilter, onRefresh, onNavigate }) {
   // 회원 목록 내보내기: 엑셀(.xlsx) 다운로드 / Google Drive(스프레드시트) 저장
   const [driveState, setDriveState] = useState({ busy: false, msg: '', url: '', error: false });
+  useEffect(() => { prepareDriveSave(); }, []);
   const exportName = `HangulNow_회원목록_${stamp()}`;
   const downloadExcel = () => {
     downloadBlob(buildXlsx(memberExportRows(view.users), '회원 목록'), `${exportName}.xlsx`, XLSX_MIME);
