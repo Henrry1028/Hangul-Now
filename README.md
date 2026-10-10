@@ -16,7 +16,7 @@
 | Firebase Hosting / 커스텀 도메인 | 사용하지 않음 |
 | 비용 알림 | 결제 계정 예산 ₩140,000/월 (앱 프로젝트 + Gemini 키 프로젝트 `gen-lang-client-0898376857`), 50/90/100%·예상 100%에 이메일 |
 
-배포 기록과 롤백 절차: `.agent/PRODUCTION_LAUNCH.md`, `.agent/STAGING_DEPLOYMENT.md`, `.agent/CUTOVER_READINESS.md`.
+배포 기록과 운영 명세: 종합 기술 문서 `GEMINI.md` 참조.
 
 ## 기술 구성
 
@@ -167,8 +167,7 @@ gcloud run services update-traffic hangul-now-api --to-revisions <새 리비전>
 │   └── ...
 ├── preview/                  # 레거시 화면 — 롤백용 보관본 (수정 금지)
 ├── firestore.rules, storage.rules
-├── Dockerfile                # Node 20 프론트 빌드 → Node 22 런타임
-└── .agent/                   # 마이그레이션·배포 기록 (에이전트 작업 규칙: AGENTS.md)
+└── Dockerfile                # Node 20 프론트 빌드 → Node 22 런타임
 ```
 
 ## 주요 API
