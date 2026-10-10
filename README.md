@@ -9,7 +9,7 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 운영 URL | https://hangul-now-api-313423647793.us-east4.run.app (또는 이전 asia-northeast3) |
+| 운영 URL | https://hangul-now-api-onpsj3o5ta-uk.a.run.app (또는 https://hangul-now-api-313423647793.us-east4.run.app) |
 | 스테이징 | https://hangulnow-staging-313423647793.us-east4.run.app |
 | 구성 | Cloud Run 단일 서비스(`hangul-now-api`, `us-east4` / 미국 버지니아 북부)가 React 빌드 + Express API + WebSocket을 같은 출처로 서빙 (Supabase DB `aws-0-us-east-1`와 동일 지역) |
 | 운영 리비전 | 트래픽이 검증된 리비전에 **고정**되어 있음 (자동 전환 없음) |
