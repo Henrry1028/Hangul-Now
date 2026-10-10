@@ -144,7 +144,7 @@ function AppShell({
           <button type="button" className="mobile-menu-btn" onClick={() => setMobileDrawerOpen(true)} aria-label="메뉴 열기" aria-expanded={mobileDrawerOpen} style={{ border: '1.5px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', width: '36px', height: '36px', borderRadius: '10px', placeItems: 'center', cursor: 'pointer', flex: 'none' }}>
             <MenuIcon />
           </button>
-          <button type="button" onClick={go('intro')} aria-label="Hangul Now home" style={{ display: 'flex', alignItems: 'center', border: 0, background: 'none', cursor: 'pointer', padding: 0 }}>
+          <button type="button" onClick={go('intro')} aria-label="Hangul Now home" style={{ display: 'flex', alignItems: 'center', height: '36px', border: 0, background: 'none', cursor: 'pointer', padding: 0 }}>
             <img className="brand-logo brand-logo--header brand-logo--light" src="/assets/logo-new.png?v=2" alt="Hangul Now" />
             <img className="brand-logo brand-logo--header brand-logo--dark" src="/assets/logo-new-dark.png?v=2" alt="Hangul Now" />
           </button>

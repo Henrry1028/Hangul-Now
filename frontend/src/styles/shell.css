@@ -15,7 +15,7 @@
 .desktop-header-nav { display: flex; align-items: center; gap: 20px; font-size: 14px; }
 
 @media(max-width: 860px) {
-  .brand-logo--header { height: 28px !important; max-height: 30px !important; }
+  .brand-logo--header { height: 36px !important; max-height: 36px !important; }
   .marketing-header {
     height: 56px !important;
     min-height: 56px !important;
